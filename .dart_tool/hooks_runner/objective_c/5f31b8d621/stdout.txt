@@ -1,0 +1,58 @@
+Running `(cd /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/; TMPDIR=/var/folders/5m/fdgjzns137sf62jcnpjcww280000gp/T/ PATH=/Users/Asus/.antigravity/antigravity/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:/opt/homebrew/lib/ruby/gems/3.*/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/ruby/bin:/opt/homebrew/opt/ruby/bin:/Applications/MAMP/bin/php/php8.3.30/bin:/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin:/Users/Asus/develop/flutter/bin:/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/System/Cryptexes/App/usr/bin:/usr/bin:/bin:/usr/sbin:/sbin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/local/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/bin:/var/run/com.apple.security.cryptexd/codex.system/bootstrap/usr/appleinternal/bin:/opt/pmk/env/global/bin:/Library/Apple/usr/bin:/Users/Asus/.antigravity/antigravity/bin:/opt/homebrew/lib/ruby/gems/4.0.0/bin:/opt/homebrew/lib/ruby/gems/3.*/bin:/opt/homebrew/opt/ruby/bin:/Applications/MAMP/bin/php/php8.3.30/bin:/Library/Java/JavaVirtualMachines/jdk-22.jdk/Contents/Home/bin:/Users/Asus/develop/flutter/bin:/usr/local/mysql-9.1.0-macos14-arm64/bin:/Users/ka-jeypi/development/flutter/bin:/Users/Asus/.antigravity/extensions/vscjava.vscode-java-debug-0.58.5-universal/bundled/scripts/noConfigScripts:/usr/local/mysql-9.1.0-macos14-arm64/bin:/Users/ka-jeypi/development/flutter/bin:/Users/ka-jeypi/development/flutter/bin HOME=/Users/Asus /Users/Asus/develop/flutter/bin/cache/dart-sdk/bin/dart --packages=/Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/package_config.json /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/objective_c/5f31b8d621/hook.dill --config=/Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/objective_c/5f31b8d621/input.json )`.
+INFO: 2026-04-14 09:37:54.137164: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-04-14 09:37:54.288175: Running `/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang --version`.
+
+INFO: 2026-04-14 09:37:54.315905: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/objective_c.c -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.c.o
+
+art_api_dl.c.o
+
+INFO: 2026-04-14 09:37:54.316724: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/protocol.m -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o
+
+obj/src/objective_c_bindings_generated.m.o
+
+eveloper/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/input_stream_adapter.m -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o
+INFO: 2026-04-14 09:37:54.316395: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/objective_c.m -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.m.o
+INFO: 2026-04-14 09:37:54.316493: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/observer.m -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o
+INFO: 2026-04-14 09:37:54.316615: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 -x objective-c -fobjc-arc -c /Users/Asus/.pub-cache/hosted/pub.dev/objective_c-9.3.0/src/ns_number.m -fpic -I src -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/ns_number.m.o
+
+INFO: 2026-04-14 09:37:54.493142: 
+INFO: 2026-04-14 09:37:54.493343: 
+INFO: 2026-04-14 09:37:54.493413: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.c.o
+INFO: 2026-04-14 09:37:54.493853: 
+INFO: 2026-04-14 09:37:54.493896: 
+INFO: 2026-04-14 09:37:54.493959: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/include/dart_api_dl.c.o
+
+INFO: 2026-04-14 09:37:54.503460: 
+INFO: 2026-04-14 09:37:54.503501: 
+INFO: 2026-04-14 09:37:54.503511: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o
+INFO: 2026-04-14 09:37:54.503555: 
+INFO: 2026-04-14 09:37:54.503566: 
+INFO: 2026-04-14 09:37:54.503574: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o
+
+INFO: 2026-04-14 09:37:54.512547: 
+INFO: 2026-04-14 09:37:54.512588: 
+INFO: 2026-04-14 09:37:54.512599: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/test/util.c.o
+
+INFO: 2026-04-14 09:37:55.238216: 
+INFO: 2026-04-14 09:37:55.238298: 
+INFO: 2026-04-14 09:37:55.238311: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.m.o
+
+INFO: 2026-04-14 09:37:55.255578: 
+INFO: 2026-04-14 09:37:55.255617: 
+INFO: 2026-04-14 09:37:55.255631: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/ns_number.m.o
+
+INFO: 2026-04-14 09:37:55.262511: 
+INFO: 2026-04-14 09:37:55.262551: 
+INFO: 2026-04-14 09:37:55.262566: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o
+
+INFO: 2026-04-14 09:37:55.273506: 
+INFO: 2026-04-14 09:37:55.273546: 
+INFO: 2026-04-14 09:37:55.273557: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c_bindings_generated.m.o
+
+INFO: 2026-04-14 09:37:55.274322: Running: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin/clang -shared -Wl,-encryptable -undefined dynamic_lookup -isysroot /Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX26.4.sdk -target x86_64-apple-darwin -mmacos-version-min=13 /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/include/dart_api_dl.c.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.c.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/test/util.c.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/input_stream_adapter.m.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c.m.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/observer.m.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/ns_number.m.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/protocol.m.o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/obj/src/objective_c_bindings_generated.m.o -o /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/objective_c.dylib
+
+INFO: 2026-04-14 09:37:55.451809: 
+INFO: 2026-04-14 09:37:55.451890: 
+INFO: 2026-04-14 09:37:55.451903: Generated /Users/Asus/Desktop/indahsarisalon-mobile/.dart_tool/hooks_runner/shared/objective_c/build/5f31b8d621/objective_c.dylib
+
