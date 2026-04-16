@@ -3,7 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
 import 'home_page.dart';
 import 'settings_page.dart';
-import 'booking_page.dart';
+import 'select_services_page.dart';
 import 'booking_details_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
@@ -24,6 +24,8 @@ class _BookingListPageState extends State<BookingListPage> {
   int _selectedIndex = 1;
   bool _loading = true;
   List<Map<String, dynamic>> _bookings = [];
+  List<Map<String, dynamic>> _filteredBookings = [];
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
@@ -37,8 +39,8 @@ class _BookingListPageState extends State<BookingListPage> {
       // Fetch bookings with stylist name
       final data = await Supabase.instance.client
           .from('bookings')
-          .select('id, reservation_datetime, total_price, status, customer_name, stylist_id, users(name)')
-          .order('reservation_datetime', ascending: false);
+          .select('id, reservation_datetime, total_price, status, customer_name, stylist_id, users!bookings_stylist_id_fkey(name)')
+          .order('created_at', ascending: false);
 
       // For each booking, fetch service names from booking_details
       final List<Map<String, dynamic>> enriched = [];
@@ -62,10 +64,19 @@ class _BookingListPageState extends State<BookingListPage> {
           }
         }
 
-        final stylistUser = row['users'] as Map<String, dynamic>?;
+        dynamic stylistData = row['users'];
+        String stylistName = 'Unknown';
+        if (stylistData != null) {
+          if (stylistData is Map) {
+            stylistName = stylistData['name'] ?? 'Unknown';
+          } else if (stylistData is List && stylistData.isNotEmpty) {
+            stylistName = stylistData[0]['name'] ?? 'Unknown';
+          }
+        }
+
         enriched.add({
           'id': bookingId,
-          'stylist': stylistUser?['name'] ?? 'Unknown',
+          'stylist': stylistName,
           'services': serviceNames.isEmpty ? ['Booking #$bookingId'] : serviceNames,
           'datetime': row['reservation_datetime'],
           'total_price': row['total_price'],
@@ -77,6 +88,7 @@ class _BookingListPageState extends State<BookingListPage> {
       if (mounted) {
         setState(() {
           _bookings = enriched;
+          _filteredBookings = enriched;
           _loading = false;
         });
       }
@@ -86,20 +98,65 @@ class _BookingListPageState extends State<BookingListPage> {
     }
   }
 
+  void _filterBookings(String query) {
+    if (query.isEmpty) {
+      setState(() => _filteredBookings = _bookings);
+      return;
+    }
+    final lowerQuery = query.toLowerCase();
+    setState(() {
+      _filteredBookings = _bookings.where((b) {
+        final custName = (b['customer_name'] ?? '').toString().toLowerCase();
+        final stylName = (b['stylist'] ?? '').toString().toLowerCase();
+        return custName.contains(lowerQuery) || stylName.contains(lowerQuery);
+      }).toList();
+    });
+  }
+
+  Future<void> _deleteAllBookings() async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (_) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text("Hapus Semua Booking?", style: TextStyle(fontWeight: FontWeight.bold)),
+        content: const Text("Tindakan ini akan menghapus permanen seluruh daftar booking dari database. Lanjutkan?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Ya, Hapus", style: TextStyle(color: Colors.white)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      setState(() => _loading = true);
+      try {
+        await Supabase.instance.client.from('booking_details').delete().neq('id', 0);
+        await Supabase.instance.client.from('bookings').delete().neq('id', 0);
+        _fetchBookings();
+
+      } catch (e) {
+        debugPrint("Error deleting: $e");
+        if (mounted) setState(() => _loading = false);
+      }
+    }
+  }
+
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return const Color(0xFF16A34A);
-      case 'confirmed': return const Color(0xFF2563EB);
-      case 'cancelled': return const Color(0xFFDC2626);
+      case 'berhasil': return const Color(0xFF16A34A);
+      case 'dibatalkan': return const Color(0xFFDC2626);
       default: return const Color(0xFFEA580C); // pending/upcoming
     }
   }
 
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return const Color(0xFFDCFCE7);
-      case 'confirmed': return const Color(0xFFDBEAFE);
-      case 'cancelled': return const Color(0xFFFEE2E2);
+      case 'berhasil': return const Color(0xFFDCFCE7);
+      case 'dibatalkan': return const Color(0xFFFEE2E2);
       default: return const Color(0xFFFFEDD5);
     }
   }
@@ -145,7 +202,35 @@ class _BookingListPageState extends State<BookingListPage> {
                     onTap: _fetchBookings,
                     child: Icon(Icons.refresh, color: darkBlue, size: 24),
                   ),
+                  const SizedBox(width: 16),
+                  // Delete all button
+                  GestureDetector(
+                    onTap: _bookings.isEmpty ? null : _deleteAllBookings,
+                    child: Icon(Icons.delete_outline, color: _bookings.isEmpty ? Colors.grey : Colors.red, size: 24),
+                  ),
                 ],
+              ),
+            ),
+            
+            // Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 16.0),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                ),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: _filterBookings,
+                  decoration: const InputDecoration(
+                    icon: Icon(Icons.search, color: Color(0xFF64748B)),
+                    hintText: 'Cari by Nama atau Stylist...',
+                    border: InputBorder.none,
+                  ),
+                ),
               ),
             ),
 
@@ -173,12 +258,12 @@ class _BookingListPageState extends State<BookingListPage> {
                                 "Your Appointments",
                                 style: TextStyle(color: darkBlue, fontSize: 26, fontWeight: FontWeight.w900),
                               ),
-                              Text("${_bookings.length} total", style: TextStyle(color: mutedText, fontSize: 13)),
+                              Text("${_filteredBookings.length} total", style: TextStyle(color: mutedText, fontSize: 13)),
                             ],
                           ),
                           const SizedBox(height: 20),
 
-                          if (_bookings.isEmpty)
+                          if (_filteredBookings.isEmpty)
                             Center(
                               child: Padding(
                                 padding: const EdgeInsets.only(top: 80.0),
@@ -197,11 +282,11 @@ class _BookingListPageState extends State<BookingListPage> {
                             ListView.separated(
                               shrinkWrap: true,
                               physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _bookings.length + 1,
+                              itemCount: _filteredBookings.length + 1,
                               separatorBuilder: (_, __) => const SizedBox(height: 16),
                               itemBuilder: (_, index) {
-                                if (index == _bookings.length) return const SizedBox(height: 100);
-                                final booking = _bookings[index];
+                                if (index == _filteredBookings.length) return const SizedBox(height: 100);
+                                final booking = _filteredBookings[index];
                                 final status = booking['status'] as String;
                                 final services = booking['services'] as List<String>;
                                 final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2} lainnya" : "");
@@ -316,7 +401,7 @@ class _BookingListPageState extends State<BookingListPage> {
                       onTap: () {
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const BookingPage()),
+                          MaterialPageRoute(builder: (_) => const SelectServicesPage()),
                         ).then((_) => _fetchBookings()); // Auto-refresh after booking
                       },
                       child: Container(

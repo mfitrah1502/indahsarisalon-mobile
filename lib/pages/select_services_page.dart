@@ -5,22 +5,12 @@ import 'package:intl/intl.dart';
 import 'home_page.dart';
 import 'settings_page.dart';
 import 'booking_page.dart';
-import 'payment_details_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 
 class SelectServicesPage extends StatefulWidget {
-  final int stylistId;
-  final String stylistName;
-  final String reservationDatetime;
-
-  const SelectServicesPage({
-    super.key,
-    required this.stylistId,
-    required this.stylistName,
-    required this.reservationDatetime,
-  });
+  const SelectServicesPage({super.key});
 
   @override
   State<SelectServicesPage> createState() => _SelectServicesPageState();
@@ -43,21 +33,44 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   /// Each entry: { td_id, title, category, category_id, duration, price (num), selected, adjusted_price (num?) }
   List<Map<String, dynamic>> _allServices = [];
 
+  // Stylist Fields
+  int _selectedStylistIndex = -1;
+  bool _loadingStylists = true;
+  List<Map<String, dynamic>> _stylists = [];
+
   @override
   void initState() {
     super.initState();
+    _fetchStylists();
     _fetchCategoriesAndServices();
+  }
+
+  Future<void> _fetchStylists() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('users')
+          .select('id, name, type, role')
+          .eq('type', 'karyawan');
+      
+      if (mounted) {
+        setState(() {
+          _stylists = List<Map<String, dynamic>>.from(data);
+          _loadingStylists = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error fetching stylists: $e');
+      if (mounted) setState(() => _loadingStylists = false);
+    }
   }
 
   Future<void> _fetchCategoriesAndServices() async {
     try {
-      // Fetch categories
       final catData = await Supabase.instance.client
           .from('categories')
           .select('id, name')
           .order('name');
 
-      // Fetch treatments + details in one joined query
       final svcData = await Supabase.instance.client
           .from('treatment_details')
           .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
@@ -116,7 +129,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   int get _totalMins => _selectedServices.fold(0, (sum, s) =>
       sum + (s['duration'] as num).toInt());
 
-  /// Show price variant picker / manual input popup
   Future<void> _showPriceDialog(Map<String, dynamic> service) async {
     final basePrice = (service['price'] as num).toInt();
     final TextEditingController manualController = TextEditingController(
@@ -124,7 +136,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     );
     num? chosenPrice = service['adjusted_price'] ?? service['price'];
 
-    // Build display name
     final displayTitle = service['treatment_name'] == service['detail_name'] || service['detail_name'].toString().isEmpty
         ? service['treatment_name']
         : "${service['treatment_name']} - ${service['detail_name']}";
@@ -164,7 +175,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   Text("Pilih atau sesuaikan harga layanan", style: TextStyle(color: mutedText, fontSize: 13)),
                   const SizedBox(height: 20),
 
-                  // Predefined suggestions
                   if (basePrice > 0) ...[
                     Text("HARGA STANDAR", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
                     const SizedBox(height: 12),
@@ -277,7 +287,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pushAndRemoveUntil(
-                      context, MaterialPageRoute(builder: (_) => const BookingPage()), (r) => false),
+                      context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false),
                     child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
                   ),
                   Expanded(
@@ -285,7 +295,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 28.0),
                         child: Text(
-                          "Pilih Layanan",
+                          "New Booking",
                           style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -295,30 +305,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
               ),
             ),
 
-            // Info Band
-            Container(
-              margin: const EdgeInsets.symmetric(horizontal: 24),
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-              decoration: BoxDecoration(
-                color: darkBlue.withOpacity(0.06),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.person_outline, size: 16, color: darkBlue),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      "Stylist: ${widget.stylistName}  •  ${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
-                      style: TextStyle(color: darkBlue, fontSize: 12, fontWeight: FontWeight.w600),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
             Expanded(
               child: Stack(
                 children: [
@@ -327,6 +313,118 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        
+                        // Select Stylist
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              "Pilih Stylist",
+                              style: TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                                color: darkBlue,
+                              ),
+                            ),
+                            Text(
+                              "${_stylists.length} tersedia",
+                              style: TextStyle(fontSize: 13, color: mutedText),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        if (_loadingStylists)
+                          const Center(child: Padding(
+                            padding: EdgeInsets.all(16.0),
+                            child: CircularProgressIndicator(),
+                          ))
+                        else if (_stylists.isEmpty)
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 24),
+                            alignment: Alignment.center,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              "Belum ada stylist yang terdaftar.",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(color: mutedText, fontSize: 14),
+                            ),
+                          )
+                        else
+                          SizedBox(
+                            height: 100,
+                            child: ListView.separated(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: _stylists.length,
+                              separatorBuilder: (context, _) => const SizedBox(width: 20),
+                              itemBuilder: (context, index) {
+                                final isSelected = index == _selectedStylistIndex;
+                                final stylist = _stylists[index];
+                                return GestureDetector(
+                                  onTap: () => setState(() => _selectedStylistIndex = index),
+                                  child: Column(
+                                    children: [
+                                      Stack(
+                                        children: [
+                                          Container(
+                                            width: 60,
+                                            height: 60,
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(16),
+                                              border: isSelected 
+                                                  ? Border.all(color: darkBlue, width: 2) 
+                                                  : null,
+                                              color: const Color(0xFFE2E8F0),
+                                            ),
+                                            child: const Icon(Icons.person, color: Color(0xFF94A3B8), size: 30),
+                                          ),
+                                          if (isSelected)
+                                            Positioned(
+                                              bottom: -2,
+                                              right: -2,
+                                              child: Container(
+                                                padding: const EdgeInsets.all(4),
+                                                decoration: BoxDecoration(
+                                                  color: darkBlue,
+                                                  shape: BoxShape.circle,
+                                                  border: Border.all(color: scaffoldBg, width: 2),
+                                                ),
+                                                child: const Icon(Icons.check, color: Colors.white, size: 8),
+                                              ),
+                                            ),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        stylist['name'] ?? '-',
+                                        style: TextStyle(
+                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                          color: isSelected ? darkBlue : mutedText,
+                                          fontSize: 12,
+                                        ),
+                                      )
+                                    ],
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+
+                        const SizedBox(height: 28),
+
+                        Text(
+                          "Pilih Layanan",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: darkBlue,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+
                         // Search
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
@@ -453,15 +551,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           const SizedBox(height: 8),
                                           Row(
                                             children: [
-                                              if (dur > 0) ...[
-                                                Icon(Icons.access_time_filled, size: 13, color: mutedText),
-                                                const SizedBox(width: 4),
-                                                Text(
-                                                  "$dur mnt",
-                                                  style: TextStyle(color: mutedText, fontSize: 12),
-                                                ),
-                                                const SizedBox(width: 10),
-                                              ],
+                                              Icon(Icons.access_time_outlined, size: 13, color: mutedText),
+                                              const SizedBox(width: 4),
+                                              Text(
+                                                dur > 0 ? "$dur Menit" : "- Menit",
+                                                style: TextStyle(color: mutedText, fontSize: 12),
+                                              ),
+                                              const SizedBox(width: 10),
                                               Text(
                                                 _currencyFormat.format(displayPrice),
                                                 style: TextStyle(
@@ -493,7 +589,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         if (!isSelected) {
                                           await _showPriceDialog(service);
                                         } else {
-                                          // Deselect
                                           final idx = _allServices.indexWhere((s) => s['td_id'] == service['td_id']);
                                           if (idx != -1) {
                                             setState(() {
@@ -576,26 +671,31 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: darkBlue,
+                                disabledBackgroundColor: const Color(0xFFCBD5E1),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 padding: const EdgeInsets.symmetric(vertical: 18),
                                 elevation: 8,
                                 shadowColor: Colors.black.withOpacity(0.15),
                               ),
-                              onPressed: () {
+                              onPressed: _selectedStylistIndex == -1 ? null : () {
+                                final selectedStylist = _stylists[_selectedStylistIndex];
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => PaymentDetailsPage(
-                                      stylistId: widget.stylistId,
-                                      stylistName: widget.stylistName,
-                                      reservationDatetime: widget.reservationDatetime,
+                                    builder: (_) => BookingPage(
+                                      stylistId: selectedStylist['id'],
+                                      stylistName: selectedStylist['name'] ?? '',
+                                      totalDuration: _totalMins,
                                       selectedServices: selected,
                                       totalPrice: _totalPrice.toInt(),
                                     ),
                                   ),
                                 );
                               },
-                              child: const Text("Lanjut ke Pembayaran", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                              child: Text(
+                                _selectedStylistIndex == -1 ? "Pilih Stylist di Atas" : "Lanjut ke Jadwal", 
+                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)
+                              ),
                             ),
                           ),
                         ],
@@ -606,6 +706,56 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             ),
           ],
         ),
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          boxShadow: [
+            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+          ],
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        child: SafeArea(
+          top: false,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _buildNavItem(0, "HOME", Icons.home_filled),
+              _buildNavItem(1, "BOOKING", Icons.calendar_today),
+              _buildNavItem(2, "SERVICES", Icons.content_cut_rounded),
+              _buildNavItem(3, "REPORT", Icons.bar_chart_rounded),
+              _buildNavItem(4, "SETTINGS", Icons.settings_outlined),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildNavItem(int index, String label, IconData icon) {
+    final isSelected = _selectedIndex == index;
+    return GestureDetector(
+      onTap: () {
+        if (index == 0) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
+        } else if (index == 1) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
+        } else if (index == 2) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
+        } else if (index == 4) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+        }
+      },
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          const SizedBox(height: 6),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+        ],
       ),
     );
   }

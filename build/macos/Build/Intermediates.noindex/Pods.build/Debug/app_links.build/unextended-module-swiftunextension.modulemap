@@ -1,4 +1,0 @@
-
-module app_links.__Swift {
-  exclude header "app_links-Swift.h"
-}
