@@ -93,6 +93,16 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         });
       }
 
+      try {
+        await supabase.from('notifikasi').insert({
+          'user_id': userId,
+          'title': 'Booking Berhasil',
+          'message': 'Booking untuk jadwal ${widget.reservationDatetime.substring(0, 16)} dengan stylist ${widget.stylistName} telah berhasil dibuat.',
+        });
+      } catch (e) {
+        debugPrint('Failed to insert notification: $e');
+      }
+
       if (!mounted) return;
 
       // Show success dialog
@@ -248,12 +258,32 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 ? svc['treatment_name']
                                 : "${svc['treatment_name']} - ${svc['detail_name']}";
                             final price = svc['adjusted_price'] ?? svc['price'];
+                            final dur = (svc['duration'] as num?)?.toInt() ?? 0;
                             return Padding(
-                              padding: const EdgeInsets.only(bottom: 10.0),
+                              padding: const EdgeInsets.only(bottom: 12.0),
                               child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Expanded(child: Text(title, style: const TextStyle(fontSize: 14, color: Color(0xFF334155)))),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(title, style: const TextStyle(fontSize: 14, color: Color(0xFF334155))),
+                                        const SizedBox(height: 2),
+                                        Row(
+                                          children: [
+                                            Icon(Icons.access_time_outlined, size: 12, color: mutedText),
+                                            const SizedBox(width: 4),
+                                            Text(
+                                              dur > 0 ? "$dur Menit" : "- Menit",
+                                              style: TextStyle(color: mutedText, fontSize: 11),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
                                   Text(_currencyFormat.format(price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
                                 ],
                               ),

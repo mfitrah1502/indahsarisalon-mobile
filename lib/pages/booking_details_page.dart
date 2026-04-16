@@ -6,6 +6,7 @@ import 'settings_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
+import '../app_session.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -29,18 +30,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return const Color(0xFF16A34A);
-      case 'confirmed': return const Color(0xFF2563EB);
-      case 'cancelled': return const Color(0xFFDC2626);
+      case 'berhasil': return const Color(0xFF16A34A);
+      case 'dibatalkan': return const Color(0xFFDC2626);
       default: return const Color(0xFFEA580C);
     }
   }
 
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
-      case 'completed': return const Color(0xFFDCFCE7);
-      case 'confirmed': return const Color(0xFFDBEAFE);
-      case 'cancelled': return const Color(0xFFFEE2E2);
+      case 'berhasil': return const Color(0xFFDCFCE7);
+      case 'dibatalkan': return const Color(0xFFFEE2E2);
       default: return const Color(0xFFFFEDD5);
     }
   }
@@ -56,7 +55,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     }
   }
 
-  Future<void> _updateStatus(String newStatus) async {
+    Future<void> _updateStatus(String newStatus) async {
     setState(() => _updating = true);
     try {
       await Supabase.instance.client
@@ -64,12 +63,22 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           .update({'status': newStatus})
           .eq('id', widget.booking['id']);
       
+      try {
+        final userId = AppSession.userId;
+        if (userId != null) {
+          String statusText = newStatus.toLowerCase() == 'berhasil' ? 'Telah Selesai' : (newStatus.toLowerCase() == 'dibatalkan' ? 'Telah Dibatalkan' : newStatus);
+          await Supabase.instance.client.from('notifikasi').insert({
+            'user_id': userId,
+            'title': 'Status Booking Diperbarui',
+            'message': 'Booking dengan jadwal \n${widget.booking['datetime']} statusnya $statusText.',
+          });
+        }
+      } catch (e) {
+        debugPrint('Gagal mengirim Notifikasi: $e');
+      }
+
       if (mounted) {
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (_) => const BookingListPage()),
-          (r) => false,
-        );
+        Navigator.pop(context, true); // Pop back to list page to trigger _fetchBookings
       }
     } catch (e) {
       debugPrint('Error updating booking: $e');
@@ -99,7 +108,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         ],
       ),
     );
-    if (confirm == true) await _updateStatus('cancelled');
+    if (confirm == true) await _updateStatus('dibatalkan'); // Cancel status
   }
 
   @override
@@ -292,7 +301,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     const SizedBox(height: 32),
 
                     // Action Buttons based on status
-                    if (_status.toLowerCase() == 'pending' || _status.toLowerCase() == 'confirmed') ...[
+                    if (_status.toLowerCase() == 'pending') ...[
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -302,10 +311,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             elevation: 4,
                           ),
-                          onPressed: _updating ? null : () => _updateStatus('completed'),
+                          onPressed: _updating ? null : () => _updateStatus('berhasil'),
                           child: _updating
                               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                              : const Text("Tandai Selesai", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                              : const Text("Mark as Done", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -314,7 +323,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           onTap: _updating ? null : _cancelBooking,
                           child: const Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Text("Batalkan Booking", style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold, fontSize: 15)),
+                            child: Text("Cancel Booking", style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold, fontSize: 15)),
                           ),
                         ),
                       ),

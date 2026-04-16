@@ -7,6 +7,7 @@ import 'settings_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
+import 'edit_profile_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -150,17 +151,25 @@ class _HomePageState extends State<HomePage> {
                     Row(
                       children: [
                         // Profile Avatar
-                        Container(
-                          width: 48,
-                          height: 48,
-                          decoration: const BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: Color(0xFFE2E8F0),
-                          ),
-                          child: const Icon(
-                            Icons.person,
-                            color: Color(0xFF94A3B8),
-                            size: 28,
+                        GestureDetector(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                            );
+                          },
+                          child: Container(
+                            width: 48,
+                            height: 48,
+                            decoration: const BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: Color(0xFFE2E8F0),
+                            ),
+                            child: const Icon(
+                              Icons.person,
+                              color: Color(0xFF94A3B8),
+                              size: 28,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 16),
