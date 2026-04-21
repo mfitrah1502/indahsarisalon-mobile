@@ -53,7 +53,7 @@ class _HomePageState extends State<HomePage> {
       final yesterdayStart = DateTime(now.year, now.month, now.day - 1).toIso8601String();
       final yesterdayEnd = DateTime(now.year, now.month, now.day - 1, 23, 59, 59).toIso8601String();
 
-      // Fetch Today's bookings
+      // Fetch Today's bookingss
       final todayData = await supabase
           .from('bookings')
           .select('id, user_id, total_price, reservation_datetime')
