@@ -14,7 +14,8 @@ class NotificationsPage extends StatefulWidget {
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -118,13 +119,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     onTap: () {
                       Navigator.pop(context);
                     },
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   const SizedBox(width: 16),
                   Text(
                     "Notifications",
                     style: TextStyle(
-                      color: darkBlue,
+                      color: primaryColor,
                       fontSize: 24,
                       fontWeight: FontWeight.bold,
                     ),
@@ -153,7 +154,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       child: Text(
                         "Mark all as read",
                         style: TextStyle(
-                          color: darkBlue,
+                          color: primaryColor,
                           fontSize: 14,
                           fontWeight: FontWeight.bold,
                         ),
@@ -192,7 +193,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 description: notif['message'],
                                 iconData: _getIconForTitle(notif['title']),
                                 iconBgColor: const Color(0xFFE4F0F9),
-                                iconColor: darkBlue,
+                                iconColor: primaryColor,
                                 isUnread: notif['is_read'] == false,
                                 showButton: notif['title'].toString().toLowerCase().contains('booking'),
                               ),
@@ -344,7 +345,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             width: 8,
                             height: 8,
                             decoration: BoxDecoration(
-                              color: darkBlue,
+                              color: primaryColor,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -368,7 +369,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     height: 36,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: darkBlue,
+                        backgroundColor: buttonColor,
                         foregroundColor: Colors.white,
                         elevation: 0,
                         shape: RoundedRectangleBorder(

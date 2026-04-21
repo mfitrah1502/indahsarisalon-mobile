@@ -8,6 +8,7 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import 'edit_profile_page.dart';
+import 'customer_list_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -18,7 +19,8 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -176,27 +178,46 @@ class _HomePageState extends State<HomePage> {
                         Text(
                           "Hello, Admin!",
                           style: TextStyle(
-                            color: darkBlue,
+                            color: primaryColor,
                             fontSize: 20,
                             fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const NotificationsPage(),
+                    Row(
+                      children: [
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const CustomerListPage(),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.people_outline,
+                            color: primaryColor,
+                            size: 28,
                           ),
-                        );
-                      },
-                      icon: Icon(
-                        Icons.notifications_none,
-                        color: darkBlue,
-                        size: 28,
-                      ),
+                        ),
+                        IconButton(
+                          onPressed: () {
+                            Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (context) => const NotificationsPage(),
+                              ),
+                            );
+                          },
+                          icon: Icon(
+                            Icons.notifications_none,
+                            color: primaryColor,
+                            size: 28,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -253,7 +274,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
-                    color: darkBlue,
+                    color: primaryColor,
                     letterSpacing: -0.5,
                   ),
                 ),
@@ -271,7 +292,7 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayBookings",
                       increase: formatIncrease(bookingsIncrease),
                       iconData: Icons.calendar_today_rounded,
-                      increaseColor: bookingsIncrease >= 0 ? darkBlue : Colors.red,
+                      increaseColor: bookingsIncrease >= 0 ? primaryColor : Colors.red,
                       trendIcon: bookingsIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
                     ),
                   ),
@@ -283,7 +304,7 @@ class _HomePageState extends State<HomePage> {
                       value: formatCurrency(todayRevenue),
                       increase: formatIncrease(revenueIncrease),
                       iconData: Icons.payments_outlined,
-                      increaseColor: revenueIncrease >= 0 ? darkBlue : Colors.red,
+                      increaseColor: revenueIncrease >= 0 ? primaryColor : Colors.red,
                       trendIcon: revenueIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
                     ),
                   ),
@@ -295,7 +316,7 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayCustomers",
                       increase: formatIncrease(customersIncrease),
                       iconData: Icons.people_outline_rounded,
-                      increaseColor: customersIncrease >= 0 ? darkBlue : Colors.red,
+                      increaseColor: customersIncrease >= 0 ? primaryColor : Colors.red,
                       trendIcon: customersIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
                     ),
                   ),
@@ -383,7 +404,7 @@ class _HomePageState extends State<HomePage> {
                   style: TextStyle(
                     fontSize: 32, // slightly smaller to fit Rp
                     fontWeight: FontWeight.w900,
-                    color: darkBlue,
+                    color: primaryColor,
                     height: 1.1,
                   ),
                 ),
@@ -454,7 +475,7 @@ class _HomePageState extends State<HomePage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? darkBlue : mutedText,
+            color: isSelected ? primaryColor : mutedText,
             size: 26,
           ),
           const SizedBox(height: 6),
@@ -463,7 +484,7 @@ class _HomePageState extends State<HomePage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
-              color: isSelected ? darkBlue : mutedText,
+              color: isSelected ? primaryColor : mutedText,
               letterSpacing: 0.5,
             ),
           ),

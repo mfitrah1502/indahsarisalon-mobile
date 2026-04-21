@@ -6,6 +6,9 @@ import 'booking_list_page.dart';
 import 'manage_team_page.dart';
 import 'manage_services_page.dart';
 import 'edit_profile_page.dart';
+import 'create_account_page.dart';
+import 'auth_page.dart';
+import '../app_session.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -22,13 +25,13 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     // Dynamic Dark/Light Colors
-    final Color mainTextColor = isDarkMode ? Colors.white : const Color(0xFF02365A);
+    final Color mainTextColor = isDarkMode ? Colors.white : const Color(0xFFD660A1);
     final Color scaffoldBg = isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF5F8FA);
     final Color mutedText = isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
     final Color cardBg = isDarkMode ? const Color(0xFF0F172A) : Colors.white;
     final Color optionBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
     final Color iconBoxBg = isDarkMode ? const Color(0xFF475569) : const Color(0xFFEDF2F7);
-    final Color activeNavBg = isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFF02365A);
+    final Color activeNavBg = isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFFD660A1);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -187,6 +190,18 @@ class _SettingsPageState extends State<SettingsPage> {
                             iconBoxBg: iconBoxBg,
                             onTap: () {},
                           ),
+                          _buildSettingTile(
+                            icon: Icons.person_add_alt,
+                            title: "Add Another Account",
+                            mainTextColor: mainTextColor,
+                            iconBoxBg: iconBoxBg,
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const CreateAccountPage()),
+                              );
+                            },
+                          ),
                         ],
                       ),
                     ),
@@ -270,7 +285,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         iconBgOverride: isDarkMode ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
                         iconColor: const Color(0xFFEF4444),
                         hideArrow: true,
-                        onTap: () {},
+                        onTap: () => _showLogoutDialog(context),
                       ),
                     ),
                     
@@ -394,7 +409,7 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 16),
               ListTile(
                 title: Text("English", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: _selectedLanguage == 'English' ? const Icon(Icons.check_circle, color: Color(0xFF02365A)) : const Icon(Icons.circle_outlined, color: Colors.grey),
+                trailing: _selectedLanguage == 'English' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
                 onTap: () {
                   setState(() {
                     _selectedLanguage = 'English';
@@ -404,7 +419,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               ListTile(
                 title: Text("Indonesia", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: _selectedLanguage == 'Indonesia' ? const Icon(Icons.check_circle, color: Color(0xFF02365A)) : const Icon(Icons.circle_outlined, color: Colors.grey),
+                trailing: _selectedLanguage == 'Indonesia' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
                 onTap: () {
                   setState(() {
                     _selectedLanguage = 'Indonesia';
@@ -473,6 +488,104 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
         ],
       ),
+    );
+  }
+
+  void _showLogoutDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (ctx) {
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Logout Icon Box
+                Container(
+                  width: 64, height: 64,
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(Icons.logout, color: const Color(0xFFD660A1), size: 28),
+                ),
+                const SizedBox(height: 20),
+                Text(
+                  "Logout",
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Are you sure you want to log out?",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                ),
+                const SizedBox(height: 32),
+                
+                // Yes Button
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFB53D7C),
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 0,
+                    ),
+                    onPressed: () {
+                      AppSession.clear();
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (context) => const AuthPage()),
+                        (route) => false,
+                      );
+                    },
+                    child: const Text("Yes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                
+                // No Button
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: BorderSide(color: isDarkMode ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
+                    ),
+                    onPressed: () => Navigator.pop(ctx),
+                    child: Text(
+                      "No",
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
     );
   }
 }

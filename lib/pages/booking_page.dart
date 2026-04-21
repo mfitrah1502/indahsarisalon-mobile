@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../utils/schedule_helper.dart';
 import 'home_page.dart';
+import 'customer_list_page.dart';
 import 'settings_page.dart';
 import 'select_services_page.dart';
 import 'booking_list_page.dart';
@@ -10,6 +11,7 @@ import 'report_page.dart';
 import 'payment_details_page.dart';
 
 class BookingPage extends StatefulWidget {
+  final DateTime selectedDate;
   final int stylistId;
   final String stylistName;
   final int totalDuration;
@@ -18,6 +20,7 @@ class BookingPage extends StatefulWidget {
 
   const BookingPage({
     super.key,
+    required this.selectedDate,
     required this.stylistId,
     required this.stylistName,
     required this.totalDuration,
@@ -30,37 +33,26 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
-  int _selectedDateIndex = 0;
   int _selectedTimeIndex = -1;
   int _selectedIndex = 1;
 
-  late final List<Map<String, dynamic>> _dates;
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+
   bool _loadingTimes = true;
   List<String> _times = [];
 
   @override
   void initState() {
     super.initState();
-    _buildDates();
     _fetchAvailableTimes();
-  }
-
-  void _buildDates() {
-    final now = DateTime.now();
-    _dates = List.generate(7, (i) {
-      final d = now.add(Duration(days: i));
-      const dayNames = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
-      return {
-        "day": dayNames[d.weekday - 1],
-        "date": d.day.toString(),
-        "fullDate": "${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}",
-        "rawDate": d,
-      };
-    });
   }
 
   Future<void> _fetchAvailableTimes() async {
@@ -70,7 +62,7 @@ class _BookingPageState extends State<BookingPage> {
     });
 
     try {
-      final selectedDate = _dates[_selectedDateIndex]["rawDate"] as DateTime;
+      final selectedDate = widget.selectedDate;
       
       final slots = await ScheduleHelper.getAvailableTimeSlots(
         date: selectedDate,
@@ -109,7 +101,7 @@ class _BookingPageState extends State<BookingPage> {
                 children: [
                    GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   Expanded(
                     child: Center(
@@ -118,7 +110,7 @@ class _BookingPageState extends State<BookingPage> {
                         child: Text(
                           "Pilih Jadwal",
                           style: TextStyle(
-                            color: darkBlue,
+                            color: primaryColor,
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
@@ -149,7 +141,7 @@ class _BookingPageState extends State<BookingPage> {
                           Container(
                             width: 44, height: 44,
                             decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFFE4F0FA)),
-                            child: Icon(Icons.person, color: darkBlue, size: 24),
+                            child: Icon(Icons.person, color: primaryColor, size: 24),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -158,7 +150,7 @@ class _BookingPageState extends State<BookingPage> {
                               children: [
                                 Text("STYLIST", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                 const SizedBox(height: 2),
-                                Text(widget.stylistName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: darkBlue)),
+                                Text(widget.stylistName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                               ],
                             ),
                           ),
@@ -167,7 +159,7 @@ class _BookingPageState extends State<BookingPage> {
                             children: [
                               Text("DURASI", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                               const SizedBox(height: 2),
-                              Text("${widget.totalDuration} Menit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: darkBlue)),
+                              Text("${widget.totalDuration} Menit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                             ],
                           )
                         ],
@@ -176,63 +168,100 @@ class _BookingPageState extends State<BookingPage> {
 
                     const SizedBox(height: 28),
 
-                    // Select Date
-                    Text(
-                      "Pilih Tanggal",
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: darkBlue,
-                      ),
+                    // Form Data Diri
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          "Informasi Pelanggan",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                        TextButton.icon(
+                          onPressed: () async {
+                            final result = await Navigator.push(
+                              context,
+                              MaterialPageRoute(
+                                builder: (_) => const CustomerListPage(isSelectionMode: true),
+                              ),
+                            );
+                            if (result != null && result is Map<String, dynamic>) {
+                              setState(() {
+                                _nameCtrl.text = result['name'] ?? '';
+                                _phoneCtrl.text = result['phone'] ?? '';
+                                _emailCtrl.text = result['email'] ?? '';
+                              });
+                            }
+                          },
+                          icon: const Icon(Icons.person_add_alt_1, size: 18),
+                          label: const Text("Dari Daftar"),
+                          style: TextButton.styleFrom(
+                            foregroundColor: primaryColor,
+                            textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                          ),
+                        )
+                      ],
                     ),
                     const SizedBox(height: 16),
-                    SizedBox(
-                      height: 80,
-                      child: ListView.separated(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: _dates.length,
-                        separatorBuilder: (context, _) => const SizedBox(width: 12),
-                        itemBuilder: (context, index) {
-                          final isSelected = index == _selectedDateIndex;
-                          return GestureDetector(
-                            onTap: () {
-                              if (_selectedDateIndex != index) {
-                                setState(() => _selectedDateIndex = index);
-                                _fetchAvailableTimes();
-                              }
-                            },
-                            child: Container(
-                              width: 65,
-                              padding: const EdgeInsets.symmetric(vertical: 12),
-                              decoration: BoxDecoration(
-                                color: isSelected ? darkBlue : Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    _dates[index]["day"]!,
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? Colors.white70 : mutedText,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    _dates[index]["date"]!,
-                                    style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: isSelected ? Colors.white : const Color(0xFF1E293B),
-                                    ),
-                                  ),
-                                ],
-                              ),
+                    Form(
+                      key: _formKey,
+                      child: Column(
+                        children: [
+                          TextFormField(
+                            controller: _nameCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Nama Lengkap",
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              prefixIcon: Icon(Icons.person_outline, color: mutedText),
                             ),
-                          );
-                        },
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return "Nama harus diisi";
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _phoneCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Nomor WhatsApp / HP",
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              prefixIcon: Icon(Icons.phone_outlined, color: mutedText),
+                            ),
+                            keyboardType: TextInputType.phone,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return "Nomor HP harus diisi";
+                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) return "Nomor telpon harus berupa angka";
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          TextFormField(
+                            controller: _emailCtrl,
+                            decoration: InputDecoration(
+                              labelText: "Email",
+                              filled: true,
+                              fillColor: Colors.white,
+                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
+                              prefixIcon: Icon(Icons.email_outlined, color: mutedText),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return "Email harus diisi";
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return "Format email tidak valid";
+                              return null;
+                            },
+                          ),
+                        ],
                       ),
                     ),
 
@@ -244,7 +273,7 @@ class _BookingPageState extends State<BookingPage> {
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: darkBlue,
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -288,10 +317,10 @@ class _BookingPageState extends State<BookingPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
                               decoration: BoxDecoration(
-                                color: isSelected ? darkBlue : Colors.white,
+                                color: isSelected ? primaryColor : Colors.white,
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: isSelected ? darkBlue : const Color(0xFFE2E8F0),
+                                  color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
                                 ),
                               ),
                               child: Text(
@@ -314,16 +343,20 @@ class _BookingPageState extends State<BookingPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBlue,
+                          backgroundColor: buttonColor,
                           disabledBackgroundColor: const Color(0xFFCBD5E1),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 0,
                         ),
                         onPressed: _selectedTimeIndex == -1 ? null : () {
-                          final selectedDate = _dates[_selectedDateIndex];
+                          if (!_formKey.currentState!.validate()) {
+                            return;
+                          }
+                          
+                          final selectedDateStr = "${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2,'0')}-${widget.selectedDate.day.toString().padLeft(2,'0')}";
                           final selectedTime = _times[_selectedTimeIndex];
-                          final dateTimeStr = "${selectedDate['fullDate']} $selectedTime:00";
+                          final dateTimeStr = "$selectedDateStr $selectedTime:00";
 
                           Navigator.push(
                             context,
@@ -334,6 +367,9 @@ class _BookingPageState extends State<BookingPage> {
                                 reservationDatetime: dateTimeStr,
                                 selectedServices: widget.selectedServices,
                                 totalPrice: widget.totalPrice,
+                                customerName: _nameCtrl.text.trim(),
+                                customerPhone: _phoneCtrl.text.trim(),
+                                customerEmail: _emailCtrl.text.trim(),
                               ),
                             ),
                           );
@@ -403,9 +439,9 @@ class _BookingPageState extends State<BookingPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );
