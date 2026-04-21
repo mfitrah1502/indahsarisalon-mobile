@@ -7,6 +7,8 @@ import 'settings_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
+import '../utils/midtrans_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 
 
@@ -16,6 +18,9 @@ class PaymentDetailsPage extends StatefulWidget {
   final String reservationDatetime;
   final List<Map<String, dynamic>> selectedServices;
   final int totalPrice;
+  final String customerName;
+  final String customerPhone;
+  final String customerEmail;
 
   const PaymentDetailsPage({
     super.key,
@@ -24,6 +29,9 @@ class PaymentDetailsPage extends StatefulWidget {
     required this.reservationDatetime,
     required this.selectedServices,
     required this.totalPrice,
+    required this.customerName,
+    required this.customerPhone,
+    required this.customerEmail,
   });
 
   @override
@@ -31,7 +39,8 @@ class PaymentDetailsPage extends StatefulWidget {
 }
 
 class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
   final _currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -78,7 +87,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         'total_price': widget.totalPrice,
         'status': 'pending',
         'payment_status': 'unpaid',
-        'customer_name': 'Customer',
+        'customer_name': widget.customerName,
+        'customer_phone': widget.customerPhone,
+        'customer_email': widget.customerEmail,
       }).select('id').single();
 
       final bookingId = bookingInsert['id'];
@@ -105,53 +116,92 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
       if (!mounted) return;
 
-      // Show success dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => AlertDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SizedBox(height: 8),
-              Container(
-                width: 64, height: 64,
-                decoration: BoxDecoration(color: const Color(0xFFE4F0FA), shape: BoxShape.circle),
-                child: Icon(Icons.check, color: darkBlue, size: 36),
-              ),
-              const SizedBox(height: 16),
-              Text("Booking Berhasil!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: darkBlue)),
-              const SizedBox(height: 8),
-              Text(
-                "Jadwal dengan ${widget.stylistName} telah tersimpan.\n${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
-                textAlign: TextAlign.center,
-                style: TextStyle(color: mutedText, fontSize: 13),
+      if (!mounted) return;
+
+      // Handle Midtrans ONLY for E-Wallet (Index 1)
+      if (_selectedPaymentIndex == 1) {
+        try {
+          final redirectUrl = await MidtransHelper.createTransaction(
+            orderId: "BOOKING-$bookingId-${DateTime.now().millisecondsSinceEpoch}",
+            grossAmount: widget.totalPrice,
+            customerName: widget.customerName,
+            customerEmail: widget.customerEmail,
+            customerPhone: widget.customerPhone,
+          );
+          
+          if (redirectUrl != null) {
+            final uri = Uri.parse(redirectUrl);
+            if (await canLaunchUrl(uri)) {
+              await launchUrl(uri, mode: LaunchMode.externalApplication);
+            }
+          }
+        } catch (e) {
+          debugPrint("Midtrans Error: $e");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Gagal membuka halaman pembayaran Midtrans: $e"), backgroundColor: Colors.orange),
+            );
+          }
+        }
+
+        if (!mounted) return;
+        
+        // Redirect to Booking List Page after launching Midtrans
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (_) => const BookingListPage()),
+          (route) => false,
+        );
+      } else {
+        // For Bank Transfer or Cash, show the Success Dialog
+        showDialog(
+          context: context,
+          barrierDismissible: false,
+          builder: (_) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const SizedBox(height: 8),
+                Container(
+                  width: 64, height: 64,
+                  decoration: BoxDecoration(color: const Color(0xFFE4F0FA), shape: BoxShape.circle),
+                  child: Icon(Icons.check, color: primaryColor, size: 36),
+                ),
+                const SizedBox(height: 16),
+                Text("Booking Berhasil!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor)),
+                const SizedBox(height: 8),
+                Text(
+                  "Jadwal dengan ${widget.stylistName} telah tersimpan.\n${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(color: mutedText, fontSize: 13),
+                ),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: buttonColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                  ),
+                  onPressed: () {
+                    Navigator.pushAndRemoveUntil(
+                      context,
+                      MaterialPageRoute(builder: (_) => const BookingListPage()),
+                      (route) => false,
+                    );
+                  },
+                  child: const Text("Lihat Daftar Booking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ),
               ),
             ],
           ),
-          actions: [
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: darkBlue,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                ),
-                onPressed: () {
-                  Navigator.pushAndRemoveUntil(
-                    context,
-                    MaterialPageRoute(builder: (_) => const BookingListPage()),
-                    (route) => false,
-                  );
-                },
-                child: const Text("Lihat Daftar Booking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-              ),
-            ),
-          ],
-        ),
-      );
+        );
+      }
+
     } catch (e) {
       debugPrint('Booking error: $e');
       if (mounted) {
@@ -177,7 +227,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   Expanded(
                     child: Center(
@@ -185,7 +235,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                         padding: const EdgeInsets.only(right: 44.0),
                         child: Text(
                           "Detail Pembayaran",
-                          style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -221,7 +271,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                               Container(
                                 width: 44, height: 44,
                                 decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFFE4F0FA)),
-                                child: Icon(Icons.person, color: darkBlue, size: 24),
+                                child: Icon(Icons.person, color: primaryColor, size: 24),
                               ),
                               const SizedBox(width: 16),
                               Column(
@@ -229,7 +279,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 children: [
                                   Text("STYLIST", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                   const SizedBox(height: 2),
-                                  Text(widget.stylistName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkBlue)),
+                                  Text(widget.stylistName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor)),
                                 ],
                               ),
                             ],
@@ -296,8 +346,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Total", style: TextStyle(fontWeight: FontWeight.bold, color: darkBlue)),
-                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: darkBlue)),
+                              Text("Total", style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
+                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: primaryColor)),
                             ],
                           ),
                         ],
@@ -323,7 +373,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                               color: isSelected ? Colors.white : const Color(0xFFF4F7F9),
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? darkBlue : const Color(0xFFE2E8F0),
+                                color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
                                 width: isSelected ? 1.5 : 1,
                               ),
                             ),
@@ -335,20 +385,20 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                     color: const Color(0xFFE2E8F0).withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(method["icon"], size: 20, color: darkBlue),
+                                  child: Icon(method["icon"], size: 20, color: primaryColor),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(method["title"], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: darkBlue)),
+                                      Text(method["title"], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryColor)),
                                       Text(method["subtitle"], style: TextStyle(fontSize: 12, color: mutedText)),
                                     ],
                                   ),
                                 ),
                                 isSelected
-                                    ? Icon(Icons.circle, color: darkBlue, size: 22)
+                                    ? Icon(Icons.circle, color: primaryColor, size: 22)
                                     : const Icon(Icons.radio_button_unchecked, color: Color(0xFFCBD5E1), size: 22),
                               ],
                             ),
@@ -374,7 +424,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             children: [
                               Text("TOTAL PEMBAYARAN", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                               const SizedBox(height: 4),
-                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: darkBlue, height: 1.0)),
+                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: primaryColor, height: 1.0)),
                             ],
                           ),
                           Container(
@@ -398,7 +448,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBlue,
+                          backgroundColor: buttonColor,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 6,
@@ -454,9 +504,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );

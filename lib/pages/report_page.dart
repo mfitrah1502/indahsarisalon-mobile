@@ -15,7 +15,8 @@ class ReportPage extends StatefulWidget {
 
 class _ReportPageState extends State<ReportPage> {
   final int _selectedIndex = 3; // 3 is Report
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -153,8 +154,8 @@ class _ReportPageState extends State<ReportPage> {
       builder: (context, child) {
         return Theme(
           data: ThemeData.light().copyWith(
-            primaryColor: darkBlue,
-            colorScheme: ColorScheme.light(primary: darkBlue),
+            primaryColor: primaryColor,
+            colorScheme: ColorScheme.light(primary: primaryColor),
             buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary),
           ),
           child: child!,
@@ -192,7 +193,7 @@ class _ReportPageState extends State<ReportPage> {
                   child: Text(
                     "Report",
                     style: TextStyle(
-                      color: darkBlue,
+                      color: primaryColor,
                       fontSize: 22,
                       fontWeight: FontWeight.bold,
                     ),
@@ -235,15 +236,15 @@ class _ReportPageState extends State<ReportPage> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(Icons.chevron_left, color: darkBlue, size: 20),
+                        Icon(Icons.chevron_left, color: primaryColor, size: 20),
                         Row(
                           children: [
-                            Icon(Icons.calendar_today_outlined, size: 14, color: darkBlue),
+                            Icon(Icons.calendar_today_outlined, size: 14, color: primaryColor),
                             const SizedBox(width: 8),
                             Text(
                               formatDateRange(_dateRange),
                               style: TextStyle(
-                                color: darkBlue,
+                                color: primaryColor,
                                 fontWeight: FontWeight.bold,
                                 fontSize: 12,
                                 letterSpacing: 1.0,
@@ -251,7 +252,7 @@ class _ReportPageState extends State<ReportPage> {
                             ),
                           ],
                         ),
-                        Icon(Icons.chevron_right, color: darkBlue, size: 20),
+                        Icon(Icons.chevron_right, color: primaryColor, size: 20),
                       ],
                     ),
                   ),
@@ -270,7 +271,7 @@ class _ReportPageState extends State<ReportPage> {
                       Text(
                         "Performance",
                         style: TextStyle(
-                          color: darkBlue,
+                          color: primaryColor,
                           fontSize: 20,
                           fontWeight: FontWeight.w900,
                         ),
@@ -325,7 +326,7 @@ class _ReportPageState extends State<ReportPage> {
                           style: TextStyle(
                             fontSize: 28,
                             fontWeight: FontWeight.w900,
-                            color: darkBlue,
+                            color: primaryColor,
                           ),
                         ),
                         const SizedBox(height: 24),
@@ -335,7 +336,7 @@ class _ReportPageState extends State<ReportPage> {
                           width: double.infinity,
                           child: CustomPaint(
                             painter: ChartCurvePainter(
-                              lineColor: darkBlue,
+                              lineColor: primaryColor,
                               hasData: peakRevenue > 0,
                             ),
                           ),
@@ -369,12 +370,12 @@ class _ReportPageState extends State<ReportPage> {
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(width: 24, height: 3, color: darkBlue),
+                      Container(width: 24, height: 3, color: primaryColor),
                       const SizedBox(width: 8),
                       Text(
                         "Top Services by Revenue",
                         style: TextStyle(
-                          color: darkBlue,
+                          color: primaryColor,
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
                         ),
@@ -421,7 +422,7 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: darkBlue,
+                        backgroundColor: buttonColor,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -491,7 +492,7 @@ class _ReportPageState extends State<ReportPage> {
               color: const Color(0xFFE2E8F0),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: darkBlue, size: 22),
+            child: Icon(icon, color: primaryColor, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -513,7 +514,7 @@ class _ReportPageState extends State<ReportPage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: darkBlue,
+                    color: primaryColor,
                   ),
                 ),
               ],
@@ -557,7 +558,7 @@ class _ReportPageState extends State<ReportPage> {
                   title,
                   style: TextStyle(
                     fontWeight: FontWeight.w800,
-                    color: darkBlue,
+                    color: primaryColor,
                     fontSize: 14,
                   ),
                 ),
@@ -579,7 +580,7 @@ class _ReportPageState extends State<ReportPage> {
                 amount,
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: darkBlue,
+                  color: primaryColor,
                   fontSize: 15,
                 ),
               ),
@@ -596,7 +597,7 @@ class _ReportPageState extends State<ReportPage> {
                   widthFactor: progress.isNaN ? 0.0 : progress, // safety check
                   child: Container(
                     decoration: BoxDecoration(
-                      color: darkBlue,
+                      color: primaryColor,
                       borderRadius: BorderRadius.circular(2),
                     ),
                   ),
@@ -644,7 +645,7 @@ class _ReportPageState extends State<ReportPage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? darkBlue : mutedText,
+            color: isSelected ? primaryColor : mutedText,
             size: 26,
           ),
           const SizedBox(height: 6),
@@ -653,7 +654,7 @@ class _ReportPageState extends State<ReportPage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
-              color: isSelected ? darkBlue : mutedText,
+              color: isSelected ? primaryColor : mutedText,
               letterSpacing: 0.5,
             ),
           ),

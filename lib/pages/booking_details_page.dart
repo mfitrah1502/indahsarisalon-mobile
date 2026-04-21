@@ -18,7 +18,8 @@ class BookingDetailsPage extends StatefulWidget {
 }
 
 class _BookingDetailsPageState extends State<BookingDetailsPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -131,10 +132,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   GestureDetector(
                     onTap: () => Navigator.pushAndRemoveUntil(
                       context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   const SizedBox(width: 16),
-                  Text("Detail Booking", style: TextStyle(color: darkBlue, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("Detail Booking", style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -181,9 +182,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             height: 160,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: darkBlue,
+                              color: primaryColor,
                               gradient: LinearGradient(
-                                colors: [darkBlue, const Color(0xFF1B547A)],
+                                colors: [primaryColor, const Color(0xFF1B547A)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
@@ -203,9 +204,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                   padding: const EdgeInsets.only(bottom: 6.0),
                                   child: Row(
                                     children: [
-                                      Icon(Icons.check_circle_outline, size: 16, color: darkBlue),
+                                      Icon(Icons.check_circle_outline, size: 16, color: primaryColor),
                                       const SizedBox(width: 8),
-                                      Expanded(child: Text(s, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: darkBlue))),
+                                      Expanded(child: Text(s, style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: primaryColor))),
                                     ],
                                   ),
                                 )),
@@ -233,12 +234,12 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    Icon(Icons.calendar_today_outlined, color: darkBlue, size: 18),
+                                    Icon(Icons.calendar_today_outlined, color: primaryColor, size: 18),
                                     const SizedBox(width: 8),
                                     Expanded(
                                       child: Text(
                                         _formatDateTime(datetimeRaw),
-                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: darkBlue, height: 1.4),
+                                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: primaryColor, height: 1.4),
                                       ),
                                     ),
                                   ],
@@ -259,7 +260,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                 const SizedBox(height: 8),
                                 Text(
                                   _currency.format(totalPrice),
-                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: darkBlue),
+                                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: primaryColor),
                                 ),
                               ],
                             ),
@@ -281,19 +282,63 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               borderRadius: BorderRadius.circular(12),
                               color: const Color(0xFFE4F0FA),
                             ),
-                            child: Icon(Icons.person, color: darkBlue, size: 28),
+                            child: Icon(Icons.person, color: primaryColor, size: 28),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(booking['stylist'] ?? '-', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: darkBlue)),
+                                Text(booking['stylist'] ?? '-', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor)),
                                 Text("Stylist", style: TextStyle(fontSize: 13, color: mutedText)),
                               ],
                             ),
                           ),
                           Row(children: List.generate(5, (_) => const Icon(Icons.star, color: Color(0xFFFBBF24), size: 16))),
+                        ],
+                      ),
+                    ),
+
+                    const SizedBox(height: 16),
+
+                    // Customer Card
+                    Container(
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text("INFORMASI PELANGGAN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.8)),
+                          const SizedBox(height: 12),
+                          Row(
+                            children: [
+                              Icon(Icons.person_outline, size: 18, color: primaryColor),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(booking['customer_name'] != null && booking['customer_name'] != '-' ? booking['customer_name'] : 'Customer', style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.phone_outlined, size: 18, color: primaryColor),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(booking['customer_phone'] != null && booking['customer_phone'] != '-' ? booking['customer_phone'] : 'Belum ada nomor HP', style: TextStyle(fontSize: 14, color: mutedText)),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Icon(Icons.email_outlined, size: 18, color: primaryColor),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Text(booking['customer_email'] != null && booking['customer_email'] != '-' ? booking['customer_email'] : '-', style: TextStyle(fontSize: 14, color: mutedText)),
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
@@ -387,9 +432,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );

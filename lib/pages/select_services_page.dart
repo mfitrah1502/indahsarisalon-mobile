@@ -17,7 +17,8 @@ class SelectServicesPage extends StatefulWidget {
 }
 
 class _SelectServicesPageState extends State<SelectServicesPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF4F7F9);
   final Color mutedText = const Color(0xFF64748B);
   final _currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -33,6 +34,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   /// Each entry: { td_id, title, category, category_id, duration, price (num), selected, adjusted_price (num?) }
   List<Map<String, dynamic>> _allServices = [];
 
+  // Date Fields
+  int _selectedDateIndex = 0;
+  late final List<Map<String, dynamic>> _dates;
+
   // Stylist Fields
   int _selectedStylistIndex = -1;
   bool _loadingStylists = true;
@@ -41,20 +46,59 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   @override
   void initState() {
     super.initState();
+    _buildDates();
     _fetchStylists();
     _fetchCategoriesAndServices();
   }
 
+  void _buildDates() {
+    final now = DateTime.now();
+    _dates = List.generate(7, (i) {
+      final d = now.add(Duration(days: i));
+      const dayNames = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+      return {
+        "day": dayNames[d.weekday - 1],
+        "date": d.day.toString(),
+        "fullDate": "${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}",
+        "rawDate": d,
+      };
+    });
+  }
+
   Future<void> _fetchStylists() async {
+    setState(() => _loadingStylists = true);
     try {
-      final data = await Supabase.instance.client
+      final selectedDate = _dates[_selectedDateIndex]["rawDate"] as DateTime;
+      final dateStr = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2,'0')}-${selectedDate.day.toString().padLeft(2,'0')}";
+
+      // Get active users
+      final userData = await Supabase.instance.client
           .from('users')
-          .select('id, name, type, role')
-          .eq('type', 'karyawan');
+          .select('id, name, type, role, status, avatar')
+          .eq('type', 'karyawan')
+          .eq('status', 'aktif');
+          
+      // Get absensi for date
+      final absensiData = await Supabase.instance.client
+          .from('absensi')
+          .select('user_id, status')
+          .eq('tanggal', dateStr);
+
+      final offUserIds = <int>{};
+      for (var row in absensiData) {
+        if (row['status'] == 'off') {
+          offUserIds.add(row['user_id'] as int);
+        }
+      }
+      
+      final availableStylists = (userData as List<dynamic>)
+          .where((u) => !offUserIds.contains(u['id']))
+          .map((u) => Map<String,dynamic>.from(u)).toList();
       
       if (mounted) {
         setState(() {
-          _stylists = List<Map<String, dynamic>>.from(data);
+          _stylists = availableStylists;
+          _selectedStylistIndex = -1; // Reset selection when date changes
           _loadingStylists = false;
         });
       }
@@ -170,7 +214,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(displayTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: darkBlue)),
+                  Text(displayTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
                   const SizedBox(height: 4),
                   Text("Pilih atau sesuaikan harga layanan", style: TextStyle(color: mutedText, fontSize: 13)),
                   const SizedBox(height: 20),
@@ -185,19 +229,19 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: chosenPrice == basePrice ? darkBlue.withOpacity(0.08) : const Color(0xFFF8FAFC),
+                          color: chosenPrice == basePrice ? primaryColor.withOpacity(0.08) : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: chosenPrice == basePrice ? darkBlue : const Color(0xFFE2E8F0),
+                            color: chosenPrice == basePrice ? primaryColor : const Color(0xFFE2E8F0),
                             width: chosenPrice == basePrice ? 2 : 1,
                           ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(_currencyFormat.format(basePrice), style: TextStyle(fontWeight: FontWeight.bold, color: darkBlue, fontSize: 16)),
+                            Text(_currencyFormat.format(basePrice), style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 16)),
                             if (chosenPrice == basePrice)
-                              Icon(Icons.check_circle, color: darkBlue, size: 20),
+                              Icon(Icons.check_circle, color: primaryColor, size: 20),
                           ],
                         ),
                       ),
@@ -216,7 +260,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     },
                     decoration: InputDecoration(
                       prefixText: "Rp  ",
-                      prefixStyle: TextStyle(color: darkBlue, fontWeight: FontWeight.bold),
+                      prefixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
                       hintText: "0",
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
@@ -230,7 +274,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: darkBlue, width: 2),
+                        borderSide: BorderSide(color: primaryColor, width: 2),
                       ),
                       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     ),
@@ -242,7 +286,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: darkBlue,
+                        backgroundColor: buttonColor,
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
@@ -288,7 +332,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   GestureDetector(
                     onTap: () => Navigator.pushAndRemoveUntil(
                       context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   Expanded(
                     child: Center(
@@ -296,7 +340,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         padding: const EdgeInsets.only(right: 28.0),
                         child: Text(
                           "New Booking",
-                          style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
                     ),
@@ -314,6 +358,68 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         
+                        // Select Date
+                        Text(
+                          "Pilih Tanggal",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          height: 80,
+                          child: ListView.separated(
+                            scrollDirection: Axis.horizontal,
+                            itemCount: _dates.length,
+                            separatorBuilder: (context, _) => const SizedBox(width: 12),
+                            itemBuilder: (context, index) {
+                              final isSelected = index == _selectedDateIndex;
+                              return GestureDetector(
+                                onTap: () {
+                                  if (_selectedDateIndex != index) {
+                                    setState(() => _selectedDateIndex = index);
+                                    _fetchStylists();
+                                  }
+                                },
+                                child: Container(
+                                  width: 65,
+                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  decoration: BoxDecoration(
+                                    color: isSelected ? primaryColor : Colors.white,
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                                  ),
+                                  child: Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text(
+                                        _dates[index]["day"]!,
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected ? Colors.white70 : mutedText,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        _dates[index]["date"]!,
+                                        style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 28),
+
                         // Select Stylist
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -323,7 +429,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
-                                color: darkBlue,
+                                color: primaryColor,
                               ),
                             ),
                             Text(
@@ -375,7 +481,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             decoration: BoxDecoration(
                                               borderRadius: BorderRadius.circular(16),
                                               border: isSelected 
-                                                  ? Border.all(color: darkBlue, width: 2) 
+                                                  ? Border.all(color: primaryColor, width: 2) 
                                                   : null,
                                               color: const Color(0xFFE2E8F0),
                                             ),
@@ -388,7 +494,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                               child: Container(
                                                 padding: const EdgeInsets.all(4),
                                                 decoration: BoxDecoration(
-                                                  color: darkBlue,
+                                                  color: primaryColor,
                                                   shape: BoxShape.circle,
                                                   border: Border.all(color: scaffoldBg, width: 2),
                                                 ),
@@ -402,7 +508,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         stylist['name'] ?? '-',
                                         style: TextStyle(
                                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                          color: isSelected ? darkBlue : mutedText,
+                                          color: isSelected ? primaryColor : mutedText,
                                           fontSize: 12,
                                         ),
                                       )
@@ -420,7 +526,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlue,
+                            color: primaryColor,
                           ),
                         ),
                         const SizedBox(height: 16),
@@ -465,9 +571,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   child: Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 16),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? darkBlue : Colors.white,
+                                      color: isSelected ? primaryColor : Colors.white,
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: isSelected ? darkBlue : const Color(0xFFE2E8F0)),
+                                      border: Border.all(color: isSelected ? primaryColor : const Color(0xFFE2E8F0)),
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
@@ -514,10 +620,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? darkBlue.withOpacity(0.04) : Colors.white,
+                                  color: isSelected ? primaryColor.withOpacity(0.04) : Colors.white,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: isSelected ? darkBlue.withOpacity(0.3) : Colors.transparent,
+                                    color: isSelected ? primaryColor.withOpacity(0.3) : Colors.transparent,
                                     width: isSelected ? 1.5 : 0,
                                   ),
                                   boxShadow: [
@@ -540,7 +646,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             style: TextStyle(
                                               fontWeight: FontWeight.bold,
                                               fontSize: 15,
-                                              color: darkBlue,
+                                              color: primaryColor,
                                             ),
                                           ),
                                           const SizedBox(height: 4),
@@ -561,7 +667,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                               Text(
                                                 _currencyFormat.format(displayPrice),
                                                 style: TextStyle(
-                                                  color: darkBlue,
+                                                  color: primaryColor,
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w900,
                                                 ),
@@ -601,12 +707,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       child: Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: isSelected ? darkBlue : const Color(0xFFF1F5F9),
+                                          color: isSelected ? primaryColor : const Color(0xFFF1F5F9),
                                           borderRadius: BorderRadius.circular(12),
                                         ),
                                         child: Icon(
                                           isSelected ? Icons.check : Icons.add,
-                                          color: isSelected ? Colors.white : darkBlue,
+                                          color: isSelected ? Colors.white : primaryColor,
                                           size: 20,
                                         ),
                                       ),
@@ -651,9 +757,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          Icon(Icons.access_time_filled, size: 14, color: darkBlue),
+                                          Icon(Icons.access_time_filled, size: 14, color: primaryColor),
                                           const SizedBox(width: 4),
-                                          Text("$_totalMins mnt", style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold)),
+                                          Text("$_totalMins mnt", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
                                         ],
                                       ),
                                     ],
@@ -661,7 +767,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 ),
                                 Text(
                                   _currencyFormat.format(_totalPrice),
-                                  style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.w900),
+                                  style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.w900),
                                 ),
                               ],
                             ),
@@ -670,7 +776,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             width: double.infinity,
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: darkBlue,
+                                backgroundColor: buttonColor,
                                 disabledBackgroundColor: const Color(0xFFCBD5E1),
                                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                                 padding: const EdgeInsets.symmetric(vertical: 18),
@@ -682,13 +788,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
-                                    builder: (_) => BookingPage(
-                                      stylistId: selectedStylist['id'],
-                                      stylistName: selectedStylist['name'] ?? '',
-                                      totalDuration: _totalMins,
-                                      selectedServices: selected,
-                                      totalPrice: _totalPrice.toInt(),
-                                    ),
+                                      builder: (_) => BookingPage(
+                                        selectedDate: _dates[_selectedDateIndex]["rawDate"] as DateTime,
+                                        stylistId: selectedStylist['id'],
+                                        stylistName: selectedStylist['name'] ?? '',
+                                        totalDuration: _totalMins,
+                                        selectedServices: selected,
+                                        totalPrice: _totalPrice.toInt(),
+                                      ),
                                   ),
                                 );
                               },
@@ -752,9 +859,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );

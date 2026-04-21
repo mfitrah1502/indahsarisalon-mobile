@@ -15,7 +15,8 @@ class ManageServicesPage extends StatefulWidget {
 }
 
 class _ManageServicesPageState extends State<ManageServicesPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -99,7 +100,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Hapus Layanan", style: TextStyle(color: darkBlue, fontWeight: FontWeight.bold)),
+        title: Text("Hapus Layanan", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
         content: Text("Yakin ingin menghapus \"${service['display_name']}\"?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
@@ -149,7 +150,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     children: [
                       Text(
                         isEdit ? "Edit Layanan" : "Tambah Layanan Baru",
-                        style: TextStyle(color: darkBlue, fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
@@ -224,7 +225,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: darkBlue,
+                            backgroundColor: buttonColor,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
@@ -252,7 +253,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: Text("Batal", style: TextStyle(fontSize: 16, color: darkBlue, fontWeight: FontWeight.bold)),
+                          child: Text("Batal", style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
@@ -367,13 +368,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                   GestureDetector(
                     onTap: () => Navigator.pushAndRemoveUntil(
                       context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   Expanded(
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 28.0),
-                        child: Text("Kelola Layanan", style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: Text("Kelola Layanan", style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ),
@@ -424,9 +425,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Container(
                               padding: const EdgeInsets.symmetric(horizontal: 16),
                               decoration: BoxDecoration(
-                                color: isSelected ? darkBlue : Colors.white,
+                                color: isSelected ? primaryColor : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: isSelected ? darkBlue : const Color(0xFFE2E8F0)),
+                                border: Border.all(color: isSelected ? primaryColor : const Color(0xFFE2E8F0)),
                               ),
                               alignment: Alignment.center,
                               child: Text(
@@ -449,7 +450,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBlue,
+                          backgroundColor: buttonColor,
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           padding: const EdgeInsets.symmetric(vertical: 14),
                           elevation: 2,
@@ -509,7 +510,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             color: const Color(0xFFE4F0FA),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: Icon(Icons.content_cut_rounded, size: 20, color: darkBlue),
+                                          child: Icon(Icons.content_cut_rounded, size: 20, color: primaryColor),
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
@@ -518,7 +519,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             children: [
                                               Text(
                                                 svc['display_name'],
-                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: darkBlue),
+                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
                                               ),
                                               const SizedBox(height: 3),
                                               Text(svc['category'], style: TextStyle(fontSize: 11, color: mutedText)),
@@ -533,7 +534,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                                   ],
                                                   Text(
                                                     _currency.format(price),
-                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: darkBlue),
+                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primaryColor),
                                                   ),
                                                 ],
                                               ),
@@ -547,7 +548,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                               child: Container(
                                                 padding: const EdgeInsets.all(6),
                                                 decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
-                                                child: Icon(Icons.edit_outlined, color: darkBlue, size: 16),
+                                                child: Icon(Icons.edit_outlined, color: primaryColor, size: 16),
                                               ),
                                             ),
                                             const SizedBox(height: 8),
@@ -611,9 +612,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );

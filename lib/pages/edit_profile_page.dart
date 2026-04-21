@@ -8,7 +8,8 @@ class EditProfilePage extends StatefulWidget {
 }
 
 class _EditProfilePageState extends State<EditProfilePage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -32,13 +33,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   const SizedBox(width: 16),
                   Text(
                     "Edit Profile",
                     style: TextStyle(
-                      color: darkBlue,
+                      color: primaryColor,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
@@ -75,7 +76,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           child: Container(
                             padding: const EdgeInsets.all(8),
                             decoration: BoxDecoration(
-                              color: darkBlue,
+                              color: primaryColor,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(color: scaffoldBg, width: 3),
                             ),
@@ -90,7 +91,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
-                        color: darkBlue,
+                        color: primaryColor,
                         letterSpacing: -0.5,
                       ),
                     ),
@@ -124,7 +125,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: darkBlue,
+                          backgroundColor: buttonColor,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 20),
                           shape: RoundedRectangleBorder(

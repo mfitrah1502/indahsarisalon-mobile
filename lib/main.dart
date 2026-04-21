@@ -25,7 +25,7 @@ class MyApp extends StatelessWidget {
       title: 'Indah Sari Salon',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF02365A)),
+        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD660A1)),
         useMaterial3: true,
       ),
       home: const AuthPage(),

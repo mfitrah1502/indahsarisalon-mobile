@@ -4,6 +4,7 @@ import 'booking_list_page.dart';
 import 'settings_page.dart';
 import 'manage_services_page.dart';
 import 'list_stylist_page.dart';
+import 'presence_page.dart';
 
 class ManageTeamPage extends StatefulWidget {
   const ManageTeamPage({super.key});
@@ -13,7 +14,8 @@ class ManageTeamPage extends StatefulWidget {
 }
 
 class _ManageTeamPageState extends State<ManageTeamPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -30,6 +32,11 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       "subtitle": "Professional stylist handling standard cuts, blowouts, and basic coloring.",
       "icon": Icons.content_cut,
     },
+    {
+      "title": "Presence",
+      "subtitle": "View and manage daily attendance for all team members.",
+      "icon": Icons.access_time_filled,
+    },
   ];
 
   @override
@@ -44,14 +51,45 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 12),
-                Text(
-                  "Team and Roles",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.w900,
-                    color: darkBlue,
-                    letterSpacing: -0.5,
-                  ),
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () {
+                        Navigator.pushAndRemoveUntil(
+                          context,
+                          MaterialPageRoute(builder: (context) => const SettingsPage()),
+                          (route) => false,
+                        );
+                      },
+                      child: Container(
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.05),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Icon(Icons.arrow_back, color: primaryColor, size: 24),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Text(
+                        "Team and Roles",
+                        style: TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.w900,
+                          color: primaryColor,
+                          letterSpacing: -0.5,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 8),
                 Text(
@@ -73,12 +111,21 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                     final role = _roles[index];
                     return GestureDetector(
                       onTap: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => ListStylistPage(role: role['title']),
-                          ),
-                        );
+                        if (role['title'] == 'Presence') {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const PresencePage(),
+                            ),
+                          );
+                        } else {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => ListStylistPage(role: role['title']),
+                            ),
+                          );
+                        }
                       },
                       child: Container(
                         padding: const EdgeInsets.all(20),
@@ -105,7 +152,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                               ),
                               child: Icon(
                                 role['icon'],
-                                color: darkBlue,
+                                color: primaryColor,
                                 size: 28,
                               ),
                             ),
@@ -121,7 +168,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                                     style: TextStyle(
                                       fontSize: 18,
                                       fontWeight: FontWeight.bold,
-                                      color: darkBlue,
+                                      color: primaryColor,
                                     ),
                                   ),
                                   const SizedBox(height: 4),
@@ -228,7 +275,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? darkBlue : mutedText,
+            color: isSelected ? primaryColor : mutedText,
             size: 26,
           ),
           const SizedBox(height: 6),
@@ -237,7 +284,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
-              color: isSelected ? darkBlue : mutedText,
+              color: isSelected ? primaryColor : mutedText,
               letterSpacing: 0.5,
             ),
           ),

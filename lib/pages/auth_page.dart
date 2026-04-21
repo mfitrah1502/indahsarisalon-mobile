@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'home_page.dart';
 import '../app_session.dart';
+import 'forgot_password_page.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -12,7 +13,8 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF5F7FB);
   final Color inputBg = const Color(0xFFE2E4Eb);
 
@@ -95,14 +97,14 @@ class _AuthPageState extends State<AuthPage> {
                   children: [
                     Icon(
                       Icons.spa_outlined, 
-                      color: darkBlue,
+                      color: primaryColor,
                       size: 20,
                     ),
                     const SizedBox(width: 8),
                     Text(
                       "Indah Sari Salon",
                       style: TextStyle(
-                        color: darkBlue,
+                        color: primaryColor,
                         fontWeight: FontWeight.bold,
                         fontSize: 16,
                       ),
@@ -150,7 +152,7 @@ class _AuthPageState extends State<AuthPage> {
                 Text(
                   "Welcome Back\nto Indah Sari\nSalon",
                   style: TextStyle(
-                    color: darkBlue,
+                    color: primaryColor,
                     fontSize: 42,
                     fontWeight: FontWeight.w900,
                     height: 1.1,
@@ -262,7 +264,7 @@ class _AuthPageState extends State<AuthPage> {
                               onChanged: (v) => setState(() => rememberMe = v!),
                               fillColor: MaterialStateProperty.resolveWith((states) {
                                 if (states.contains(MaterialState.selected)) {
-                                  return darkBlue;
+                                  return primaryColor;
                                 }
                                 return inputBg; // Note: For unselected state, fillColor controls the inside. Checkbox border color usually relies on side property.
                               }),
@@ -285,12 +287,15 @@ class _AuthPageState extends State<AuthPage> {
                           const Spacer(),
                           GestureDetector(
                             onTap: () {
-                              // Forgot Password Logic
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ForgotPasswordPage()),
+                              );
                             },
                             child: Text(
                               "Forgot Password?",
                               style: TextStyle(
-                                color: darkBlue,
+                                color: primaryColor,
                                 fontWeight: FontWeight.w800,
                                 fontSize: 13,
                               ),
@@ -306,7 +311,7 @@ class _AuthPageState extends State<AuthPage> {
                         width: double.infinity,
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: darkBlue,
+                            backgroundColor: buttonColor,
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(8),

@@ -16,7 +16,8 @@ class BookingListPage extends StatefulWidget {
 }
 
 class _BookingListPageState extends State<BookingListPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
@@ -39,8 +40,8 @@ class _BookingListPageState extends State<BookingListPage> {
       // Fetch bookings with stylist name
       final data = await Supabase.instance.client
           .from('bookings')
-          .select('id, reservation_datetime, total_price, status, customer_name, stylist_id, users!bookings_stylist_id_fkey(name)')
-          .order('created_at', ascending: false);
+          .select('id, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, stylist_id, users!bookings_stylist_id_fkey(name)')
+          .order('id', ascending: false); // Order by ID DESC to get the absolute newest first
 
       // For each booking, fetch service names from booking_details
       final List<Map<String, dynamic>> enriched = [];
@@ -82,6 +83,8 @@ class _BookingListPageState extends State<BookingListPage> {
           'total_price': row['total_price'],
           'status': row['status'] ?? 'pending',
           'customer_name': row['customer_name'] ?? '-',
+          'customer_phone': row['customer_phone'] ?? '-',
+          'customer_email': row['customer_email'] ?? '-',
         });
       }
 
@@ -108,7 +111,10 @@ class _BookingListPageState extends State<BookingListPage> {
       _filteredBookings = _bookings.where((b) {
         final custName = (b['customer_name'] ?? '').toString().toLowerCase();
         final stylName = (b['stylist'] ?? '').toString().toLowerCase();
-        return custName.contains(lowerQuery) || stylName.contains(lowerQuery);
+        final phone = (b['customer_phone'] ?? '').toString().toLowerCase();
+        final email = (b['customer_email'] ?? '').toString().toLowerCase();
+        return custName.contains(lowerQuery) || stylName.contains(lowerQuery) ||
+               phone.contains(lowerQuery) || email.contains(lowerQuery);
       }).toList();
     });
   }
@@ -187,20 +193,20 @@ class _BookingListPageState extends State<BookingListPage> {
                   GestureDetector(
                     onTap: () => Navigator.pushAndRemoveUntil(
                       context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   Expanded(
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 28.0),
-                        child: Text("Daftar Booking", style: TextStyle(color: darkBlue, fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: Text("Daftar Booking", style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ),
                   // Refresh button
                   GestureDetector(
                     onTap: _fetchBookings,
-                    child: Icon(Icons.refresh, color: darkBlue, size: 24),
+                    child: Icon(Icons.refresh, color: primaryColor, size: 24),
                   ),
                   const SizedBox(width: 16),
                   // Delete all button
@@ -256,7 +262,7 @@ class _BookingListPageState extends State<BookingListPage> {
                             children: [
                               Text(
                                 "Your Appointments",
-                                style: TextStyle(color: darkBlue, fontSize: 26, fontWeight: FontWeight.w900),
+                                style: TextStyle(color: primaryColor, fontSize: 26, fontWeight: FontWeight.w900),
                               ),
                               Text("${_filteredBookings.length} total", style: TextStyle(color: mutedText, fontSize: 13)),
                             ],
@@ -321,7 +327,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                 borderRadius: BorderRadius.circular(12),
                                                 color: const Color(0xFFE4F0FA),
                                               ),
-                                              child: Icon(Icons.person, color: darkBlue, size: 28),
+                                              child: Icon(Icons.person, color: primaryColor, size: 28),
                                             ),
                                             const SizedBox(width: 16),
                                             Expanded(
@@ -329,15 +335,22 @@ class _BookingListPageState extends State<BookingListPage> {
                                                 crossAxisAlignment: CrossAxisAlignment.start,
                                                 children: [
                                                   Text(
+                                                    booking['customer_name'] != '-' ? "${booking['customer_name']}" : "Pelanggan",
+                                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  Text(
                                                     serviceLabel,
-                                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: darkBlue),
-                                                    maxLines: 2,
+                                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF334155)),
+                                                    maxLines: 1,
                                                     overflow: TextOverflow.ellipsis,
                                                   ),
                                                   const SizedBox(height: 2),
                                                   Text(
                                                     "dengan ${booking['stylist']}",
-                                                    style: TextStyle(fontSize: 13, color: mutedText),
+                                                    style: TextStyle(fontSize: 12, color: mutedText),
                                                   ),
                                                 ],
                                               ),
@@ -379,7 +392,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                             ),
                                             Text(
                                               _currency.format((booking['total_price'] as num).toDouble()),
-                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: darkBlue),
+                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: primaryColor),
                                             ),
                                           ],
                                         ),
@@ -407,10 +420,10 @@ class _BookingListPageState extends State<BookingListPage> {
                       child: Container(
                         width: 56, height: 56,
                         decoration: BoxDecoration(
-                          color: darkBlue,
+                          color: primaryColor,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
-                            BoxShadow(color: darkBlue.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                            BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
                           ],
                         ),
                         child: const Icon(Icons.add, color: Colors.white, size: 28),
@@ -460,9 +473,9 @@ class _BookingListPageState extends State<BookingListPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? darkBlue : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? darkBlue : mutedText, letterSpacing: 0.5)),
+          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
         ],
       ),
     );

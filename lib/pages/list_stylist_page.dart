@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
@@ -14,7 +15,8 @@ class ListStylistPage extends StatefulWidget {
 }
 
 class _ListStylistPageState extends State<ListStylistPage> {
-  final Color darkBlue = const Color(0xFF02365A);
+  final Color primaryColor = const Color(0xFFD660A1);
+  final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
@@ -23,46 +25,48 @@ class _ListStylistPageState extends State<ListStylistPage> {
 
   String _searchQuery = '';
 
-  final List<Map<String, String>> _allStylists = [
-    {
-      "name": "Maya",
-      "email": "maya.stylist@indahsari.com",
-      "role": "Senior Stylist",
-      "image": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80",
-    },
-    {
-      "name": "Alex",
-      "email": "alex.color@indahsari.com",
-      "role": "Junior Stylist",
-      "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80",
-    },
-    {
-      "name": "Sophia",
-      "email": "sophia.spa@indahsari.com",
-      "role": "Senior Stylist",
-      "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80",
-    },
-    {
-      "name": "David",
-      "email": "david.cuts@indahsari.com",
-      "role": "Junior Stylist",
-      "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80",
-    },
-    {
-      "name": "Elena",
-      "email": "elena.nails@indahsari.com",
-      "role": "Senior Stylist",
-      "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=256&q=80",
-    },
-  ];
+  List<Map<String, dynamic>> _allStylists = [];
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchStylists();
+  }
+
+  String get _kategori {
+    return widget.role == 'Senior Stylist' ? 'senior' : 'junior';
+  }
+
+  Future<void> _fetchStylists() async {
+    try {
+      final data = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('type', 'karyawan')
+          .eq('kategori', _kategori)
+          .order('name');
+          
+      if (mounted) {
+        setState(() {
+          _allStylists = List<Map<String, dynamic>>.from(data);
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching stylists: $e");
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final filteredStylists = _allStylists.where((stylist) {
-      if (stylist['role'] != widget.role) return false;
       final query = _searchQuery.toLowerCase();
-      return stylist["name"]!.toLowerCase().contains(query) ||
-             stylist["email"]!.toLowerCase().contains(query);
+      return (stylist["name"]?.toString().toLowerCase().contains(query) ?? false) ||
+             (stylist["email"]?.toString().toLowerCase().contains(query) ?? false);
     }).toList();
 
     return Scaffold(
@@ -80,7 +84,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                       // Back Arrow
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Icon(Icons.arrow_back, color: darkBlue, size: 28),
+                        child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                       ),
                       const SizedBox(height: 20),
                       
@@ -90,7 +94,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                         style: TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.w900,
-                          color: darkBlue,
+                          color: primaryColor,
                           letterSpacing: -0.5,
                         ),
                       ),
@@ -140,12 +144,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             },
                             child: Row(
                               children: [
-                                Icon(Icons.add, color: darkBlue, size: 22),
+                                Icon(Icons.add, color: primaryColor, size: 22),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Add New",
                                   style: TextStyle(
-                                    color: darkBlue,
+                                    color: primaryColor,
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -158,11 +162,21 @@ class _ListStylistPageState extends State<ListStylistPage> {
                       const SizedBox(height: 24),
                       
                       // List of Stylists
-                      ListView.separated(
-                        shrinkWrap: true,
-                        physics: const NeverScrollableScrollPhysics(),
-                        itemCount: filteredStylists.length,
-                        separatorBuilder: (context, index) => const SizedBox(height: 12),
+                      if (_isLoading)
+                        const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+                      else if (filteredStylists.isEmpty)
+                        Center(
+                          child: Padding(
+                            padding: const EdgeInsets.all(32.0),
+                            child: Text("Belum ada data ${widget.role}.", style: TextStyle(color: mutedText)),
+                          ),
+                        )
+                      else
+                        ListView.separated(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          itemCount: filteredStylists.length,
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
                         itemBuilder: (context, index) {
                           final stylist = filteredStylists[index];
                           return Container(
@@ -180,42 +194,48 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             ),
                             child: Row(
                               children: [
-                                // Avatar
-                                Container(
-                                  width: 56,
-                                  height: 56,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    image: DecorationImage(
-                                      image: NetworkImage(stylist['image']!),
-                                      fit: BoxFit.cover,
+                                  // Avatar
+                                  Container(
+                                    width: 56,
+                                    height: 56,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(12),
+                                      color: const Color(0xFFF1F5F9),
+                                      image: stylist['avatar'] != null && stylist['avatar'].toString().isNotEmpty
+                                          ? DecorationImage(
+                                              image: NetworkImage(stylist['avatar']!),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
                                     ),
+                                    child: stylist['avatar'] == null || stylist['avatar'].toString().isEmpty
+                                        ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 32)
+                                        : null,
                                   ),
-                                ),
-                                const SizedBox(width: 16),
-                                
-                                // Text details
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        stylist['name']!,
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.bold,
-                                          color: darkBlue,
+                                  const SizedBox(width: 16),
+                                  
+                                  // Text details
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          stylist['name']?.toString() ?? '-',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                            color: primaryColor,
+                                          ),
                                         ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        stylist['email']!,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: mutedText,
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          stylist['email']?.toString() ?? '-',
+                                          style: TextStyle(
+                                            fontSize: 13,
+                                            color: mutedText,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
                                   ),
                                 ),
                                 
@@ -274,11 +294,14 @@ class _ListStylistPageState extends State<ListStylistPage> {
     );
   }
 
-  void _showAddStylistModal({Map<String, String>? stylist}) {
+  void _showAddStylistModal({Map<String, dynamic>? stylist}) {
     final isEdit = stylist != null;
-    String selectedRole = isEdit && stylist.containsKey('role') ? stylist['role']! : 'Junior Stylist';
-    final nameController = TextEditingController(text: isEdit ? stylist['name'] : '');
-    final emailController = TextEditingController(text: isEdit ? stylist['email'] : '');
+    String selectedRole = isEdit && (stylist['kategori'] == 'senior') ? 'Senior Stylist' : 'Junior Stylist';
+    if (!isEdit) {
+      selectedRole = widget.role;
+    }
+    final nameController = TextEditingController(text: isEdit ? (stylist['name'] ?? '') : '');
+    final emailController = TextEditingController(text: isEdit ? (stylist['email'] ?? '') : '');
 
     showModalBottomSheet(
       context: context,
@@ -307,48 +330,59 @@ class _ListStylistPageState extends State<ListStylistPage> {
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Icon(Icons.close, color: darkBlue, size: 24),
+                          child: Icon(Icons.close, color: primaryColor, size: 24),
                         ),
                         Text(
                           isEdit ? "Update Stylist" : "Add Stylist",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                            color: darkBlue,
+                            color: primaryColor,
                           ),
                         ),
                         GestureDetector(
-                          onTap: () {
+                          onTap: () async {
                             if (nameController.text.isNotEmpty) {
-                              setState(() {
+                              final emailValue = emailController.text.trim().isEmpty 
+                                  ? "${DateTime.now().millisecondsSinceEpoch}@example.com" 
+                                  : emailController.text.trim();
+                                  
+                              final dataPayload = {
+                                "name": nameController.text.trim(),
+                                "email": emailValue,
+                                "kategori": selectedRole == 'Senior Stylist' ? 'senior' : 'junior',
+                                "type": 'karyawan',
+                                "role": 'karyawan',
+                                "status": "aktif",
+                                "username": nameController.text.trim().replaceAll(' ', '').toLowerCase() + DateTime.now().millisecondsSinceEpoch.toString().substring(8),
+                                "password": "password",
+                              };
+                              
+                              try {
                                 if (isEdit) {
-                                  final index = _allStylists.indexOf(stylist);
-                                  if (index != -1) {
-                                    _allStylists[index] = {
-                                      "name": nameController.text.trim(),
-                                      "email": emailController.text.trim(),
-                                      "role": selectedRole,
-                                      "image": stylist['image']!,
-                                    };
-                                  }
+                                  await Supabase.instance.client
+                                      .from('users')
+                                      .update(dataPayload)
+                                      .eq('id', stylist['id']);
                                 } else {
-                                  _allStylists.add({
-                                    "name": nameController.text.trim(),
-                                    "email": emailController.text.trim(),
-                                    "role": selectedRole,
-                                    "image": "https://cdn-icons-png.flaticon.com/512/3135/3135715.png", // generic thumbnail
-                                  });
+                                  await Supabase.instance.client
+                                      .from('users')
+                                      .insert(dataPayload);
                                 }
-                              });
+                                _fetchStylists();
+                              } catch (e) {
+                                debugPrint("Error saving stylist: $e");
+                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save data: $e')));
+                              }
                             }
-                            Navigator.pop(context);
+                            if (mounted) Navigator.pop(context);
                           },
                           child: Text(
                             "Save",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
-                              color: darkBlue,
+                              color: primaryColor,
                             ),
                           ),
                         ),
@@ -366,24 +400,29 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           Stack(
                             alignment: Alignment.bottomRight,
                             children: [
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  color: const Color(0xFFA1C6C8), // Light greenish-blue placeholder
-                                  borderRadius: BorderRadius.circular(16),
-                                  image: DecorationImage(
-                                    image: NetworkImage(isEdit && stylist.containsKey('image') ? stylist['image']! : 'https://cdn-icons-png.flaticon.com/512/3135/3135715.png'), // generic avatar
-                                    fit: BoxFit.cover,
+                                    Container(
+                                    width: 100,
+                                    height: 100,
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE2E8F0),
+                                      borderRadius: BorderRadius.circular(16),
+                                      image: (isEdit && stylist['avatar'] != null && stylist['avatar'].toString().isNotEmpty)
+                                          ? DecorationImage(
+                                              image: NetworkImage(stylist['avatar']),
+                                              fit: BoxFit.cover,
+                                            )
+                                          : null,
+                                    ),
+                                    child: (!isEdit || stylist['avatar'] == null || stylist['avatar'].toString().isEmpty)
+                                        ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 48)
+                                        : null,
                                   ),
-                                ),
-                              ),
                               Transform.translate(
                                 offset: const Offset(8, 8),
                                 child: Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: darkBlue,
+                                    color: primaryColor,
                                     borderRadius: BorderRadius.circular(8),
                                     border: Border.all(color: scaffoldBg, width: 2),
                                   ),
@@ -448,7 +487,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                         "Junior Stylist",
                                         style: TextStyle(
                                           fontWeight: selectedRole == 'Junior Stylist' ? FontWeight.bold : FontWeight.w600,
-                                          color: selectedRole == 'Junior Stylist' ? darkBlue : mutedText,
+                                          color: selectedRole == 'Junior Stylist' ? primaryColor : mutedText,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -475,7 +514,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                         "Senior Stylist",
                                         style: TextStyle(
                                           fontWeight: selectedRole == 'Senior Stylist' ? FontWeight.bold : FontWeight.w600,
-                                          color: selectedRole == 'Senior Stylist' ? darkBlue : mutedText,
+                                          color: selectedRole == 'Senior Stylist' ? primaryColor : mutedText,
                                           fontSize: 14,
                                         ),
                                       ),
@@ -579,7 +618,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
         children: [
           Icon(
             icon,
-            color: isSelected ? darkBlue : mutedText,
+            color: isSelected ? primaryColor : mutedText,
             size: 26,
           ),
           const SizedBox(height: 6),
@@ -588,7 +627,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
             style: TextStyle(
               fontSize: 10,
               fontWeight: FontWeight.w800,
-              color: isSelected ? darkBlue : mutedText,
+              color: isSelected ? primaryColor : mutedText,
               letterSpacing: 0.5,
             ),
           ),

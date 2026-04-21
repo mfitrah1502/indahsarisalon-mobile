@@ -19,8 +19,20 @@ class ScheduleHelper {
     // 1. Definisikan jam awal dan akhir dari hari yang dipilih
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    final dateStr = "${date.year}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}";
 
     try {
+      // Cek Absensi dulu. Jika stylist libur (off) di hari ini, langsung return kosong.
+      final absensi = await supabase
+          .from('absensi')
+          .select('status')
+          .eq('user_id', stylistId)
+          .eq('tanggal', dateStr)
+          .maybeSingle();
+
+      if (absensi != null && absensi['status'] == 'off') {
+        return [];
+      }
       // 2. Ambil data booking dari database yang ada di tanggal tersebut untuk stylist yang dipilih
       // catatan: pastikan mengecualikan yang 'dibatalkan'
       final response = await supabase
