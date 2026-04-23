@@ -59,9 +59,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     Future<void> _updateStatus(String newStatus) async {
     setState(() => _updating = true);
     try {
+      final Map<String, dynamic> updateData = {'status': newStatus};
+      if (newStatus.toLowerCase() == 'berhasil') {
+        updateData['payment_status'] = 'paid';
+      }
+
       await Supabase.instance.client
           .from('bookings')
-          .update({'status': newStatus})
+          .update(updateData)
           .eq('id', widget.booking['id']);
       
       try {
