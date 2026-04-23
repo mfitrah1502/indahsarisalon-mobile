@@ -9,6 +9,7 @@ import 'edit_profile_page.dart';
 import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,6 +22,34 @@ class _SettingsPageState extends State<SettingsPage> {
   bool isDarkMode = false; // Default to light mode
   int _selectedIndex = 4; // Settings is active
   String _selectedLanguage = 'English'; // Default Language
+  String _userEmail = "Loading...";
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchEmail();
+  }
+
+  Future<void> _fetchEmail() async {
+    if (AppSession.userId != null) {
+      try {
+        final userData = await Supabase.instance.client
+            .from('users')
+            .select('email')
+            .eq('id', AppSession.userId!)
+            .maybeSingle();
+        if (mounted && userData != null) {
+          setState(() {
+            _userEmail = userData['email']?.toString() ?? "No Email";
+          });
+        }
+      } catch (e) {
+        if (mounted) setState(() => _userEmail = "No Email");
+      }
+    } else {
+      if (mounted) setState(() => _userEmail = "No Email");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +147,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Jane Doe",
+                            AppSession.userName ?? "Admin User",
                             style: TextStyle(
                               color: mainTextColor,
                               fontSize: 24,
@@ -127,7 +156,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "jane.doe@example.com",
+                            _userEmail,
                             style: TextStyle(
                               color: mutedText,
                               fontSize: 14,

@@ -9,6 +9,7 @@ import 'manage_services_page.dart';
 import 'report_page.dart';
 import 'edit_profile_page.dart';
 import 'customer_list_page.dart';
+import '../app_session.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -176,7 +177,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(width: 16),
                         Text(
-                          "Hello, Admin!",
+                          "Hello, ${AppSession.userName ?? 'Admin'}!",
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 20,

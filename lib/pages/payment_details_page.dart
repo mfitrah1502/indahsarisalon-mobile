@@ -99,8 +99,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         'reservation_datetime': widget.reservationDatetime,
         'total_price': widget.totalPrice,
         'status': 'pending',
-        'payment_status': paymentStatus,
-        'payment_method': paymentMethod,
+        'payment_status': _selectedPaymentIndex == 2 ? 'paid' : 'unpaid',
         'customer_name': widget.customerName,
         'customer_phone': widget.customerPhone,
         'customer_email': widget.customerEmail,
@@ -321,7 +320,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             final title = svc['treatment_name'] == svc['detail_name'] || (svc['detail_name'] ?? '').toString().isEmpty
                                 ? svc['treatment_name']
                                 : "${svc['treatment_name']} - ${svc['detail_name']}";
+                            
                             final price = svc['adjusted_price'] ?? svc['price'];
+                            final originalPrice = svc['price'] ?? 0;
+                            final bool isPromo = svc['is_promo'] == true;
+                            final bool isManuallyAdjusted = svc['adjusted_price'] != null;
+                            
                             final dur = (svc['duration'] as num?)?.toInt() ?? 0;
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12.0),
@@ -348,7 +352,28 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                       ],
                                     ),
                                   ),
-                                  Text(_currencyFormat.format(price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (isPromo && !isManuallyAdjusted && originalPrice != price)
+                                        Text(
+                                          _currencyFormat.format(originalPrice),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: mutedText,
+                                            decoration: TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                      Text(
+                                        _currencyFormat.format(price),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: (isPromo && !isManuallyAdjusted) ? const Color(0xFF16A34A) : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             );
