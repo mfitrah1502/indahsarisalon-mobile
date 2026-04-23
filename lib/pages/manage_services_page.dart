@@ -46,7 +46,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
       final svcData = await Supabase.instance.client
           .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
+          .select('id, name, duration, price, treatment_id, is_promo, promo_type, promo_value, has_stylist_price, price_senior, price_junior, treatments(id, name, category_id, is_promo, promo_type, promo_value, categories(id, name))')
           .order('id');
 
       final cats = ['All', ...List<Map<String, dynamic>>.from(catData).map((c) => c['name'] as String)];
@@ -59,6 +59,19 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         final displayName = (treatmentName == detailName || detailName.isEmpty)
             ? treatmentName
             : "$treatmentName - $detailName";
+        final bool parentPromo = treatment?['is_promo'] == true;
+        final bool detailPromo = td['is_promo'] == true;
+        final bool isPromoActive = parentPromo || detailPromo;
+
+        final String rawType = parentPromo 
+            ? (treatment?['promo_type'] ?? 'percentage') 
+            : (td['promo_type'] ?? 'percentage');
+        
+        final String mobileType = (rawType == 'fixed' || rawType == 'nominal') ? 'nominal' : 'persen';
+        final num effectiveValue = parentPromo 
+            ? (treatment?['promo_value'] ?? 0) 
+            : (td['promo_value'] ?? 0);
+
         return {
           'td_id': td['id'],
           'treatment_id': td['treatment_id'],
@@ -68,6 +81,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           'category': category?['name'] ?? '',
           'duration': td['duration'] ?? 0,
           'price': td['price'] ?? 0,
+          'is_promo': isPromoActive,
+          'promo_type': mobileType,
+          'promo_value': effectiveValue,
+          'has_stylist_price': td['has_stylist_price'] == true,
+          'price_senior': td['price_senior'],
+          'price_junior': td['price_junior'],
         };
       }).toList();
 
@@ -127,12 +146,29 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   }
 
   void _showServiceDialog({Map<String, dynamic>? service}) {
+    String _safeNum(dynamic val) {
+      if (val == null) return '';
+      if (val is num) return val.toInt().toString();
+      final p = num.tryParse(val.toString());
+      return p != null ? p.toInt().toString() : '';
+    }
+
     final isEdit = service != null;
-    final nameController = TextEditingController(text: isEdit ? service['detail_name'] : '');
-    final treatmentController = TextEditingController(text: isEdit ? service['treatment_name'] : '');
-    final priceController = TextEditingController(text: isEdit ? (service['price'] as num).toInt().toString() : '');
-    final durationController = TextEditingController(text: isEdit ? (service['duration'] as num).toInt().toString() : '');
-    String selectedCategory = isEdit ? service['category'] : (_categories.length > 1 ? _categories[1] : 'All');
+    final nameController = TextEditingController(text: isEdit ? service['detail_name']?.toString() ?? '' : '');
+    final treatmentController = TextEditingController(text: isEdit ? service['treatment_name']?.toString() ?? '' : '');
+    final priceController = TextEditingController(text: isEdit ? _safeNum(service['price']) : '');
+    final durationController = TextEditingController(text: isEdit ? _safeNum(service['duration']) : '');
+    String selectedCategory = isEdit && service['category'] != null && service['category'].toString().isNotEmpty
+        ? service['category']
+        : (_categories.length > 1 ? _categories[1] : 'All');
+    
+    bool isPromo = isEdit ? (service['is_promo'] == true) : false;
+    String promoType = isEdit ? (service['promo_type'] == 'nominal' ? 'nominal' : 'persen') : 'persen';
+    final promoValueController = TextEditingController(text: isEdit ? _safeNum(service['promo_value']) : '');
+    
+    bool hasSpecialPrice = isEdit ? (service['has_stylist_price'] == true) : false;
+    final priceSeniorController = TextEditingController(text: isEdit ? _safeNum(service['price_senior']) : '');
+    final priceJuniorController = TextEditingController(text: isEdit ? _safeNum(service['price_junior']) : '');
 
     showDialog(
       context: context,
@@ -220,6 +256,116 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         ],
                       ),
 
+                      const SizedBox(height: 16),
+                      // Toggle Harga Khusus
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _fieldLabel("AKTIFKAN HARGA SENIOR & JUNIOR"),
+                          Switch(
+                            value: hasSpecialPrice,
+                            activeColor: primaryColor,
+                            onChanged: (val) {
+                              setStateDialog(() => hasSpecialPrice = val);
+                            },
+                          ),
+                        ],
+                      ),
+                      
+                      if (hasSpecialPrice) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _fieldLabel("HARGA SENIOR (Rp)"),
+                                  const SizedBox(height: 8),
+                                  _textField(controller: priceSeniorController, hint: "120000", numeric: true),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _fieldLabel("HARGA JUNIOR (Rp)"),
+                                  const SizedBox(height: 8),
+                                  _textField(controller: priceJuniorController, hint: "100000", numeric: true),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
+                      const SizedBox(height: 16),
+                      // Promo Switch
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          _fieldLabel("AKTIFKAN PROMO"),
+                          Switch(
+                            value: isPromo,
+                            activeColor: primaryColor,
+                            onChanged: (val) {
+                              setStateDialog(() => isPromo = val);
+                            },
+                          ),
+                        ],
+                      ),
+                      
+                      if (isPromo) ...[
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            Expanded(
+                              flex: 2,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _fieldLabel("TIPE PROMO"),
+                                  const SizedBox(height: 8),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: DropdownButtonHideUnderline(
+                                      child: DropdownButton<String>(
+                                        value: promoType,
+                                        isExpanded: true,
+                                        icon: Icon(Icons.expand_more, color: mutedText),
+                                        items: const [
+                                          DropdownMenuItem(value: 'persen', child: Text('Persen (%)', style: TextStyle(fontSize: 14))),
+                                          DropdownMenuItem(value: 'nominal', child: Text('Nominal (Rp)', style: TextStyle(fontSize: 14))),
+                                        ],
+                                        onChanged: (v) => setStateDialog(() => promoType = v!),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+                            Expanded(
+                              flex: 3,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  _fieldLabel("NILAI PROMO"),
+                                  const SizedBox(height: 8),
+                                  _textField(controller: promoValueController, hint: promoType == 'persen' ? "10" : "15000", numeric: true),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
+
                       const SizedBox(height: 28),
                       SizedBox(
                         width: double.infinity,
@@ -240,6 +386,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               category: selectedCategory,
                               price: int.tryParse(priceController.text) ?? 0,
                               duration: int.tryParse(durationController.text) ?? 0,
+                              isPromo: isPromo,
+                              promoType: promoType,
+                              promoValue: int.tryParse(promoValueController.text) ?? 0,
+                              hasSpecialPrice: hasSpecialPrice,
+                              priceSenior: hasSpecialPrice ? int.tryParse(priceSeniorController.text) : null,
+                              priceJunior: hasSpecialPrice ? int.tryParse(priceJuniorController.text) : null,
                             );
                           },
                           child: Text(
@@ -293,8 +445,16 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     required String category,
     required int price,
     required int duration,
+    required bool isPromo,
+    required String promoType,
+    required int promoValue,
+    required bool hasSpecialPrice,
+    int? priceSenior,
+    int? priceJunior,
   }) async {
     final supabase = Supabase.instance.client;
+
+    final dbPromoType = promoType == 'nominal' ? 'fixed' : 'percentage';
 
     try {
       // Get or create category
@@ -313,12 +473,21 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           'name': detailName.isEmpty ? treatmentName : detailName,
           'price': price,
           'duration': duration,
+          'is_promo': isPromo,
+          'promo_type': dbPromoType,
+          'promo_value': promoValue,
+          'has_stylist_price': hasSpecialPrice,
+          'price_senior': priceSenior,
+          'price_junior': priceJunior,
         }).eq('id', existingService['td_id']);
 
-        // Also update the treatment name if changed
+        // Also update the treatment name AND promo if changed
         await supabase.from('treatments').update({
           'name': treatmentName,
           'category_id': catId,
+          'is_promo': isPromo,
+          'promo_type': dbPromoType,
+          'promo_value': promoValue,
         }).eq('id', existingService['treatment_id']);
       } else {
         // Get or create treatment
@@ -331,8 +500,20 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           final newTreatment = await supabase.from('treatments').insert({
             'name': treatmentName,
             'category_id': catId,
+            'is_promo': isPromo,
+            'promo_type': promoType,
+            'promo_value': promoValue,
           }).select('id').single();
           treatmentId = newTreatment['id'];
+        }
+
+        // If treatment exists, ensure its promo is updated to match what's set here
+        if (treatmentResult != null) {
+          await supabase.from('treatments').update({
+            'is_promo': isPromo,
+            'promo_type': promoType,
+            'promo_value': promoValue,
+          }).eq('id', treatmentId);
         }
 
         // Create new treatment detail
@@ -341,6 +522,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           'name': detailName.isEmpty ? treatmentName : detailName,
           'price': price,
           'duration': duration,
+          'is_promo': isPromo,
+          'promo_type': dbPromoType,
+          'promo_value': promoValue,
+          'has_stylist_price': hasSpecialPrice,
+          'price_senior': priceSenior,
+          'price_junior': priceJunior,
         });
       }
 
@@ -532,10 +719,75 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                                     Text("$dur mnt", style: TextStyle(fontSize: 12, color: mutedText)),
                                                     const SizedBox(width: 10),
                                                   ],
-                                                  Text(
-                                                    _currency.format(price),
-                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primaryColor),
-                                                  ),
+                                                  () {
+                                                    final bool hasStylist = svc['has_stylist_price'] == true;
+                                                    final int pSr = (svc['price_senior'] as num? ?? 0).toInt();
+                                                    final int pJr = (svc['price_junior'] as num? ?? 0).toInt();
+                                                    
+                                                    final bool isPromo = svc['is_promo'] == true;
+                                                    final String pType = svc['promo_type'] ?? 'persen';
+                                                    final num pValue = svc['promo_value'] ?? 0;
+
+                                                    int calcDiscount(int p) {
+                                                      if (!isPromo) return p;
+                                                      if (pType == 'nominal') return (p - pValue).toInt();
+                                                      return (p * (1 - pValue / 100)).toInt();
+                                                    }
+
+                                                    if (hasStylist) {
+                                                      final int minP = pSr < pJr ? pSr : pJr;
+                                                      final int maxP = pSr > pJr ? pSr : pJr;
+                                                      
+                                                      final int dMin = calcDiscount(minP);
+                                                      final int dMax = calcDiscount(maxP);
+
+                                                      if (isPromo) {
+                                                        return Row(
+                                                          children: [
+                                                            Text(
+                                                              "${_currency.format(minP)} - ${_currency.format(maxP)}",
+                                                              style: TextStyle(fontSize: 10, color: mutedText, decoration: TextDecoration.lineThrough, decorationColor: mutedText),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              "${_currency.format(dMin)} - ${_currency.format(dMax)}",
+                                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF16A34A)),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      } else {
+                                                        return Text(
+                                                          "${_currency.format(minP)} - ${_currency.format(maxP)}",
+                                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primaryColor),
+                                                        );
+                                                      }
+                                                    } else {
+                                                      // Standard price
+                                                      int dPrice = calcDiscount(price);
+                                                      if (dPrice < 0) dPrice = 0;
+
+                                                      if (isPromo) {
+                                                        return Row(
+                                                          children: [
+                                                            Text(
+                                                              _currency.format(price),
+                                                              style: TextStyle(fontSize: 11, color: mutedText, decoration: TextDecoration.lineThrough, decorationColor: mutedText),
+                                                            ),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              _currency.format(dPrice),
+                                                              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: Color(0xFF16A34A)),
+                                                            ),
+                                                          ],
+                                                        );
+                                                      } else {
+                                                        return Text(
+                                                          _currency.format(price),
+                                                          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primaryColor),
+                                                        );
+                                                      }
+                                                    }
+                                                  }(),
                                                 ],
                                               ),
                                             ],

@@ -74,7 +74,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       // Get active users
       final userData = await Supabase.instance.client
           .from('users')
-          .select('id, name, type, role, status, avatar')
+          .select('id, name, type, role, kategori, status, avatar')
           .eq('type', 'karyawan')
           .eq('status', 'aktif');
           
@@ -117,7 +117,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
       final svcData = await Supabase.instance.client
           .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
+          .select('id, name, duration, price, treatment_id, has_stylist_price, price_senior, price_junior, is_promo, promo_type, promo_value, treatments(id, name, category_id, is_promo, promo_type, promo_value, categories(id, name))')
           .order('id');
 
       if (!mounted) return;
@@ -128,6 +128,23 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       final services = List<Map<String, dynamic>>.from(svcData).map((td) {
         final treatment = td['treatments'] as Map<String, dynamic>?;
         final category = treatment?['categories'] as Map<String, dynamic>?;
+
+        final bool parentPromo = treatment?['is_promo'] == true;
+        final bool detailPromo = td['is_promo'] == true;
+        final bool isPromoActive = parentPromo || detailPromo;
+
+        final String rawType = parentPromo 
+            ? (treatment?['promo_type'] ?? 'percentage') 
+            : (td['promo_type'] ?? 'percentage');
+        
+        // Let's keep fixed as fixed, and nominal/percentage as is.
+        final String mobileType = (rawType == 'fixed') ? 'fixed' : ((rawType == 'nominal') ? 'nominal' : 'persen');
+        
+        final dynamic rawPromoValue = parentPromo 
+            ? (treatment?['promo_value'] ?? 0) 
+            : (td['promo_value'] ?? 0);
+        final num effectivePromoValue = num.tryParse(rawPromoValue.toString()) ?? 0;
+
         return {
           'td_id': td['id'],
           'treatment_id': td['treatment_id'],
@@ -135,7 +152,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           'treatment_name': treatment?['name'] ?? '',
           'category': category?['name'] ?? '',
           'duration': td['duration'] ?? 0,
-          'price': td['price'] ?? 0,
+          'price': num.tryParse(td['price']?.toString() ?? '0') ?? 0,
+          'has_stylist_price': td['has_stylist_price'] == true,
+          'price_senior': num.tryParse(td['price_senior']?.toString() ?? '0') ?? 0,
+          'price_junior': num.tryParse(td['price_junior']?.toString() ?? '0') ?? 0,
+          'is_promo': isPromoActive,
+          'promo_type': mobileType,
+          'promo_value': effectivePromoValue,
           'selected': false,
           'adjusted_price': null,
         };
@@ -167,18 +190,75 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   List<Map<String, dynamic>> get _selectedServices =>
       _allServices.where((s) => s['selected'] == true).toList();
 
-  num get _totalPrice => _selectedServices.fold(0, (sum, s) =>
-      sum + ((s['adjusted_price'] ?? s['price']) as num));
+  num _getDynamicPrice(Map<String, dynamic> service) {
+    if (service['adjusted_price'] != null) return service['adjusted_price'] as num;
+
+    num base = service['price'] ?? 0;
+    if (_selectedStylistIndex != -1) {
+      final stylist = _stylists[_selectedStylistIndex];
+      final level = (stylist['kategori'] ?? '').toString().toLowerCase();
+      if (service['has_stylist_price'] == true) {
+        if (level.contains('senior')) {
+          base = service['price_senior'] ?? 0;
+        } else if (level.contains('junior')) {
+          base = service['price_junior'] ?? 0;
+        }
+      }
+    }
+
+    num discounted = base;
+    if (service['is_promo'] == true) {
+      final pType = service['promo_type'];
+      final pValue = service['promo_value'] ?? 0;
+      if (pType == 'fixed' || pType == 'nominal') {
+        discounted = base - pValue;
+      } else {
+        discounted = base * (1 - pValue / 100);
+      }
+    }
+    return discounted < 0 ? 0 : discounted;
+  }
+
+  num get _totalPrice => _selectedServices.fold(0, (sum, s) => sum + _getDynamicPrice(s));
 
   int get _totalMins => _selectedServices.fold(0, (sum, s) =>
       sum + (s['duration'] as num).toInt());
 
   Future<void> _showPriceDialog(Map<String, dynamic> service) async {
-    final basePrice = (service['price'] as num).toInt();
+    // Determine the base price based on stylist level (without promo first, or just use the calculated one)
+    num levelBase = service['price'] ?? 0;
+    String levelLabel = "";
+    if (_selectedStylistIndex != -1) {
+      final stylist = _stylists[_selectedStylistIndex];
+      final level = (stylist['kategori'] ?? '').toString().toLowerCase();
+      if (service['has_stylist_price'] == true) {
+        if (level.contains('senior')) {
+          levelBase = service['price_senior'] ?? 0;
+          levelLabel = " (Senior)";
+        } else if (level.contains('junior')) {
+          levelBase = service['price_junior'] ?? 0;
+          levelLabel = " (Junior)";
+        }
+      }
+    }
+
+    // However, the user might want the price AFTER promo as the default suggested standard
+    num suggestedPrice = levelBase;
+    if (service['is_promo'] == true) {
+      final pType = service['promo_type'];
+      final pValue = service['promo_value'] ?? 0;
+      if (pType == 'fixed' || pType == 'nominal') {
+        suggestedPrice = levelBase - pValue;
+      } else {
+        suggestedPrice = levelBase * (1 - pValue / 100);
+      }
+    }
+    if (suggestedPrice < 0) suggestedPrice = 0;
+
     final TextEditingController manualController = TextEditingController(
-      text: (service['adjusted_price'] ?? service['price']).toString(),
+      text: (service['adjusted_price'] ?? suggestedPrice).toString(),
     );
-    num? chosenPrice = service['adjusted_price'] ?? service['price'];
+    num? chosenPrice = service['adjusted_price'] ?? suggestedPrice;
 
     final displayTitle = service['treatment_name'] == service['detail_name'] || service['detail_name'].toString().isEmpty
         ? service['treatment_name']
@@ -219,35 +299,55 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   Text("Pilih atau sesuaikan harga layanan", style: TextStyle(color: mutedText, fontSize: 13)),
                   const SizedBox(height: 20),
 
-                  if (basePrice > 0) ...[
-                    Text("HARGA STANDAR", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
-                    const SizedBox(height: 12),
-                    GestureDetector(
-                      onTap: () {
-                        setSheet(() { chosenPrice = basePrice; manualController.text = basePrice.toString(); });
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: chosenPrice == basePrice ? primaryColor.withOpacity(0.08) : const Color(0xFFF8FAFC),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            color: chosenPrice == basePrice ? primaryColor : const Color(0xFFE2E8F0),
-                            width: chosenPrice == basePrice ? 2 : 1,
-                          ),
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(_currencyFormat.format(basePrice), style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 16)),
-                            if (chosenPrice == basePrice)
-                              Icon(Icons.check_circle, color: primaryColor, size: 20),
-                          ],
+                  Text("HARGA STANDAR$levelLabel", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
+                  const SizedBox(height: 12),
+                  GestureDetector(
+                    onTap: () {
+                      setSheet(() { chosenPrice = suggestedPrice; manualController.text = suggestedPrice.toString(); });
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: chosenPrice == suggestedPrice ? (service['is_promo'] == true ? Colors.green.withOpacity(0.08) : primaryColor.withOpacity(0.08)) : const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: chosenPrice == suggestedPrice ? (service['is_promo'] == true ? const Color(0xFF16A34A) : primaryColor) : const Color(0xFFE2E8F0),
+                          width: chosenPrice == suggestedPrice ? 2 : 1,
                         ),
                       ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              if (service['is_promo'] == true && levelBase != suggestedPrice) ...[
+                                Text(
+                                  _currencyFormat.format(levelBase),
+                                  style: TextStyle(
+                                    color: mutedText,
+                                    fontSize: 12,
+                                    decoration: TextDecoration.lineThrough,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Text(
+                                _currencyFormat.format(suggestedPrice),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: service['is_promo'] == true ? const Color(0xFF16A34A) : primaryColor,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ],
+                          ),
+                          if (chosenPrice == suggestedPrice)
+                            Icon(Icons.check_circle, color: service['is_promo'] == true ? const Color(0xFF16A34A) : primaryColor, size: 20),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                  ],
+                  ),
+                  const SizedBox(height: 20),
 
                   Text("INPUT HARGA MANUAL", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
                   const SizedBox(height: 12),
@@ -292,7 +392,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         elevation: 0,
                       ),
                       onPressed: () {
-                        final finalPrice = int.tryParse(manualController.text) ?? (chosenPrice ?? basePrice);
+                        final finalPrice = int.tryParse(manualController.text) ?? (chosenPrice ?? suggestedPrice);
                         final idx = _allServices.indexWhere((s) => s['td_id'] == service['td_id']);
                         if (idx != -1) {
                           setState(() {
@@ -508,10 +608,23 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         stylist['name'] ?? '-',
                                         style: TextStyle(
                                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                          color: isSelected ? primaryColor : mutedText,
+                                          color: isSelected ? primaryColor : const Color(0xFF1E293B),
                                           fontSize: 12,
                                         ),
-                                      )
+                                        textAlign: TextAlign.center,
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      if (stylist['kategori'] != null)
+                                        Text(
+                                          (stylist['kategori'] ?? '').toString().toUpperCase(),
+                                          style: TextStyle(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: isSelected ? primaryColor.withOpacity(0.7) : mutedText.withOpacity(0.6),
+                                            letterSpacing: 0.5,
+                                          ),
+                                        ),
                                     ],
                                   ),
                                 );
@@ -614,7 +727,50 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               final displayTitle = service['treatment_name'] == service['detail_name'] || service['detail_name'].toString().isEmpty
                                   ? service['treatment_name']
                                   : "${service['treatment_name']} - ${service['detail_name']}";
-                              final displayPrice = service['adjusted_price'] ?? service['price'];
+
+                              // Calculate price based on selected stylist
+                              num basePrice = service['price'] ?? 0;
+                              bool isRange = false;
+                              num minP = 0;
+                              num maxP = 0;
+                              String stylistLevelLabel = "";
+
+                              if (_selectedStylistIndex != -1) {
+                                final stylist = _stylists[_selectedStylistIndex];
+                                final level = (stylist['kategori'] ?? '').toString().toLowerCase();
+                                if (service['has_stylist_price'] == true) {
+                                  if (level.contains('senior')) {
+                                    basePrice = service['price_senior'] ?? 0;
+                                    stylistLevelLabel = " (Senior)";
+                                  } else if (level.contains('junior')) {
+                                    basePrice = service['price_junior'] ?? 0;
+                                    stylistLevelLabel = " (Junior)";
+                                  }
+                                }
+                              } else {
+                                if (service['has_stylist_price'] == true) {
+                                  isRange = true;
+                                  final pSr = (service['price_senior'] as num? ?? 0).toInt();
+                                  final pJr = (service['price_junior'] as num? ?? 0).toInt();
+                                  minP = pSr < pJr ? pSr : pJr;
+                                  maxP = pSr > pJr ? pSr : pJr;
+                                }
+                              }
+
+                              num discountedPrice = basePrice;
+                              final bool isPromo = service['is_promo'] == true;
+                              if (isPromo) {
+                                final pType = service['promo_type'];
+                                final pValue = service['promo_value'] ?? 0;
+                                if (pType == 'fixed' || pType == 'nominal') {
+                                  discountedPrice = basePrice - pValue;
+                                } else {
+                                  discountedPrice = basePrice * (1 - pValue / 100);
+                                }
+                              }
+                              if (discountedPrice < 0) discountedPrice = 0;
+
+                              final displayPrice = _getDynamicPrice(service);
                               final dur = (service['duration'] as num).toInt();
 
                               return Container(
@@ -650,6 +806,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             ),
                                           ),
                                           const SizedBox(height: 4),
+                                          if (isPromo)
+                                            Text(
+                                              "Promo",
+                                              style: TextStyle(fontSize: 11, color: Colors.green[700], fontWeight: FontWeight.bold),
+                                            ),
                                           Text(
                                             service['category'],
                                             style: TextStyle(fontSize: 11, color: mutedText, letterSpacing: 0.3),
@@ -664,14 +825,36 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                                 style: TextStyle(color: mutedText, fontSize: 12),
                                               ),
                                               const SizedBox(width: 10),
-                                              Text(
-                                                _currencyFormat.format(displayPrice),
-                                                style: TextStyle(
-                                                  color: primaryColor,
-                                                  fontSize: 13,
-                                                  fontWeight: FontWeight.w900,
+                                              if (isRange)
+                                                Text(
+                                                  "${_currencyFormat.format(minP)} - ${_currencyFormat.format(maxP)}",
+                                                  style: TextStyle(
+                                                    color: primaryColor,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
+                                                )
+                                              else ...[
+                                                if (isPromo && service['adjusted_price'] == null) ...[
+                                                  Text(
+                                                    _currencyFormat.format(basePrice),
+                                                    style: TextStyle(
+                                                      color: mutedText,
+                                                      fontSize: 11,
+                                                      decoration: TextDecoration.lineThrough,
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 6),
+                                                ],
+                                                Text(
+                                                  _currencyFormat.format(displayPrice),
+                                                  style: TextStyle(
+                                                    color: isPromo && service['adjusted_price'] == null ? const Color(0xFF16A34A) : primaryColor,
+                                                    fontSize: 13,
+                                                    fontWeight: FontWeight.w900,
+                                                  ),
                                                 ),
-                                              ),
+                                              ],
                                               if (service['adjusted_price'] != null &&
                                                   service['adjusted_price'] != service['price']) ...[
                                                 const SizedBox(width: 6),
@@ -693,6 +876,16 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                     GestureDetector(
                                       onTap: () async {
                                         if (!isSelected) {
+                                          if (service['has_stylist_price'] == true && _selectedStylistIndex == -1) {
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text("Silakan pilih Stylist terlebih dahulu untuk melihat harga layanan ini."),
+                                                backgroundColor: Color(0xFFEAB308),
+                                                behavior: SnackBarBehavior.floating,
+                                              )
+                                            );
+                                            return;
+                                          }
                                           await _showPriceDialog(service);
                                         } else {
                                           final idx = _allServices.indexWhere((s) => s['td_id'] == service['td_id']);
@@ -785,6 +978,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               ),
                               onPressed: _selectedStylistIndex == -1 ? null : () {
                                 final selectedStylist = _stylists[_selectedStylistIndex];
+                                
+                                // Ensure each selected service has its correct dynamic price
+                                final processedServices = selected.map((s) {
+                                  final copy = Map<String, dynamic>.from(s);
+                                  copy['adjusted_price'] = _getDynamicPrice(s);
+                                  return copy;
+                                }).toList();
+
                                 Navigator.push(
                                   context,
                                   MaterialPageRoute(
@@ -793,7 +994,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         stylistId: selectedStylist['id'],
                                         stylistName: selectedStylist['name'] ?? '',
                                         totalDuration: _totalMins,
-                                        selectedServices: selected,
+                                        selectedServices: processedServices,
                                         totalPrice: _totalPrice.toInt(),
                                       ),
                                   ),
