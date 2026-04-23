@@ -78,20 +78,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         throw Exception("treatment_id tidak ditemukan. Silakan coba booking ulang.");
       }
 
-      // Determine payment method string
-      String paymentMethod = 'cash';
-      if (_selectedPaymentIndex == 0) paymentMethod = 'transfer';
-      else if (_selectedPaymentIndex == 1) paymentMethod = 'midtrans';
-
       // Determine payment status (Staff + Cash = Paid immediately)
-      String paymentStatus = 'unpaid';
+      String paymentStatus = (_selectedPaymentIndex == 2) ? 'paid' : 'unpaid';
       if (AppSession.userRole?.toLowerCase() == 'admin' || AppSession.userRole?.toLowerCase() == 'karyawan') {
-        if (paymentMethod == 'cash') {
+        if (_selectedPaymentIndex == 2) { // 2 is Cash
           paymentStatus = 'paid';
         }
       }
-
-      // Insert into bookings
       final bookingInsert = await supabase.from('bookings').insert({
         'user_id': userId,
         'stylist_id': widget.stylistId,
@@ -99,7 +92,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         'reservation_datetime': widget.reservationDatetime,
         'total_price': widget.totalPrice,
         'status': 'pending',
-        'payment_status': _selectedPaymentIndex == 2 ? 'paid' : 'unpaid',
+        'payment_status': paymentStatus,
+        'payment_method': _selectedPaymentIndex == 2 ? 'cash' : (_selectedPaymentIndex == 0 ? 'transfer' : 'midtrans'),
         'customer_name': widget.customerName,
         'customer_phone': widget.customerPhone,
         'customer_email': widget.customerEmail,
@@ -113,6 +107,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         await supabase.from('booking_details').insert({
           'booking_id': bookingId,
           'treatment_detail_id': svc['td_id'],
+          'stylist_id': widget.stylistId,
           'price': price,
         });
       }
