@@ -78,7 +78,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         throw Exception("treatment_id tidak ditemukan. Silakan coba booking ulang.");
       }
 
-      // Insert into bookings
+      // Determine payment status (Staff + Cash = Paid immediately)
+      String paymentStatus = (_selectedPaymentIndex == 2) ? 'paid' : 'unpaid';
+      if (AppSession.userRole?.toLowerCase() == 'admin' || AppSession.userRole?.toLowerCase() == 'karyawan') {
+        if (_selectedPaymentIndex == 2) { // 2 is Cash
+          paymentStatus = 'paid';
+        }
+      }
       final bookingInsert = await supabase.from('bookings').insert({
         'user_id': userId,
         'stylist_id': widget.stylistId,
@@ -86,7 +92,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         'reservation_datetime': widget.reservationDatetime,
         'total_price': widget.totalPrice,
         'status': 'pending',
-        'payment_status': 'unpaid',
+        'payment_status': paymentStatus,
+        'payment_method': _selectedPaymentIndex == 2 ? 'cash' : (_selectedPaymentIndex == 0 ? 'transfer' : 'midtrans'),
         'customer_name': widget.customerName,
         'customer_phone': widget.customerPhone,
         'customer_email': widget.customerEmail,
@@ -100,6 +107,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         await supabase.from('booking_details').insert({
           'booking_id': bookingId,
           'treatment_detail_id': svc['td_id'],
+          'stylist_id': widget.stylistId,
           'price': price,
         });
       }
@@ -307,7 +315,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             final title = svc['treatment_name'] == svc['detail_name'] || (svc['detail_name'] ?? '').toString().isEmpty
                                 ? svc['treatment_name']
                                 : "${svc['treatment_name']} - ${svc['detail_name']}";
+                            
                             final price = svc['adjusted_price'] ?? svc['price'];
+                            final originalPrice = svc['price'] ?? 0;
+                            final bool isPromo = svc['is_promo'] == true;
+                            final bool isManuallyAdjusted = svc['adjusted_price'] != null;
+                            
                             final dur = (svc['duration'] as num?)?.toInt() ?? 0;
                             return Padding(
                               padding: const EdgeInsets.only(bottom: 12.0),
@@ -334,7 +347,28 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                       ],
                                     ),
                                   ),
-                                  Text(_currencyFormat.format(price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.end,
+                                    children: [
+                                      if (isPromo && !isManuallyAdjusted && originalPrice != price)
+                                        Text(
+                                          _currencyFormat.format(originalPrice),
+                                          style: TextStyle(
+                                            fontSize: 10,
+                                            color: mutedText,
+                                            decoration: TextDecoration.lineThrough,
+                                          ),
+                                        ),
+                                      Text(
+                                        _currencyFormat.format(price),
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: (isPromo && !isManuallyAdjusted) ? const Color(0xFF16A34A) : const Color(0xFF0F172A),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 ],
                               ),
                             );

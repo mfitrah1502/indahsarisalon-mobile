@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -13,11 +15,56 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
-  final TextEditingController _fullNameController = TextEditingController(text: "Jane Doe");
-  final TextEditingController _usernameController = TextEditingController(text: "janedoe");
-  final TextEditingController _emailController = TextEditingController(text: "jane.doe@example.com");
-  final TextEditingController _phoneController = TextEditingController(text: "+1 (555) 000-1234");
-  final TextEditingController _addressController = TextEditingController(text: "123 Maple Avenue, Apt 4B, Beverly Hills, CA 90210");
+  late final TextEditingController _fullNameController;
+  late final TextEditingController _usernameController;
+  late final TextEditingController _emailController;
+  late final TextEditingController _phoneController;
+  late final TextEditingController _addressController;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _fullNameController = TextEditingController();
+    _usernameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _addressController = TextEditingController();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    if (AppSession.userId != null) {
+      try {
+        final userData = await Supabase.instance.client
+            .from('users')
+            .select('name, username, email, phone, address')
+            .eq('id', AppSession.userId!)
+            .maybeSingle();
+
+        if (userData != null) {
+          _fullNameController.text = userData['name']?.toString() ?? AppSession.userName ?? '';
+          _usernameController.text = userData['username']?.toString() ?? '';
+          _emailController.text = userData['email']?.toString() ?? '';
+          _phoneController.text = userData['phone']?.toString() ?? '';
+          _addressController.text = userData['address']?.toString() ?? '';
+        } else {
+          _fullNameController.text = AppSession.userName ?? '';
+        }
+      } catch (e) {
+        debugPrint('Error fetching user profile: $e');
+        _fullNameController.text = AppSession.userName ?? '';
+      }
+    } else {
+      _fullNameController.text = AppSession.userName ?? '';
+    }
+    
+    if (mounted) {
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +96,9 @@ class _EditProfilePageState extends State<EditProfilePage> {
             ),
             
             Expanded(
-              child: SingleChildScrollView(
+              child: _isLoading 
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 child: Column(
                   children: [
@@ -87,7 +136,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      "Jane Doe",
+                      _fullNameController.text.isNotEmpty ? _fullNameController.text : "User",
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
