@@ -49,10 +49,40 @@ class _BookingPageState extends State<BookingPage> {
   bool _loadingTimes = true;
   List<String> _times = [];
 
+  List<Map<String, dynamic>> _finalServices = [];
+  int _finalTotalPrice = 0;
+  bool _isColourCircleApplied = false;
+
   @override
   void initState() {
     super.initState();
+    _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) => Map<String, dynamic>.from(e)));
+    _finalTotalPrice = widget.totalPrice;
     _fetchAvailableTimes();
+  }
+
+  void _recalculatePrice() {
+    int total = 0;
+    _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) {
+      final s = Map<String, dynamic>.from(e);
+      num price = s['adjusted_price'] ?? s['price'];
+      
+      if (_isColourCircleApplied) {
+        String cat = (s['category'] ?? '').toString().toLowerCase();
+        String tName = (s['treatment_name'] ?? '').toString().toLowerCase();
+        if (cat.contains('color') || tName.contains('color')) {
+          price = price * 0.65; // 35% discount
+          s['adjusted_price'] = price;
+          s['is_colour_circle_discount'] = true;
+        }
+      } else {
+        s['is_colour_circle_discount'] = false;
+        s['adjusted_price'] = widget.selectedServices.firstWhere((w) => w['td_id'] == s['td_id'])['adjusted_price'];
+      }
+      total += price.toInt();
+      return s;
+    }));
+    _finalTotalPrice = total;
   }
 
   Future<void> _fetchAvailableTimes() async {
@@ -189,11 +219,16 @@ class _BookingPageState extends State<BookingPage> {
                               ),
                             );
                             if (result != null && result is Map<String, dynamic>) {
-                              setState(() {
-                                _nameCtrl.text = result['name'] ?? '';
-                                _phoneCtrl.text = result['phone'] ?? '';
-                                _emailCtrl.text = result['email'] ?? '';
-                              });
+                                setState(() {
+                                  _nameCtrl.text = result['name'] ?? '';
+                                  _phoneCtrl.text = result['phone'] ?? '';
+                                  _emailCtrl.text = result['email'] ?? '';
+                                  
+                                  bool isCc = result['is_colour_circle'] == true;
+                                  DateTime? exp = result['colour_circle_expired_at'] != null ? DateTime.tryParse(result['colour_circle_expired_at']) : null;
+                                  _isColourCircleApplied = isCc && exp != null && exp.isAfter(DateTime.now());
+                                  _recalculatePrice();
+                                });
                             }
                           },
                           icon: const Icon(Icons.person_add_alt_1, size: 18),
@@ -365,8 +400,8 @@ class _BookingPageState extends State<BookingPage> {
                                 stylistId: widget.stylistId,
                                 stylistName: widget.stylistName,
                                 reservationDatetime: dateTimeStr,
-                                selectedServices: widget.selectedServices,
-                                totalPrice: widget.totalPrice,
+                                selectedServices: _finalServices,
+                                totalPrice: _finalTotalPrice,
                                 customerName: _nameCtrl.text.trim(),
                                 customerPhone: _phoneCtrl.text.trim(),
                                 customerEmail: _emailCtrl.text.trim(),

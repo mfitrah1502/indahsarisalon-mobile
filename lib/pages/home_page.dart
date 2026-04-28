@@ -9,6 +9,8 @@ import 'manage_services_page.dart';
 import 'report_page.dart';
 import 'edit_profile_page.dart';
 import 'customer_list_page.dart';
+import '../app_session.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -33,11 +35,34 @@ class _HomePageState extends State<HomePage> {
   num bookingsIncrease = 0;
   num revenueIncrease = 0;
   num customersIncrease = 0;
+  List<Map<String, dynamic>> _promos = [];
 
   @override
   void initState() {
     super.initState();
     _fetchDashboardData();
+    _fetchPromos();
+  }
+
+  Future<void> _fetchPromos() async {
+    try {
+      final now = DateTime.now().toIso8601String();
+      final data = await Supabase.instance.client
+          .from('promos')
+          .select()
+          .eq('is_active', true)
+          .lte('start_at', now)
+          .gte('end_at', now)
+          .order('created_at', ascending: false);
+      
+      if (mounted) {
+        setState(() {
+          _promos = List<Map<String, dynamic>>.from(data);
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching promos: $e");
+    }
   }
 
   Future<void> _fetchDashboardData() async {
@@ -176,7 +201,7 @@ class _HomePageState extends State<HomePage> {
                         ),
                         const SizedBox(width: 16),
                         Text(
-                          "Hello, Admin!",
+                          "Hello, ${AppSession.userName}!",
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 20,
@@ -257,6 +282,88 @@ class _HomePageState extends State<HomePage> {
                 ),
 
                 const SizedBox(height: 32),
+
+                // Promo Section
+                if (_promos.isNotEmpty) ...[
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text(
+                        "PENAWARAN SPESIAL",
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
+                      ),
+                      Text(
+                        "Lihat Semua",
+                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  SizedBox(
+                    height: 160,
+                    child: ListView.separated(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: _promos.length,
+                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      itemBuilder: (context, index) {
+                        final p = _promos[index];
+                        return GestureDetector(
+                          onTap: () => _showPromoDetail(p),
+                          child: Container(
+                            width: 280,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(20),
+                              image: p['image_url'] != null && p['image_url'].toString().isNotEmpty
+                                ? DecorationImage(image: NetworkImage(p['image_url']), fit: BoxFit.cover)
+                                : null,
+                              gradient: p['image_url'] == null || p['image_url'].toString().isEmpty
+                                ? LinearGradient(colors: [primaryColor, buttonColor])
+                                : null,
+                            ),
+                            child: Stack(
+                              children: [
+                                if (p['image_url'] == null || p['image_url'].toString().isEmpty)
+                                  const Center(child: Icon(Icons.star, color: Colors.white, size: 48)),
+                                Positioned(
+                                  bottom: 0,
+                                  left: 0,
+                                  right: 0,
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    decoration: BoxDecoration(
+                                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                                      gradient: LinearGradient(
+                                        begin: Alignment.bottomCenter,
+                                        end: Alignment.topCenter,
+                                        colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                                      ),
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          p['title'] ?? "Promo Menarik",
+                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        Text(
+                                          formatCurrency((p['price'] as num?)?.toInt() ?? 0),
+                                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                ],
 
                 // Title Section
                 Text(
@@ -355,6 +462,137 @@ class _HomePageState extends State<HomePage> {
               _buildNavItem(4, "SETTINGS", Icons.settings_outlined),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  void _showPromoDetail(Map<String, dynamic> promo) {
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // Image / Header
+            Container(
+              height: 200,
+              width: double.infinity,
+              decoration: BoxDecoration(
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                image: promo['image_url'] != null && promo['image_url'].toString().isNotEmpty
+                  ? DecorationImage(image: NetworkImage(promo['image_url']), fit: BoxFit.cover)
+                  : null,
+                color: primaryColor,
+              ),
+              child: promo['image_url'] == null || promo['image_url'].toString().isEmpty
+                ? const Icon(Icons.local_offer, color: Colors.white, size: 80)
+                : null,
+            ),
+            
+            Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          promo['title'] ?? "Promo Detail",
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                        decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "Dapatkan layanan ini hanya dengan harga:",
+                    style: TextStyle(color: mutedText, fontSize: 14),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    formatCurrency((promo['price'] as num?)?.toInt() ?? 0),
+                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black),
+                  ),
+                  if (promo['description'] != null && promo['description'].toString().isNotEmpty) ...[
+                    const SizedBox(height: 16),
+                    Text(
+                      "Termasuk Treatment:",
+                      style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      promo['description'],
+                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  const Divider(),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Icon(Icons.access_time, size: 16, color: mutedText),
+                      const SizedBox(width: 8),
+                      Text(
+                        "Berlaku sampai: ${DateFormat('dd MMM yyyy').format(DateTime.parse(promo['end_at']))}",
+                        style: TextStyle(color: mutedText, fontSize: 13),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF25D366), // WhatsApp Green
+                        foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () async {
+                        final selectedCustomer = await Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const CustomerListPage(isSelectionMode: true),
+                          ),
+                        );
+
+                        if (selectedCustomer != null && selectedCustomer is Map<String, dynamic>) {
+                          String phone = selectedCustomer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
+                          
+                          if (phone.isNotEmpty) {
+                            // Convert standard 08... to 62... for WhatsApp
+                            if (phone.startsWith('0')) {
+                              phone = '62${phone.substring(1)}';
+                            } else if (!phone.startsWith('62')) {
+                              phone = '62$phone';
+                            }
+
+                            final message = "Halo ${selectedCustomer['name']}! Cek promo menarik ini di Indah Sari Salon: ${promo['title']} hanya dengan ${formatCurrency((promo['price'] as num?)?.toInt() ?? 0)}! Berlaku sampai ${DateFormat('dd MMM yyyy').format(DateTime.parse(promo['end_at']))}. Yuk booking sekarang!";
+                            final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
+                            
+                            if (await canLaunchUrl(Uri.parse(url))) {
+                              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+                            }
+                          }
+                        }
+                      },
+                      icon: const Icon(Icons.share),
+                      label: const Text("Bagikan ke WhatsApp", style: TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

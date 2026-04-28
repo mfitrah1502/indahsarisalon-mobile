@@ -104,6 +104,33 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         });
       }
 
+      // Check Colour Circle criteria
+      num coloringSpend = 0;
+      for (final svc in widget.selectedServices) {
+        String cat = (svc['category'] ?? '').toString().toLowerCase();
+        String tName = (svc['treatment_name'] ?? '').toString().toLowerCase();
+        if (cat.contains('color') || tName.contains('color')) {
+           coloringSpend += (svc['adjusted_price'] ?? svc['price']);
+        }
+      }
+
+      if (coloringSpend >= 1500000) {
+        // Find user by phone
+        if (widget.customerPhone.isNotEmpty) {
+          final q = await supabase.from('users')
+            .select('id')
+            .eq('role', 'pelanggan')
+            .eq('phone', widget.customerPhone)
+            .maybeSingle();
+          if (q != null && q['id'] != null) {
+            await supabase.from('users').update({
+               'is_colour_circle': true,
+               'colour_circle_expired_at': DateTime.now().add(const Duration(days: 730)).toIso8601String()
+            }).eq('id', q['id']);
+          }
+        }
+      }
+
       try {
         await supabase.from('notifikasi').insert({
           'user_id': userId,
@@ -329,6 +356,14 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                               dur > 0 ? "$dur Menit" : "- Menit",
                                               style: TextStyle(color: mutedText, fontSize: 11),
                                             ),
+                                            if (svc['is_colour_circle_discount'] == true) ...[
+                                              const SizedBox(width: 8),
+                                              Container(
+                                                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                                                decoration: BoxDecoration(color: const Color(0xFFD660A1).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                                child: const Text("Colour Circle -35%", style: TextStyle(color: Color(0xFFD660A1), fontSize: 9, fontWeight: FontWeight.bold)),
+                                              ),
+                                            ],
                                           ],
                                         ),
                                       ],

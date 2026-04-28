@@ -46,6 +46,7 @@ class _PresencePageState extends State<PresencePage> {
           .from('users')
           .select('id, name, role, avatar, status')
           .eq('type', 'karyawan')
+          .neq('role', 'pelanggan')
           .eq('status', 'aktif') // Only active employees
           .order('name');
           

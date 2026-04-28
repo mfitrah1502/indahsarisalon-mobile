@@ -44,6 +44,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
           .from('users')
           .select()
           .eq('type', 'karyawan')
+          .neq('role', 'pelanggan')
           .eq('kategori', _kategori)
           .order('name');
           

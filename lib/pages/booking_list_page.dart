@@ -37,11 +37,11 @@ class _BookingListPageState extends State<BookingListPage> {
   Future<void> _fetchBookings() async {
     setState(() => _loading = true);
     try {
-      // Fetch bookings with stylist name
+      // Fetch bookings with stylist name and customer info (if user_id present)
       final data = await Supabase.instance.client
           .from('bookings')
-          .select('id, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, stylist_id, users!bookings_stylist_id_fkey(name)')
-          .order('id', ascending: false); // Order by ID DESC to get the absolute newest first
+          .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
+          .order('created_at', ascending: false); // Order by creation date DESC
 
       // For each booking, fetch service names from booking_details
       final List<Map<String, dynamic>> enriched = [];
@@ -75,16 +75,29 @@ class _BookingListPageState extends State<BookingListPage> {
           }
         }
 
+        // Fallback for phone and email from the users table (customer:users!bookings_user_id_fkey)
+        Map<String, dynamic>? linkedCustomer = row['customer'] as Map<String, dynamic>?;
+        String finalPhone = row['customer_phone'] ?? '-';
+        String finalEmail = row['customer_email'] ?? '-';
+
+        if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
+          finalPhone = linkedCustomer['phone'] ?? '-';
+        }
+        if ((finalEmail == '-' || finalEmail == 'null') && linkedCustomer != null) {
+          finalEmail = linkedCustomer['email'] ?? '-';
+        }
+
         enriched.add({
           'id': bookingId,
+          'created_at': row['created_at'],
           'stylist': stylistName,
           'services': serviceNames.isEmpty ? ['Booking #$bookingId'] : serviceNames,
           'datetime': row['reservation_datetime'],
           'total_price': row['total_price'],
           'status': row['status'] ?? 'pending',
           'customer_name': row['customer_name'] ?? '-',
-          'customer_phone': row['customer_phone'] ?? '-',
-          'customer_email': row['customer_email'] ?? '-',
+          'customer_phone': finalPhone,
+          'customer_email': finalEmail,
         });
       }
 
@@ -99,6 +112,35 @@ class _BookingListPageState extends State<BookingListPage> {
       debugPrint('Error fetching bookings: $e');
       if (mounted) setState(() => _loading = false);
     }
+  }
+
+  Map<String, List<Map<String, dynamic>>> _getGroupedBookings() {
+    Map<String, List<Map<String, dynamic>>> groups = {};
+    for (var b in _filteredBookings) {
+      final createdAtStr = b['created_at'] as String?;
+      if (createdAtStr == null) continue;
+      
+      final date = DateTime.parse(createdAtStr).toLocal();
+      final now = DateTime.now();
+      final today = DateTime(now.year, now.month, now.day);
+      final yesterday = today.subtract(const Duration(days: 1));
+      final itemDate = DateTime(date.year, date.month, date.day);
+
+      String groupKey;
+      if (itemDate == today) {
+        groupKey = "Hari Ini";
+      } else if (itemDate == yesterday) {
+        groupKey = "Kemarin";
+      } else {
+        groupKey = DateFormat('EEEE, d MMMM yyyy', 'id').format(itemDate);
+      }
+
+      if (!groups.containsKey(groupKey)) {
+        groups[groupKey] = [];
+      }
+      groups[groupKey]!.add(b);
+    }
+    return groups;
   }
 
   void _filterBookings(String query) {
@@ -180,6 +222,8 @@ class _BookingListPageState extends State<BookingListPage> {
 
   @override
   Widget build(BuildContext context) {
+    final groupedBookings = _getGroupedBookings();
+
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
@@ -197,22 +241,26 @@ class _BookingListPageState extends State<BookingListPage> {
                   ),
                   Expanded(
                     child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 28.0),
-                        child: Text("Daftar Booking", style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                      child: Text(
+                        "Daftar Booking", 
+                        style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)
                       ),
                     ),
                   ),
-                  // Refresh button
-                  GestureDetector(
-                    onTap: _fetchBookings,
-                    child: Icon(Icons.refresh, color: primaryColor, size: 24),
-                  ),
-                  const SizedBox(width: 16),
-                  // Delete all button
-                  GestureDetector(
-                    onTap: _bookings.isEmpty ? null : _deleteAllBookings,
-                    child: Icon(Icons.delete_outline, color: _bookings.isEmpty ? Colors.grey : Colors.red, size: 24),
+                  // Actions Right
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: _fetchBookings,
+                        child: Icon(Icons.refresh, color: primaryColor, size: 24),
+                      ),
+                      const SizedBox(width: 12),
+                      GestureDetector(
+                        onTap: _bookings.isEmpty ? null : _deleteAllBookings,
+                        child: Icon(Icons.delete_outline, color: _bookings.isEmpty ? Colors.grey : Colors.red, size: 24),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -285,123 +333,151 @@ class _BookingListPageState extends State<BookingListPage> {
                               ),
                             )
                           else
-                            ListView.separated(
-                              shrinkWrap: true,
-                              physics: const NeverScrollableScrollPhysics(),
-                              itemCount: _filteredBookings.length + 1,
-                              separatorBuilder: (_, __) => const SizedBox(height: 16),
-                              itemBuilder: (_, index) {
-                                if (index == _filteredBookings.length) return const SizedBox(height: 100);
-                                final booking = _filteredBookings[index];
-                                final status = booking['status'] as String;
-                                final services = booking['services'] as List<String>;
-                                final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2} lainnya" : "");
-
-                                return GestureDetector(
-                                  onTap: () {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (_) => BookingDetailsPage(booking: booking),
-                                      ),
-                                    ).then((_) => _fetchBookings()); // Refresh on return
-                                  },
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [
-                                        BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
-                                      ],
-                                    ),
-                                    child: Column(
+                            ...groupedBookings.entries.map((entry) {
+                              return Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+                                    child: Row(
                                       children: [
-                                        Row(
-                                          crossAxisAlignment: CrossAxisAlignment.start,
-                                          children: [
-                                            // Stylist avatar
-                                            Container(
-                                              width: 50, height: 50,
-                                              decoration: BoxDecoration(
-                                                borderRadius: BorderRadius.circular(12),
-                                                color: const Color(0xFFE4F0FA),
-                                              ),
-                                              child: Icon(Icons.person, color: primaryColor, size: 28),
-                                            ),
-                                            const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
-                                                children: [
-                                                  Text(
-                                                    booking['customer_name'] != '-' ? "${booking['customer_name']}" : "Pelanggan",
-                                                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    serviceLabel,
-                                                    style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF334155)),
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  Text(
-                                                    "dengan ${booking['stylist']}",
-                                                    style: TextStyle(fontSize: 12, color: mutedText),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            const SizedBox(width: 8),
-                                            Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                              decoration: BoxDecoration(
-                                                color: _statusBg(status),
-                                                borderRadius: BorderRadius.circular(20),
-                                              ),
-                                              child: Text(
-                                                status.toUpperCase(),
-                                                style: TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w900,
-                                                  letterSpacing: 0.5,
-                                                  color: _statusColor(status),
-                                                ),
-                                              ),
-                                            ),
-                                          ],
+                                        Container(
+                                          width: 4,
+                                          height: 14,
+                                          decoration: BoxDecoration(
+                                            color: primaryColor,
+                                            borderRadius: BorderRadius.circular(2),
+                                          ),
                                         ),
-                                        const SizedBox(height: 14),
-                                        const Divider(color: Color(0xFFF1F5F9), height: 1),
-                                        const SizedBox(height: 14),
-                                        Row(
-                                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Row(
-                                              children: [
-                                                Icon(Icons.calendar_today_outlined, size: 13, color: mutedText),
-                                                const SizedBox(width: 6),
-                                                Text(
-                                                  _formatDateTime(booking['datetime']),
-                                                  style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
-                                                ),
-                                              ],
-                                            ),
-                                            Text(
-                                              _currency.format((booking['total_price'] as num).toDouble()),
-                                              style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: primaryColor),
-                                            ),
-                                          ],
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          entry.key,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w800,
+                                            color: primaryColor,
+                                            letterSpacing: 0.2,
+                                          ),
                                         ),
                                       ],
                                     ),
                                   ),
-                                );
-                              },
-                            ),
+                                  ...entry.value.map((booking) {
+                                    final status = booking['status'] as String;
+                                    final services = booking['services'] as List<String>;
+                                    final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2} lainnya" : "");
+
+                                    return Padding(
+                                      padding: const EdgeInsets.only(bottom: 16.0),
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (_) => BookingDetailsPage(booking: booking),
+                                            ),
+                                          ).then((_) => _fetchBookings()); // Refresh on return
+                                        },
+                                        child: Container(
+                                          padding: const EdgeInsets.all(16),
+                                          decoration: BoxDecoration(
+                                            color: Colors.white,
+                                            borderRadius: BorderRadius.circular(16),
+                                            boxShadow: [
+                                              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                                            ],
+                                          ),
+                                          child: Column(
+                                            children: [
+                                              Row(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                children: [
+                                                  // Stylist avatar
+                                                  Container(
+                                                    width: 50, height: 50,
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(12),
+                                                      color: const Color(0xFFE4F0FA),
+                                                    ),
+                                                    child: Icon(Icons.person, color: primaryColor, size: 28),
+                                                  ),
+                                                  const SizedBox(width: 16),
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                                      children: [
+                                                        Text(
+                                                          booking['customer_name'] != '-' ? "${booking['customer_name']}" : "Pelanggan",
+                                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                        const SizedBox(height: 2),
+                                                        Text(
+                                                          serviceLabel,
+                                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF334155)),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow.ellipsis,
+                                                        ),
+                                                        const SizedBox(height: 2),
+                                                        Text(
+                                                          "dengan ${booking['stylist']}",
+                                                          style: TextStyle(fontSize: 12, color: mutedText),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 8),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                                    decoration: BoxDecoration(
+                                                      color: _statusBg(status),
+                                                      borderRadius: BorderRadius.circular(20),
+                                                    ),
+                                                    child: Text(
+                                                      status.toUpperCase(),
+                                                      style: TextStyle(
+                                                        fontSize: 9,
+                                                        fontWeight: FontWeight.w900,
+                                                        letterSpacing: 0.5,
+                                                        color: _statusColor(status),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              const SizedBox(height: 14),
+                                              const Divider(color: Color(0xFFF1F5F9), height: 1),
+                                              const SizedBox(height: 14),
+                                              Row(
+                                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                                children: [
+                                                  Row(
+                                                    children: [
+                                                      Icon(Icons.calendar_today_outlined, size: 13, color: mutedText),
+                                                      const SizedBox(width: 6),
+                                                      Text(
+                                                        _formatDateTime(booking['datetime']),
+                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                  Text(
+                                                    _currency.format((booking['total_price'] as num).toDouble()),
+                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: primaryColor),
+                                                  ),
+                                                ],
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ],
+                              );
+                            }).toList(),
+                          const SizedBox(height: 100),
                         ],
                       ),
                     ),

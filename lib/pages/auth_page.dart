@@ -51,6 +51,7 @@ class _AuthPageState extends State<AuthPage> {
           AppSession.userId = user['id'] as int;
           AppSession.userName = user['name'] as String? ?? '';
           AppSession.userRole = user['role'] as String? ?? '';
+          AppSession.userEmail = user['email'] as String? ?? '';
 
           // Berhasil login
           ScaffoldMessenger.of(context).showSnackBar(

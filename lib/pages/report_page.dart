@@ -1,6 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:fl_chart/fl_chart.dart';
+import 'package:excel/excel.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+
 import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
@@ -14,28 +20,25 @@ class ReportPage extends StatefulWidget {
 }
 
 class _ReportPageState extends State<ReportPage> {
-  final int _selectedIndex = 3; // 3 is Report
+  final int _selectedIndex = 3;
   final Color primaryColor = const Color(0xFFD660A1);
   final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
   DateTimeRange? _dateRange;
-  String _searchQuery = '';
 
   // Data State
-  int totalCustomers = 0;
-  int totalBookings = 0;
-  int totalRevenue = 0;
-  int peakRevenue = 0;
-  List<Map<String, dynamic>> topServices = [];
+  int totalIncome = 0;
+  int totalExpense = 0;
+  int totalProfit = 0;
+  List<Map<String, dynamic>> dailyStats = [];
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
     final now = DateTime.now();
-    // Default to this month
     _dateRange = DateTimeRange(
       start: DateTime(now.year, now.month, 1),
       end: DateTime(now.year, now.month + 1, 0),
@@ -52,75 +55,69 @@ class _ReportPageState extends State<ReportPage> {
 
     try {
       final startStr = _dateRange!.start.toIso8601String();
-      final endStr = _dateRange!.end.add(const Duration(days: 1)).toIso8601String(); // Include the end day fully
+      final endStr = _dateRange!.end.add(const Duration(days: 1)).toIso8601String();
 
-      // 1. Fetch Bookings
+      // Fetch Bookings
       final bookingsData = await supabase
           .from('bookings')
-          .select('id, user_id, total_price, reservation_datetime, treatment_id')
+          .select('total_price, reservation_datetime, status')
           .gte('reservation_datetime', startStr)
           .lt('reservation_datetime', endStr);
 
-      final List bookings = bookingsData;
+      // Fetch Expenses
+      final expensesData = await supabase
+          .from('expenses')
+          .select('amount, expense_date')
+          .gte('expense_date', startStr)
+          .lt('expense_date', endStr);
 
-      int rev = 0;
-      Set<int> uniqueCustomers = {};
-      Map<int, int> serviceRevenueMap = {};
-      Map<int, int> serviceBookingsMap = {};
-      
-      // Calculate Peak Revenue dummy logic (max daily revenue in period)
-      Map<String, int> dailyRevenues = {};
+      int income = 0;
+      int expense = 0;
+      Map<String, Map<String, dynamic>> statsMap = {};
 
-      for (var b in bookings) {
+      DateTime curr = _dateRange!.start;
+      while (curr.isBefore(_dateRange!.end.add(const Duration(days: 1)))) {
+        final dateKey = "${curr.year}-${curr.month.toString().padLeft(2,'0')}-${curr.day.toString().padLeft(2,'0')}";
+        statsMap[dateKey] = {'date': curr, 'income': 0, 'expense': 0, 'profit': 0};
+        curr = curr.add(const Duration(days: 1));
+      }
+
+      for (var b in bookingsData) {
+        if (b['status'] == 'dibatalkan') continue;
         final price = (b['total_price'] as num?)?.toInt() ?? 0;
-        final tId = (b['treatment_id'] as num?)?.toInt();
-        final uId = (b['user_id'] as num?)?.toInt();
         final bDate = DateTime.parse(b['reservation_datetime']).toLocal();
-        final dateKey = "${bDate.year}-${bDate.month}-${bDate.day}";
-
-        rev += price;
-        if (uId != null) uniqueCustomers.add(uId);
-
-        if (tId != null) {
-          serviceRevenueMap[tId] = (serviceRevenueMap[tId] ?? 0) + price;
-          serviceBookingsMap[tId] = (serviceBookingsMap[tId] ?? 0) + 1;
+        final dateKey = "${bDate.year}-${bDate.month.toString().padLeft(2,'0')}-${bDate.day.toString().padLeft(2,'0')}";
+        
+        income += price;
+        if (statsMap.containsKey(dateKey)) {
+          statsMap[dateKey]!['income'] = (statsMap[dateKey]!['income'] as int) + price;
         }
-
-        dailyRevenues[dateKey] = (dailyRevenues[dateKey] ?? 0) + price;
       }
 
-      int pRev = 0;
-      dailyRevenues.forEach((key, value) {
-        if (value > pRev) pRev = value;
-      });
-
-      // 2. Fetch Treatments for names
-      final treatmentsData = await supabase.from('treatments').select('id, name');
-      final Map<int, String> tNames = {};
-      for (var t in treatmentsData) {
-        tNames[t['id'] as int] = t['name'] as String;
+      for (var e in expensesData) {
+        final amount = (e['amount'] as num?)?.toInt() ?? 0;
+        final eDate = DateTime.parse(e['expense_date']).toLocal();
+        final dateKey = "${eDate.year}-${eDate.month.toString().padLeft(2,'0')}-${eDate.day.toString().padLeft(2,'0')}";
+        
+        expense += amount;
+        if (statsMap.containsKey(dateKey)) {
+          statsMap[dateKey]!['expense'] = (statsMap[dateKey]!['expense'] as int) + amount;
+        }
       }
 
-      List<Map<String, dynamic>> servicesList = [];
-      serviceRevenueMap.forEach((id, r) {
-        servicesList.add({
-          'id': id,
-          'name': tNames[id] ?? 'Unknown Treatment',
-          'revenue': r,
-          'bookings': serviceBookingsMap[id] ?? 0,
-        });
-      });
-
-      // Sort by highest revenue
-      servicesList.sort((a, b) => (b['revenue'] as int).compareTo(a['revenue'] as int));
+      final list = statsMap.values.toList();
+      list.sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
+      
+      for (var s in list) {
+        s['profit'] = (s['income'] as int) - (s['expense'] as int);
+      }
 
       if (mounted) {
         setState(() {
-          totalBookings = bookings.length;
-          totalRevenue = rev;
-          totalCustomers = uniqueCustomers.length;
-          peakRevenue = pRev;
-          topServices = servicesList;
+          totalIncome = income;
+          totalExpense = expense;
+          totalProfit = income - expense;
+          dailyStats = list;
           isLoading = false;
         });
       }
@@ -171,14 +168,272 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 
+  Future<void> _showAddExpenseDialog() async {
+    final amountCtrl = TextEditingController();
+    String category = 'gaji karyawan';
+    
+    await showDialog(
+      context: context,
+      builder: (context) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Text("Tambah Pengeluaran", style: TextStyle(fontWeight: FontWeight.bold)),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  DropdownButtonFormField<String>(
+                    value: category,
+                    decoration: InputDecoration(
+                      labelText: "Kategori",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                    items: const [
+                      DropdownMenuItem(value: "gaji karyawan", child: Text("Gaji Karyawan")),
+                      DropdownMenuItem(value: "maintenance", child: Text("Maintenance")),
+                      DropdownMenuItem(value: "others", child: Text("Others")),
+                    ],
+                    onChanged: (val) {
+                      if (val != null) setDialogState(() => category = val);
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  TextField(
+                    controller: amountCtrl,
+                    keyboardType: TextInputType.number,
+                    decoration: InputDecoration(
+                      labelText: "Jumlah (Rp)",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: Text("Batal", style: TextStyle(color: mutedText)),
+                ),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: primaryColor,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  ),
+                  onPressed: () async {
+                    final amount = int.tryParse(amountCtrl.text) ?? 0;
+                    if (amount > 0) {
+                      try {
+                        await Supabase.instance.client.from('expenses').insert({
+                          'amount': amount,
+                          'category': category,
+                          'expense_date': DateTime.now().toIso8601String(),
+                        });
+                        if (!context.mounted) return;
+                        Navigator.pop(context);
+                        _fetchData();
+                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pengeluaran berhasil ditambahkan")));
+                      } catch (e) {
+                        debugPrint("Error adding expense: $e");
+                        if (!context.mounted) return;
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: $e")));
+                      }
+                    }
+                  },
+                  child: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                ),
+              ],
+            );
+          }
+        );
+      }
+    );
+  }
+
+  Future<void> _exportToExcel() async {
+    try {
+      var excel = Excel.createExcel();
+      Sheet sheetObject = excel['Report'];
+      excel.setDefaultSheet('Report');
+
+      // Add Headers
+      sheetObject.appendRow([
+        TextCellValue('Tanggal'),
+        TextCellValue('Pemasukan'),
+        TextCellValue('Pengeluaran'),
+        TextCellValue('Profit'),
+      ]);
+
+      // Add Data
+      for (var s in dailyStats) {
+        final date = DateFormat('yyyy-MM-dd').format(s['date'] as DateTime);
+        sheetObject.appendRow([
+          TextCellValue(date),
+          IntCellValue(s['income'] as int),
+          IntCellValue(s['expense'] as int),
+          IntCellValue(s['profit'] as int),
+        ]);
+      }
+      
+      // Add Totals
+      sheetObject.appendRow([
+        TextCellValue('TOTAL'),
+        IntCellValue(totalIncome),
+        IntCellValue(totalExpense),
+        IntCellValue(totalProfit),
+      ]);
+
+      var fileBytes = excel.save();
+      if (fileBytes != null) {
+        final directory = await getTemporaryDirectory();
+        final path = "${directory.path}/Salon_Report_${DateTime.now().millisecondsSinceEpoch}.xlsx";
+        File(path)
+          ..createSync(recursive: true)
+          ..writeAsBytesSync(fileBytes);
+        
+        await Share.shareXFiles([XFile(path)], text: 'Report Salon');
+      }
+    } catch (e) {
+      debugPrint("Error exporting excel: $e");
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal mengunduh report: $e")));
+    }
+  }
+
+  Widget _buildIncomeExpenseChart() {
+    if (dailyStats.isEmpty) return const SizedBox();
+    
+    double maxY = 0;
+    for (var s in dailyStats) {
+      if (s['income'] > maxY) maxY = (s['income'] as int).toDouble();
+      if (s['expense'] > maxY) maxY = (s['expense'] as int).toDouble();
+    }
+    if (maxY == 0) maxY = 100000;
+    
+    return SizedBox(
+      height: 250,
+      child: BarChart(
+        BarChartData(
+          alignment: BarChartAlignment.spaceAround,
+          maxY: maxY * 1.2,
+          barTouchData: BarTouchData(enabled: false),
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  int idx = value.toInt();
+                  if (idx >= 0 && idx < dailyStats.length) {
+                    if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
+                    final date = dailyStats[idx]['date'] as DateTime;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(DateFormat('dd MMM').format(date), style: const TextStyle(fontSize: 9)),
+                    );
+                  }
+                  return const SizedBox();
+                },
+                reservedSize: 28,
+              ),
+            ),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          barGroups: dailyStats.asMap().entries.map((e) {
+            int i = e.key;
+            var s = e.value;
+            return BarChartGroupData(
+              x: i,
+              barRods: [
+                BarChartRodData(
+                  toY: (s['income'] as int).toDouble(),
+                  color: Colors.green.shade400,
+                  width: 6,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+                BarChartRodData(
+                  toY: (s['expense'] as int).toDouble(),
+                  color: Colors.red.shade400,
+                  width: 6,
+                  borderRadius: BorderRadius.circular(2),
+                ),
+              ],
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildProfitChart() {
+    if (dailyStats.isEmpty) return const SizedBox();
+    
+    double maxY = 0;
+    double minY = 0;
+    for (var s in dailyStats) {
+      if (s['profit'] > maxY) maxY = (s['profit'] as int).toDouble();
+      if (s['profit'] < minY) minY = (s['profit'] as int).toDouble();
+    }
+    if (maxY == 0 && minY == 0) maxY = 100000;
+    
+    return SizedBox(
+      height: 200,
+      child: LineChart(
+        LineChartData(
+          minY: minY < 0 ? minY * 1.2 : 0,
+          maxY: maxY * 1.2,
+          titlesData: FlTitlesData(
+            show: true,
+            bottomTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  int idx = value.toInt();
+                  if (idx >= 0 && idx < dailyStats.length) {
+                    if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
+                    final date = dailyStats[idx]['date'] as DateTime;
+                    return Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text(DateFormat('dd MMM').format(date), style: const TextStyle(fontSize: 9)),
+                    );
+                  }
+                  return const SizedBox();
+                },
+                reservedSize: 28,
+              ),
+            ),
+            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+          ),
+          gridData: const FlGridData(show: false),
+          borderData: FlBorderData(show: false),
+          lineBarsData: [
+            LineChartBarData(
+              spots: dailyStats.asMap().entries.map((e) {
+                return FlSpot(e.key.toDouble(), (e.value['profit'] as int).toDouble());
+              }).toList(),
+              isCurved: true,
+              color: primaryColor,
+              barWidth: 3,
+              isStrokeCapRound: true,
+              dotData: const FlDotData(show: false),
+              belowBarData: BarAreaData(
+                show: true,
+                color: primaryColor.withOpacity(0.2),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Implement Search Filter on Top Services
-    final filteredServices = topServices.where((service) {
-      final name = service['name'].toString().toLowerCase();
-      return name.contains(_searchQuery.toLowerCase());
-    }).take(3).toList(); // Only show Top 3 of filtered
-
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
@@ -188,7 +443,6 @@ class _ReportPageState extends State<ReportPage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // 1. Centered Header (Removed drawer, profile, notifications)
                 Center(
                   child: Text(
                     "Report",
@@ -201,30 +455,6 @@ class _ReportPageState extends State<ReportPage> {
                 ),
                 const SizedBox(height: 24),
 
-                // 2. Functional Search Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: TextField(
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      icon: Icon(Icons.search, color: mutedText, size: 20),
-                      hintText: "Search treatments in report...",
-                      hintStyle: TextStyle(color: mutedText, fontSize: 14),
-                      border: InputBorder.none,
-                    ),
-                  ),
-                ),
-                const SizedBox(height: 16),
-
-                // 3. Functional Date Picker
                 GestureDetector(
                   onTap: () => _pickDateRange(context),
                   child: Container(
@@ -257,13 +487,26 @@ class _ReportPageState extends State<ReportPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 16),
+                
+                SizedBox(
+                  width: double.infinity,
+                  child: ElevatedButton.icon(
+                    onPressed: _showAddExpenseDialog,
+                    icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                    label: const Text("TAMBAH PENGELUARAN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: primaryColor,
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 24),
 
-                // Processing Indicator
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else ...[
-                  // Performance Section Title
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
@@ -289,131 +532,41 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 16),
 
-                  // Chart Card
-                  Container(
-                    padding: const EdgeInsets.all(20),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(16),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.02),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              "PEAK DAILY REVENUE",
-                              style: TextStyle(
-                                fontSize: 10,
-                                fontWeight: FontWeight.bold,
-                                color: mutedText,
-                                letterSpacing: 0.5,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          formatCurrency(peakRevenue),
-                          style: TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: primaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                        // Mock Chart Area
-                        SizedBox(
-                          height: 80,
-                          width: double.infinity,
-                          child: CustomPaint(
-                            painter: ChartCurvePainter(
-                              lineColor: primaryColor,
-                              hasData: peakRevenue > 0,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
                   // Stat cards
-                  _buildHorizontalStatCard(
-                    Icons.people_outline,
-                    "TOTAL CUSTOMERS",
-                    "$totalCustomers",
-                  ),
+                  _buildHorizontalStatCard(Icons.arrow_downward, "PEMASUKAN", formatCurrency(totalIncome), Colors.green),
                   const SizedBox(height: 12),
-                  _buildHorizontalStatCard(
-                    Icons.calendar_today_outlined,
-                    "TOTAL BOOKINGS",
-                    "$totalBookings",
-                  ),
+                  _buildHorizontalStatCard(Icons.arrow_upward, "PENGELUARAN", formatCurrency(totalExpense), Colors.red),
                   const SizedBox(height: 12),
-                  _buildHorizontalStatCard(
-                    Icons.payments_outlined,
-                    "TOTAL REVENUE",
-                    formatCurrency(totalRevenue),
-                  ),
+                  _buildHorizontalStatCard(Icons.attach_money, "PROFIT", formatCurrency(totalProfit), primaryColor),
                   const SizedBox(height: 32),
 
-                  // Top 3 Best Services Title
+                  Text("Pemasukan & Pengeluaran", style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 4),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
-                      Container(width: 24, height: 3, color: primaryColor),
-                      const SizedBox(width: 8),
-                      Text(
-                        "Top Services by Revenue",
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      Container(width: 10, height: 10, color: Colors.green.shade400), const SizedBox(width: 4),
+                      const Text("Pemasukan", style: TextStyle(fontSize: 10)), const SizedBox(width: 12),
+                      Container(width: 10, height: 10, color: Colors.red.shade400), const SizedBox(width: 4),
+                      const Text("Pengeluaran", style: TextStyle(fontSize: 10)),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Top 3 Items List
-                  if (filteredServices.isEmpty)
-                    Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Text("No services found in this period.", style: TextStyle(color: mutedText)),
-                      ),
-                    ),
-                  
-                  for (int i = 0; i < filteredServices.length; i++) ...[
-                    _buildTopServiceCard(
-                      filteredServices[i]['name'],
-                      "${filteredServices[i]['bookings']} bookings in this range",
-                      formatCurrency(filteredServices[i]['revenue']),
-                      (filteredServices[i]['revenue'] as int) / (filteredServices[0]['revenue'] as int == 0 ? 1 : filteredServices[0]['revenue'] as int),
-                      _getDummyColor(i),
-                    ),
-                    const SizedBox(height: 12),
-                  ],
                   const SizedBox(height: 24),
+                  _buildIncomeExpenseChart(),
+                  const SizedBox(height: 32),
 
-                  // Download Button
+                  Text("Grafik Profit", style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 24),
+                  _buildProfitChart(),
+                  const SizedBox(height: 32),
+
                   SizedBox(
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton.icon(
-                      onPressed: () {},
+                      onPressed: _exportToExcel,
                       icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
                       label: const Text(
-                        "DOWNLOAD REPORT",
+                        "DOWNLOAD REPORT EXCEL",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,
@@ -431,14 +584,12 @@ class _ReportPageState extends State<ReportPage> {
                     ),
                   ),
                 ],
-                const SizedBox(height: 100), // Spacing for bottom nav
+                const SizedBox(height: 100),
               ],
             ),
           ),
         ),
       ),
-
-      // Custom Bottom Navigation Bar
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -470,14 +621,7 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Color _getDummyColor(int index) {
-    if (index == 0) return Colors.amber.shade200;
-    if (index == 1) return Colors.green.shade200;
-    if (index == 2) return Colors.brown.shade200;
-    return Colors.grey.shade200;
-  }
-
-  Widget _buildHorizontalStatCard(IconData icon, String title, String value) {
+  Widget _buildHorizontalStatCard(IconData icon, String title, String value, Color color) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -492,7 +636,7 @@ class _ReportPageState extends State<ReportPage> {
               color: const Color(0xFFE2E8F0),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: primaryColor, size: 22),
+            child: Icon(icon, color: color, size: 22),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -514,96 +658,11 @@ class _ReportPageState extends State<ReportPage> {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.w900,
-                    color: primaryColor,
+                    color: color,
                   ),
                 ),
               ],
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTopServiceCard(String title, String subtitle, String amount, double progress, Color dummyImageColor) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.01),
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(10),
-              color: dummyImageColor,
-            ),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: primaryColor,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    color: mutedText,
-                    fontSize: 11,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [
-              Text(
-                amount,
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                  fontSize: 15,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Container(
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE2E8F0),
-                  borderRadius: BorderRadius.circular(2),
-                ),
-                child: FractionallySizedBox(
-                  alignment: Alignment.centerLeft,
-                  widthFactor: progress.isNaN ? 0.0 : progress, // safety check
-                  child: Container(
-                    decoration: BoxDecoration(
-                      color: primaryColor,
-                      borderRadius: BorderRadius.circular(2),
-                    ),
-                  ),
-                ),
-              ),
-            ],
           ),
         ],
       ),
@@ -662,43 +721,4 @@ class _ReportPageState extends State<ReportPage> {
       ),
     );
   }
-}
-
-class ChartCurvePainter extends CustomPainter {
-  final Color lineColor;
-  final bool hasData;
-
-  ChartCurvePainter({required this.lineColor, this.hasData = true});
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = hasData ? lineColor : Colors.grey.shade300
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 3.5
-      ..strokeCap = StrokeCap.round;
-
-    final path = Path();
-    if (hasData) {
-      path.moveTo(0, size.height * 0.7);
-      // Create a smooth curve
-      path.cubicTo(
-        size.width * 0.2, size.height * 0.6,
-        size.width * 0.4, size.height * 0.3,
-        size.width * 0.7, size.height * 0.2,
-      );
-      path.quadraticBezierTo(
-        size.width * 0.85, size.height * 0.15,
-        size.width, size.height * 0.3,
-      );
-    } else {
-      path.moveTo(0, size.height * 0.7);
-      path.lineTo(size.width, size.height * 0.7);
-    }
-
-    canvas.drawPath(path, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

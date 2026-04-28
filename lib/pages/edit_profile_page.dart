@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../app_session.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -13,18 +15,91 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
-  final TextEditingController _fullNameController = TextEditingController(text: "Jane Doe");
-  final TextEditingController _usernameController = TextEditingController(text: "janedoe");
-  final TextEditingController _emailController = TextEditingController(text: "jane.doe@example.com");
-  final TextEditingController _phoneController = TextEditingController(text: "+1 (555) 000-1234");
-  final TextEditingController _addressController = TextEditingController(text: "123 Maple Avenue, Apt 4B, Beverly Hills, CA 90210");
+  final TextEditingController _fullNameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _phoneController = TextEditingController();
+  final TextEditingController _addressController = TextEditingController();
+
+  bool _loading = true;
+  bool _saving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUserData();
+  }
+
+  Future<void> _fetchUserData() async {
+    try {
+      final userId = AppSession.userId;
+      if (userId == null) return;
+
+      final data = await Supabase.instance.client
+          .from('users')
+          .select()
+          .eq('id', userId)
+          .single();
+
+      if (mounted) {
+        setState(() {
+          _fullNameController.text = data['name'] ?? '';
+          _usernameController.text = data['username'] ?? '';
+          _emailController.text = data['email'] ?? '';
+          _phoneController.text = data['phone'] ?? '';
+          _addressController.text = data['address'] ?? '';
+          _loading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint("Error fetching profile: $e");
+      if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  Future<void> _updateProfile() async {
+    setState(() => _saving = true);
+    try {
+      final userId = AppSession.userId;
+      if (userId == null) return;
+
+      await Supabase.instance.client.from('users').update({
+        'name': _fullNameController.text,
+        'username': _usernameController.text,
+        'email': _emailController.text,
+        'phone': _phoneController.text,
+        'address': _addressController.text,
+      }).eq('id', userId);
+
+      // Update AppSession
+      AppSession.userName = _fullNameController.text;
+      AppSession.userEmail = _emailController.text;
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Profil berhasil diperbarui!")),
+        );
+        Navigator.pop(context, true); // Return true to indicate update
+      }
+    } catch (e) {
+      debugPrint("Error updating profile: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Gagal memperbarui profil")),
+        );
+        setState(() => _saving = false);
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
-        child: Column(
+        child: _loading 
+          ? const Center(child: CircularProgressIndicator())
+          : Column(
           children: [
             // Header
             Padding(
@@ -87,7 +162,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      "Jane Doe",
+                      _fullNameController.text,
                       style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.w900,
@@ -97,7 +172,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      "Member since Oct 2023",
+                      AppSession.userRole?.toUpperCase() ?? 'USER',
                       style: TextStyle(
                         fontSize: 14,
                         color: mutedText,
@@ -133,11 +208,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           ),
                           elevation: 0,
                         ),
-                        onPressed: () {
-                          // save logic
-                          Navigator.pop(context);
-                        },
-                        child: const Text(
+                        onPressed: _saving ? null : _updateProfile,
+                        child: _saving 
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : const Text(
                           "Save Changes",
                           style: TextStyle(
                             fontSize: 16,

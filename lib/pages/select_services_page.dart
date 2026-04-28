@@ -76,6 +76,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           .from('users')
           .select('id, name, type, role, status, avatar')
           .eq('type', 'karyawan')
+          .neq('role', 'pelanggan')
           .eq('status', 'aktif');
           
       // Get absensi for date

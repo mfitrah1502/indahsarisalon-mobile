@@ -86,39 +86,23 @@ class _SettingsPageState extends State<SettingsPage> {
                       child: Column(
                         children: [
                           // Avatar with edit button
-                          Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(16),
-                                  color: const Color(0xFFE2E8F0),
-                                  image: const DecorationImage(
-                                    image: NetworkImage('https://cdn-icons-png.flaticon.com/512/3135/3135715.png'), // placeholder
-                                    fit: BoxFit.cover,
-                                  ),
-                                ),
-                                child: const Icon(Icons.person, color: Colors.white, size: 40),
+                          // Avatar
+                          Container(
+                            width: 80,
+                            height: 80,
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(16),
+                              color: const Color(0xFFE2E8F0),
+                              image: const DecorationImage(
+                                image: NetworkImage('https://cdn-icons-png.flaticon.com/512/3135/3135715.png'),
+                                fit: BoxFit.cover,
                               ),
-                              Transform.translate(
-                                offset: const Offset(8, 8),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
-                                  decoration: BoxDecoration(
-                                    color: activeNavBg,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(color: cardBg, width: 2),
-                                  ),
-                                  child: const Icon(Icons.edit, color: Colors.white, size: 14),
-                                ),
-                              )
-                            ],
+                            ),
+                            child: const Icon(Icons.person, color: Colors.white, size: 40),
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "Jane Doe",
+                            "${AppSession.userName}",
                             style: TextStyle(
                               color: mainTextColor,
                               fontSize: 24,
@@ -127,7 +111,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           const SizedBox(height: 4),
                           Text(
-                            "jane.doe@example.com",
+                            "${AppSession.userEmail}",
                             style: TextStyle(
                               color: mutedText,
                               fontSize: 14,
@@ -164,11 +148,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: "Edit Profile",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final updated = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (context) => const EditProfilePage()),
                               );
+                              if (updated == true && mounted) setState(() {});
                             },
                           ),
                           _buildSettingTile(

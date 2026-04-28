@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_page.dart';
 
 class ResetPasswordPage extends StatefulWidget {
@@ -25,6 +26,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
   bool _has8Chars = false;
   bool _hasUppercase = false;
   bool _hasSpecialSymbol = false;
+
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -247,24 +250,63 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       elevation: 4,
                       shadowColor: primaryColor.withOpacity(0.3),
                     ),
-                    onPressed: (_has8Chars && _hasUppercase && _hasSpecialSymbol) ? () {
-                      // Save Logic
+                    onPressed: (_has8Chars && _hasUppercase && _hasSpecialSymbol && !_isLoading) ? () async {
+                      if (passwordController.text != confirmController.text) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Passwords do not match')),
+                        );
+                        return;
+                      }
+
+                      setState(() => _isLoading = true);
+                      try {
+                        await Supabase.instance.client.auth.updateUser(
+                          UserAttributes(password: passwordController.text),
+                        );
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Password successfully updated!')),
+                          );
+                          // Since the user is authenticated from verifyOTP, 
+                          // navigate back to AuthPage to determine routing (Home or Login)
+                          Navigator.pushAndRemoveUntil(
+                            context,
+                            MaterialPageRoute(builder: (context) => const AuthPage()),
+                            (route) => false,
+                          );
+                        }
+                      } catch (e) {
+                        if (mounted) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(content: Text('Error updating password: ${e.toString()}')),
+                          );
+                        }
+                      } finally {
+                        if (mounted) {
+                          setState(() => _isLoading = false);
+                        }
+                      }
                     } : null,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const Text(
-                          "Save New Password",
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            letterSpacing: 0.5,
+                    child: _isLoading 
+                        ? const SizedBox(
+                            width: 24, height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Text(
+                                "Save New Password",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 0.5,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              const Icon(Icons.save_outlined, size: 18),
+                            ],
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Icon(Icons.save_outlined, size: 18),
-                      ],
-                    ),
                   ),
                 ),
               ],

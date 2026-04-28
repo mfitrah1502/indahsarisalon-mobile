@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_page.dart';
 import 'reset_password_page.dart';
 
@@ -18,6 +19,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final Color mutedText = const Color(0xFF64748B);
 
   final emailController = TextEditingController();
+  bool _isLoading = false;
+
+  final List<TextEditingController> _otpControllers = List.generate(6, (index) => TextEditingController());
+  bool _isVerifying = false;
 
   @override
   Widget build(BuildContext context) {
@@ -154,24 +159,56 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             elevation: 4,
                             shadowColor: primaryColor.withOpacity(0.3),
                           ),
-                          onPressed: () {
-                            _showOTPDialog(context);
-                          },
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              const Text(
-                                "Send OTP",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                          onPressed: _isLoading
+                              ? null
+                              : () async {
+                                  final email = emailController.text.trim();
+                                  if (email.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Please enter your email')),
+                                    );
+                                    return;
+                                  }
+
+                                  setState(() => _isLoading = true);
+                                  try {
+                                    await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                                    if (mounted) {
+                                      _showOTPDialog(context);
+                                    }
+                                  } catch (e) {
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(content: Text('Error: ${e.toString()}')),
+                                      );
+                                    }
+                                  } finally {
+                                    if (mounted) {
+                                      setState(() => _isLoading = false);
+                                    }
+                                  }
+                                },
+                          child: _isLoading
+                              ? const SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                                )
+                              : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Text(
+                                      "Send OTP",
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 8),
+                                    const Icon(Icons.arrow_forward, size: 18),
+                                  ],
                                 ),
-                              ),
-                              const SizedBox(width: 8),
-                              const Icon(Icons.arrow_forward, size: 18),
-                            ],
-                          ),
                         ),
                       ),
                     ],
@@ -228,13 +265,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   }
 
   void _showOTPDialog(BuildContext context) {
+    for (var controller in _otpControllers) {
+      controller.clear();
+    }
     showDialog(
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 32),
+        return StatefulBuilder(
+          builder: (context, setStateDialog) {
+            return Dialog(
+              backgroundColor: Colors.transparent,
+              insetPadding: const EdgeInsets.symmetric(horizontal: 32),
           child: Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
@@ -283,6 +325,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       width: 42,
                       height: 54,
                       child: TextField(
+                        controller: _otpControllers[index],
                         textAlign: TextAlign.center,
                         keyboardType: TextInputType.number,
                         inputFormatters: [
@@ -333,14 +376,50 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       elevation: 4,
                       shadowColor: primaryColor.withOpacity(0.3),
                     ),
-                    onPressed: () {
-                      Navigator.pop(ctx);
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
-                      );
-                    },
-                    child: const Text("Verify", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    onPressed: _isVerifying
+                        ? null
+                        : () async {
+                            final otp = _otpControllers.map((c) => c.text).join();
+                            if (otp.length != 6) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
+                              );
+                              return;
+                            }
+
+                            setStateDialog(() => _isVerifying = true);
+                            try {
+                              await Supabase.instance.client.auth.verifyOTP(
+                                email: emailController.text.trim(),
+                                token: otp,
+                                type: OtpType.recovery,
+                              );
+                              if (mounted) {
+                                Navigator.pop(ctx);
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                                );
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('Invalid OTP or error: ${e.toString()}')),
+                                );
+                              }
+                            } finally {
+                              if (mounted) {
+                                setStateDialog(() => _isVerifying = false);
+                              }
+                            }
+                          },
+                    child: _isVerifying
+                        ? const SizedBox(
+                            width: 24,
+                            height: 24,
+                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                          )
+                        : const Text("Verify", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
 
@@ -371,8 +450,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       style: TextStyle(color: mutedText, fontSize: 13),
                     ),
                     GestureDetector(
-                      onTap: () {
-                        // Resend Logic
+                      onTap: () async {
+                        try {
+                          await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('OTP sent successfully!')),
+                            );
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Failed to resend OTP: ${e.toString()}')),
+                            );
+                          }
+                        }
                       },
                       child: Text(
                         "Resend Code",
@@ -389,6 +481,8 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             ),
           ),
         );
+      },
+    );
       },
     );
   }

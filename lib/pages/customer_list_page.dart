@@ -19,6 +19,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   bool _loading = true;
+  bool _isSelectionActive = false;
+  final Set<String> _selectedKeys = {};
   List<Map<String, dynamic>> _customers = [];
   List<Map<String, dynamic>> _filteredCustomers = [];
   final TextEditingController _searchController = TextEditingController();
@@ -37,7 +39,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
       // 1. Fetch all users with role 'pelanggan'
       final usersData = await supabase
           .from('users')
-          .select('id, name, email, phone')
+          .select('id, name, email, phone, is_colour_circle, colour_circle_expired_at')
           .eq('role', 'pelanggan');
 
       // 2. Fetch all bookings for spend calculation
@@ -63,6 +65,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
           'phone': phone,
           'email': email,
           'spend': 0,
+          'key': key,
+          'is_colour_circle': user['is_colour_circle'] ?? false,
+          'colour_circle_expired_at': user['colour_circle_expired_at'],
         };
       }
 
@@ -99,6 +104,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
             'phone': phone,
             'email': email,
             'spend': 0,
+            'key': key,
+            'is_colour_circle': false,
+            'colour_circle_expired_at': null,
           };
         }
         
@@ -151,10 +159,21 @@ class _CustomerListPageState extends State<CustomerListPage> {
   }
 
   Widget _buildCustomerCard(Map<String, dynamic> customer) {
+    String key = customer['key'];
+    bool isSelected = _selectedKeys.contains(key);
+
     return GestureDetector(
       onTap: () {
         if (widget.isSelectionMode) {
           Navigator.pop(context, customer);
+        } else if (_isSelectionActive) {
+          setState(() {
+            if (isSelected) {
+              _selectedKeys.remove(key);
+            } else {
+              _selectedKeys.add(key);
+            }
+          });
         }
       },
       child: Container(
@@ -163,6 +182,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(16),
+          border: _isSelectionActive && isSelected 
+              ? Border.all(color: primaryColor, width: 2) 
+              : Border.all(color: Colors.transparent, width: 2),
           boxShadow: [
             BoxShadow(
               color: Colors.black.withOpacity(0.02),
@@ -173,6 +195,22 @@ class _CustomerListPageState extends State<CustomerListPage> {
         ),
         child: Row(
           children: [
+            if (_isSelectionActive) ...[
+              Checkbox(
+                value: isSelected,
+                activeColor: primaryColor,
+                onChanged: (val) {
+                  setState(() {
+                    if (val == true) {
+                      _selectedKeys.add(key);
+                    } else {
+                      _selectedKeys.remove(key);
+                    }
+                  });
+                },
+              ),
+              const SizedBox(width: 8),
+            ],
             // Avatar with green dot
             Stack(
               children: [
@@ -234,6 +272,16 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
                           else if (spend >= 1000000) { tier = 'Silver'; tc = const Color(0xFF94A3B8); } // silver
                           
+                          if (tier == 'Reguler') {
+                             bool isCc = customer['is_colour_circle'] == true;
+                             if (isCc) {
+                               DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
+                               if (exp != null && exp.isAfter(DateTime.now())) {
+                                  tier = 'Colour Circle';
+                                  tc = const Color(0xFFD660A1);
+                               }
+                             }
+                          }
                           if (tier == 'Reguler') return const SizedBox.shrink();
 
                           return Container(
@@ -296,11 +344,117 @@ class _CustomerListPageState extends State<CustomerListPage> {
               ],
             ),
             const SizedBox(width: 12),
-            const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1), size: 24),
+            if (!_isSelectionActive) const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1), size: 24),
           ],
         ),
       ),
     );
+  }
+
+  Future<void> _deleteSelectedCustomers() async {
+    if (_selectedKeys.isEmpty) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Text("Hapus Pelanggan?"),
+        content: Text("Apakah Anda yakin ingin menghapus ${_selectedKeys.length} pelanggan terpilih? Semua data booking terkait juga akan dihapus."),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Batal", style: TextStyle(color: mutedText))),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Hapus"),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => _loading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      
+      // Separate registered IDs and guest keys
+      List<int> userIds = [];
+      List<String> phones = [];
+      List<String> emails = [];
+
+      for (var key in _selectedKeys) {
+        final cust = _customers.firstWhere((c) => c['key'] == key);
+        if (cust['id'] != null) {
+          userIds.add(cust['id'] as int);
+        }
+        if (cust['phone'] != null && cust['phone'].toString().isNotEmpty) {
+          phones.add(cust['phone'].toString());
+        }
+        if (cust['email'] != null && cust['email'].toString().isNotEmpty) {
+          emails.add(cust['email'].toString());
+        }
+      }
+
+      // --- NEW: Find all relevant booking IDs to clear details first ---
+      List<int> bookingIds = [];
+      
+      var query = supabase.from('bookings').select('id');
+      
+      // We need to fetch IDs. Since Supabase OR filters are a bit complex in bulk, 
+      // we'll do simple fetches or one combined if possible.
+      // But for simplicity and reliability:
+      if (userIds.isNotEmpty) {
+        final res = await supabase.from('bookings').select('id').inFilter('user_id', userIds);
+        bookingIds.addAll((res as List).map((e) => e['id'] as int));
+      }
+      if (phones.isNotEmpty) {
+        final res = await supabase.from('bookings').select('id').inFilter('customer_phone', phones);
+        bookingIds.addAll((res as List).map((e) => e['id'] as int));
+      }
+      if (emails.isNotEmpty) {
+        final res = await supabase.from('bookings').select('id').inFilter('customer_email', emails);
+        bookingIds.addAll((res as List).map((e) => e['id'] as int));
+      }
+      
+      bookingIds = bookingIds.toSet().toList(); // unique
+
+      // 1. Delete Booking Details first
+      if (bookingIds.isNotEmpty) {
+        await supabase.from('booking_details').delete().inFilter('booking_id', bookingIds);
+      }
+
+      // 1b. Cleanup references where these users might be stylists or cashiers in other bookings
+      if (userIds.isNotEmpty) {
+        await supabase.from('booking_details').update({'stylist_id': null}).inFilter('stylist_id', userIds);
+        await supabase.from('bookings').update({'stylist_id': null}).inFilter('stylist_id', userIds);
+        await supabase.from('bookings').update({'cashier_id': null, 'stylist_id': null}).inFilter('cashier_id', userIds);
+      }
+
+      // 2. Delete Bookings
+      if (bookingIds.isNotEmpty) {
+        await supabase.from('bookings').delete().inFilter('id', bookingIds);
+      }
+
+      // 3. Delete Users
+      if (userIds.isNotEmpty) {
+        await supabase.from('users').delete().inFilter('id', userIds);
+      }
+      
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data pelanggan berhasil dibersihkan")));
+        setState(() {
+          _isSelectionActive = false;
+          _selectedKeys.clear();
+        });
+        _fetchCustomers();
+      }
+    } catch (e) {
+      debugPrint("Error deleting customers: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal menghapus beberapa data pelangan.")));
+        setState(() => _loading = false);
+      }
+    }
   }
 
   @override
@@ -310,30 +464,46 @@ class _CustomerListPageState extends State<CustomerListPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Row(
                 children: [
                    GestureDetector(
-                    onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                    onTap: () {
+                      if (_isSelectionActive) {
+                        setState(() {
+                          _isSelectionActive = false;
+                          _selectedKeys.clear();
+                        });
+                      } else {
+                        Navigator.pop(context);
+                      }
+                    },
+                    child: Icon(_isSelectionActive ? Icons.close : Icons.arrow_back, color: primaryColor, size: 28),
                   ),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 28.0),
-                        child: Text(
-                          widget.isSelectionMode ? "Pilih Pelanggan" : "Daftar Pelanggan",
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                    child: Text(
+                      _isSelectionActive 
+                        ? "${_selectedKeys.length} Terpilih" 
+                        : (widget.isSelectionMode ? "Pilih Pelanggan" : "Daftar Pelanggan"),
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
+                  if (!widget.isSelectionMode && _customers.isNotEmpty) 
+                    _isSelectionActive 
+                      ? IconButton(
+                          onPressed: _selectedKeys.isEmpty ? null : _deleteSelectedCustomers,
+                          icon: Icon(Icons.delete_outline, color: _selectedKeys.isEmpty ? Colors.grey : Colors.red, size: 28),
+                        )
+                      : TextButton(
+                          onPressed: () => setState(() => _isSelectionActive = true),
+                          child: Text("Pilih", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                        ),
                 ],
               ),
             ),

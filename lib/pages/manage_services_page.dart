@@ -6,6 +6,7 @@ import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'settings_page.dart';
 import 'report_page.dart';
+import 'add_promo_page.dart';
 
 class ManageServicesPage extends StatefulWidget {
   const ManageServicesPage({super.key});
@@ -445,7 +446,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Add Button
+                    // Add Service Button
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -462,6 +463,34 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             Icon(Icons.add, color: Colors.white, size: 20),
                             SizedBox(width: 8),
                             Text("Tambah Layanan Baru", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+
+                    // Add Promo Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        style: OutlinedButton.styleFrom(
+                          side: BorderSide(color: primaryColor),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        onPressed: () async {
+                          final updated = await Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const AddPromoPage()),
+                          );
+                          if (updated == true && mounted) _fetchAll();
+                        },
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.local_offer_outlined, color: primaryColor, size: 20),
+                            const SizedBox(width: 8),
+                            Text("Tambah Promo", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
                           ],
                         ),
                       ),
