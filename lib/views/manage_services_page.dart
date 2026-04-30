@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/service_model.dart';
+import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
 import 'home_page.dart';
 import 'booking_list_page.dart';
@@ -28,8 +29,8 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
   bool _loading = true;
   List<String> _categories = ['All'];
-  // Each: { td_id, treatment_id, treatment_name, detail_name, display_name, category, duration, price }
-  List<Map<String, dynamic>> _services = [];
+  List<ServiceModel> _services = [];
+  final ServiceController _serviceController = ServiceController();
 
   @override
   void initState() {
@@ -40,42 +41,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   Future<void> _fetchAll() async {
     setState(() => _loading = true);
     try {
-      final catData = await Supabase.instance.client
-          .from('categories')
-          .select('id, name')
-          .order('name');
-
-      final svcData = await Supabase.instance.client
-          .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
-          .order('id');
-
-      final cats = ['All', ...List<Map<String, dynamic>>.from(catData).map((c) => c['name'] as String)];
-
-      final services = List<Map<String, dynamic>>.from(svcData).map((td) {
-        final treatment = td['treatments'] as Map<String, dynamic>?;
-        final category = treatment?['categories'] as Map<String, dynamic>?;
-        final treatmentName = treatment?['name'] ?? '';
-        final detailName = td['name'] ?? '';
-        final displayName = (treatmentName == detailName || detailName.isEmpty)
-            ? treatmentName
-            : "$treatmentName - $detailName";
-        return {
-          'td_id': td['id'],
-          'treatment_id': td['treatment_id'],
-          'treatment_name': treatmentName,
-          'detail_name': detailName,
-          'display_name': displayName,
-          'category': category?['name'] ?? '',
-          'duration': td['duration'] ?? 0,
-          'price': td['price'] ?? 0,
-        };
-      }).toList();
-
+      final data = await _serviceController.fetchServicesAndCategories();
       if (mounted) {
         setState(() {
-          _categories = cats;
-          _services = services;
+          _categories = data['categories'] as List<String>;
+          _services = data['services'] as List<ServiceModel>;
           _loading = false;
         });
       }
@@ -85,24 +55,24 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     }
   }
 
-  List<Map<String, dynamic>> get _filteredServices {
+  List<ServiceModel> get _filteredServices {
     return _services.where((s) {
       final q = _searchQuery.toLowerCase();
-      final matchesSearch = s['display_name'].toString().toLowerCase().contains(q) ||
-          s['category'].toString().toLowerCase().contains(q);
+      final matchesSearch = s.displayName.toLowerCase().contains(q) ||
+          s.category.toLowerCase().contains(q);
       final matchesCat = _selectedCategory == 'All' ||
-          s['category'].toString().toLowerCase() == _selectedCategory.toLowerCase();
+          s.category.toLowerCase() == _selectedCategory.toLowerCase();
       return matchesSearch && matchesCat;
     }).toList();
   }
 
-  Future<void> _deleteService(Map<String, dynamic> service) async {
+  Future<void> _deleteService(ServiceModel service) async {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text("Hapus Layanan", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-        content: Text("Yakin ingin menghapus \"${service['display_name']}\"?"),
+        content: Text("Yakin ingin menghapus \"${service.displayName}\"?"),
         actions: [
           TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
           ElevatedButton(
@@ -116,10 +86,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
     if (confirm == true) {
       try {
-        await Supabase.instance.client
-            .from('treatment_details')
-            .delete()
-            .eq('id', service['td_id']);
+        await _serviceController.deleteService(service.tdId);
         _fetchAll();
       } catch (e) {
         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal menghapus: $e"), backgroundColor: Colors.red));
@@ -127,13 +94,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     }
   }
 
-  void _showServiceDialog({Map<String, dynamic>? service}) {
+  void _showServiceDialog({ServiceModel? service}) {
     final isEdit = service != null;
-    final nameController = TextEditingController(text: isEdit ? service['detail_name'] : '');
-    final treatmentController = TextEditingController(text: isEdit ? service['treatment_name'] : '');
-    final priceController = TextEditingController(text: isEdit ? (service['price'] as num).toInt().toString() : '');
-    final durationController = TextEditingController(text: isEdit ? (service['duration'] as num).toInt().toString() : '');
-    String selectedCategory = isEdit ? service['category'] : (_categories.length > 1 ? _categories[1] : 'All');
+    final nameController = TextEditingController(text: isEdit ? service.detailName : '');
+    final treatmentController = TextEditingController(text: isEdit ? service.treatmentName : '');
+    final priceController = TextEditingController(text: isEdit ? service.price.toString() : '');
+    final durationController = TextEditingController(text: isEdit ? service.duration.toString() : '');
+    String selectedCategory = isEdit ? service.category : (_categories.length > 1 ? _categories[1] : 'All');
 
     showDialog(
       context: context,
@@ -288,63 +255,23 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
   Future<void> _saveService({
     required bool isEdit,
-    Map<String, dynamic>? existingService,
+    ServiceModel? existingService,
     required String treatmentName,
     required String detailName,
     required String category,
     required int price,
     required int duration,
   }) async {
-    final supabase = Supabase.instance.client;
-
     try {
-      // Get or create category
-      final catResult = await supabase.from('categories').select('id').eq('name', category).maybeSingle();
-      int catId;
-      if (catResult != null) {
-        catId = catResult['id'];
-      } else {
-        final newCat = await supabase.from('categories').insert({'name': category}).select('id').single();
-        catId = newCat['id'];
-      }
-
-      if (isEdit && existingService != null) {
-        // Update treatment detail
-        await supabase.from('treatment_details').update({
-          'name': detailName.isEmpty ? treatmentName : detailName,
-          'price': price,
-          'duration': duration,
-        }).eq('id', existingService['td_id']);
-
-        // Also update the treatment name if changed
-        await supabase.from('treatments').update({
-          'name': treatmentName,
-          'category_id': catId,
-        }).eq('id', existingService['treatment_id']);
-      } else {
-        // Get or create treatment
-        final treatmentResult = await supabase.from('treatments')
-            .select('id').eq('name', treatmentName).eq('category_id', catId).maybeSingle();
-        int treatmentId;
-        if (treatmentResult != null) {
-          treatmentId = treatmentResult['id'];
-        } else {
-          final newTreatment = await supabase.from('treatments').insert({
-            'name': treatmentName,
-            'category_id': catId,
-          }).select('id').single();
-          treatmentId = newTreatment['id'];
-        }
-
-        // Create new treatment detail
-        await supabase.from('treatment_details').insert({
-          'treatment_id': treatmentId,
-          'name': detailName.isEmpty ? treatmentName : detailName,
-          'price': price,
-          'duration': duration,
-        });
-      }
-
+      await _serviceController.saveService(
+        isEdit: isEdit,
+        existingService: existingService,
+        treatmentName: treatmentName,
+        detailName: detailName,
+        category: category,
+        price: price,
+        duration: duration,
+      );
       _fetchAll();
     } catch (e) {
       debugPrint('Error saving service: $e');
@@ -519,8 +446,8 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                 separatorBuilder: (_, __) => const SizedBox(height: 12),
                                 itemBuilder: (_, index) {
                                   final svc = filtered[index];
-                                  final price = (svc['price'] as num).toInt();
-                                  final dur = (svc['duration'] as num).toInt();
+                                  final price = svc.price;
+                                  final dur = svc.duration;
 
                                   return Container(
                                     padding: const EdgeInsets.all(16),
@@ -547,11 +474,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
                                               Text(
-                                                svc['display_name'],
+                                                svc.displayName,
                                                 style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
                                               ),
                                               const SizedBox(height: 3),
-                                              Text(svc['category'], style: TextStyle(fontSize: 11, color: mutedText)),
+                                              Text(svc.category, style: TextStyle(fontSize: 11, color: mutedText)),
                                               const SizedBox(height: 8),
                                               Row(
                                                 children: [

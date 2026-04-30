@@ -1,9 +1,10 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/report_model.dart';
+import '../controllers/report_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:excel/excel.dart';
+import 'package:excel/excel.dart' hide Border;
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -32,8 +33,10 @@ class _ReportPageState extends State<ReportPage> {
   int totalIncome = 0;
   int totalExpense = 0;
   int totalProfit = 0;
-  List<Map<String, dynamic>> dailyStats = [];
+  List<ReportDailyStat> dailyStats = [];
   bool isLoading = true;
+  
+  final ReportController _reportController = ReportController();
 
   @override
   void initState() {
@@ -51,73 +54,14 @@ class _ReportPageState extends State<ReportPage> {
       isLoading = true;
     });
 
-    final supabase = Supabase.instance.client;
-
     try {
-      final startStr = _dateRange!.start.toIso8601String();
-      final endStr = _dateRange!.end.add(const Duration(days: 1)).toIso8601String();
-
-      // Fetch Bookings
-      final bookingsData = await supabase
-          .from('bookings')
-          .select('total_price, reservation_datetime, status')
-          .gte('reservation_datetime', startStr)
-          .lt('reservation_datetime', endStr);
-
-      // Fetch Expenses
-      final expensesData = await supabase
-          .from('expenses')
-          .select('amount, expense_date')
-          .gte('expense_date', startStr)
-          .lt('expense_date', endStr);
-
-      int income = 0;
-      int expense = 0;
-      Map<String, Map<String, dynamic>> statsMap = {};
-
-      DateTime curr = _dateRange!.start;
-      while (curr.isBefore(_dateRange!.end.add(const Duration(days: 1)))) {
-        final dateKey = "${curr.year}-${curr.month.toString().padLeft(2,'0')}-${curr.day.toString().padLeft(2,'0')}";
-        statsMap[dateKey] = {'date': curr, 'income': 0, 'expense': 0, 'profit': 0};
-        curr = curr.add(const Duration(days: 1));
-      }
-
-      for (var b in bookingsData) {
-        if (b['status'] == 'dibatalkan') continue;
-        final price = (b['total_price'] as num?)?.toInt() ?? 0;
-        final bDate = DateTime.parse(b['reservation_datetime']).toLocal();
-        final dateKey = "${bDate.year}-${bDate.month.toString().padLeft(2,'0')}-${bDate.day.toString().padLeft(2,'0')}";
-        
-        income += price;
-        if (statsMap.containsKey(dateKey)) {
-          statsMap[dateKey]!['income'] = (statsMap[dateKey]!['income'] as int) + price;
-        }
-      }
-
-      for (var e in expensesData) {
-        final amount = (e['amount'] as num?)?.toInt() ?? 0;
-        final eDate = DateTime.parse(e['expense_date']).toLocal();
-        final dateKey = "${eDate.year}-${eDate.month.toString().padLeft(2,'0')}-${eDate.day.toString().padLeft(2,'0')}";
-        
-        expense += amount;
-        if (statsMap.containsKey(dateKey)) {
-          statsMap[dateKey]!['expense'] = (statsMap[dateKey]!['expense'] as int) + amount;
-        }
-      }
-
-      final list = statsMap.values.toList();
-      list.sort((a, b) => (a['date'] as DateTime).compareTo(b['date'] as DateTime));
-      
-      for (var s in list) {
-        s['profit'] = (s['income'] as int) - (s['expense'] as int);
-      }
-
+      final summary = await _reportController.fetchReportData(_dateRange!);
       if (mounted) {
         setState(() {
-          totalIncome = income;
-          totalExpense = expense;
-          totalProfit = income - expense;
-          dailyStats = list;
+          totalIncome = summary.totalIncome;
+          totalExpense = summary.totalExpense;
+          totalProfit = summary.totalProfit;
+          dailyStats = summary.dailyStats;
           isLoading = false;
         });
       }
@@ -223,11 +167,7 @@ class _ReportPageState extends State<ReportPage> {
                     final amount = int.tryParse(amountCtrl.text) ?? 0;
                     if (amount > 0) {
                       try {
-                        await Supabase.instance.client.from('expenses').insert({
-                          'amount': amount,
-                          'category': category,
-                          'expense_date': DateTime.now().toIso8601String(),
-                        });
+                        await _reportController.addExpense(amount: amount, category: category);
                         if (!context.mounted) return;
                         Navigator.pop(context);
                         _fetchData();
@@ -265,12 +205,12 @@ class _ReportPageState extends State<ReportPage> {
 
       // Add Data
       for (var s in dailyStats) {
-        final date = DateFormat('yyyy-MM-dd').format(s['date'] as DateTime);
+        final date = DateFormat('yyyy-MM-dd').format(s.date);
         sheetObject.appendRow([
           TextCellValue(date),
-          IntCellValue(s['income'] as int),
-          IntCellValue(s['expense'] as int),
-          IntCellValue(s['profit'] as int),
+          IntCellValue(s.income),
+          IntCellValue(s.expense),
+          IntCellValue(s.profit),
         ]);
       }
       
@@ -304,8 +244,9 @@ class _ReportPageState extends State<ReportPage> {
     
     double maxY = 0;
     for (var s in dailyStats) {
-      if (s['income'] > maxY) maxY = (s['income'] as int).toDouble();
-      if (s['expense'] > maxY) maxY = (s['expense'] as int).toDouble();
+      if (s.income > maxY) maxY = s.income.toDouble();
+      if (s.expense > maxY) maxY = s.expense.toDouble();
+      if (s.profit > maxY) maxY = s.profit.toDouble();
     }
     if (maxY == 0) maxY = 100000;
     
@@ -314,7 +255,7 @@ class _ReportPageState extends State<ReportPage> {
       child: BarChart(
         BarChartData(
           alignment: BarChartAlignment.spaceAround,
-          maxY: maxY * 1.2,
+          maxY: maxY * 1.1,
           barTouchData: BarTouchData(enabled: false),
           titlesData: FlTitlesData(
             show: true,
@@ -325,10 +266,10 @@ class _ReportPageState extends State<ReportPage> {
                   int idx = value.toInt();
                   if (idx >= 0 && idx < dailyStats.length) {
                     if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
-                    final date = dailyStats[idx]['date'] as DateTime;
+                    final date = dailyStats[idx].date;
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(DateFormat('dd MMM').format(date), style: const TextStyle(fontSize: 9)),
+                      child: Text(DateFormat('dd MMM').format(date), style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
                     );
                   }
                   return const SizedBox();
@@ -336,97 +277,76 @@ class _ReportPageState extends State<ReportPage> {
                 reservedSize: 28,
               ),
             ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            leftTitles: AxisTitles(
+              sideTitles: SideTitles(
+                showTitles: true,
+                reservedSize: 40,
+                getTitlesWidget: (double value, TitleMeta meta) {
+                  // Format large numbers
+                  String text;
+                  if (value >= 1000000) {
+                    text = "${(value / 1000000).toStringAsFixed(1)}M";
+                  } else if (value >= 1000) {
+                    text = "${(value / 1000).toStringAsFixed(0)}K";
+                  } else {
+                    text = value.toStringAsFixed(0);
+                  }
+                  if (value == 0) text = "0";
+                  return Padding(
+                    padding: const EdgeInsets.only(right: 8.0),
+                    child: Text(text, style: TextStyle(fontSize: 10, color: Colors.grey.shade600), textAlign: TextAlign.right),
+                  );
+                },
+              ),
+            ),
             topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
             rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
           ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
+          gridData: FlGridData(
+            show: true,
+            drawVerticalLine: false,
+            horizontalInterval: maxY / 3 > 0 ? maxY / 3 : 1,
+            getDrawingHorizontalLine: (value) {
+              return FlLine(color: Colors.grey.shade200, strokeWidth: 1);
+            },
+          ),
+          borderData: FlBorderData(
+            show: true,
+            border: Border(
+              bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+              left: BorderSide.none,
+              top: BorderSide.none,
+              right: BorderSide.none,
+            ),
+          ),
           barGroups: dailyStats.asMap().entries.map((e) {
             int i = e.key;
             var s = e.value;
             return BarChartGroupData(
               x: i,
+              barsSpace: 2,
               barRods: [
                 BarChartRodData(
-                  toY: (s['income'] as int).toDouble(),
-                  color: Colors.green.shade400,
-                  width: 6,
-                  borderRadius: BorderRadius.circular(2),
+                  toY: s.expense > 0 ? s.expense.toDouble() : 0,
+                  color: Colors.redAccent,
+                  width: 5,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                 ),
                 BarChartRodData(
-                  toY: (s['expense'] as int).toDouble(),
-                  color: Colors.red.shade400,
-                  width: 6,
-                  borderRadius: BorderRadius.circular(2),
+                  toY: s.income > 0 ? s.income.toDouble() : 0,
+                  color: Colors.blueAccent,
+                  width: 5,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                ),
+                BarChartRodData(
+                  toY: s.profit > 0 ? s.profit.toDouble() : 0,
+                  color: Colors.amber.shade300,
+                  width: 5,
+                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
                 ),
               ],
             );
           }).toList(),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProfitChart() {
-    if (dailyStats.isEmpty) return const SizedBox();
-    
-    double maxY = 0;
-    double minY = 0;
-    for (var s in dailyStats) {
-      if (s['profit'] > maxY) maxY = (s['profit'] as int).toDouble();
-      if (s['profit'] < minY) minY = (s['profit'] as int).toDouble();
-    }
-    if (maxY == 0 && minY == 0) maxY = 100000;
-    
-    return SizedBox(
-      height: 200,
-      child: LineChart(
-        LineChartData(
-          minY: minY < 0 ? minY * 1.2 : 0,
-          maxY: maxY * 1.2,
-          titlesData: FlTitlesData(
-            show: true,
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (double value, TitleMeta meta) {
-                  int idx = value.toInt();
-                  if (idx >= 0 && idx < dailyStats.length) {
-                    if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
-                    final date = dailyStats[idx]['date'] as DateTime;
-                    return Padding(
-                      padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(DateFormat('dd MMM').format(date), style: const TextStyle(fontSize: 9)),
-                    );
-                  }
-                  return const SizedBox();
-                },
-                reservedSize: 28,
-              ),
-            ),
-            leftTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-          ),
-          gridData: const FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          lineBarsData: [
-            LineChartBarData(
-              spots: dailyStats.asMap().entries.map((e) {
-                return FlSpot(e.key.toDouble(), (e.value['profit'] as int).toDouble());
-              }).toList(),
-              isCurved: true,
-              color: primaryColor,
-              barWidth: 3,
-              isStrokeCapRound: true,
-              dotData: const FlDotData(show: false),
-              belowBarData: BarAreaData(
-                show: true,
-                color: primaryColor.withOpacity(0.2),
-              ),
-            ),
-          ],
         ),
       ),
     );
@@ -507,56 +427,122 @@ class _ReportPageState extends State<ReportPage> {
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else ...[
+                  // The new stat cards
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Container(
+                          height: 85,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.blueAccent,
+                                  borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text("Total Income", style: TextStyle(color: mutedText, fontSize: 13)),
+                                      const SizedBox(height: 8),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(formatCurrency(totalIncome), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Container(
+                          height: 85,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 4,
+                                decoration: const BoxDecoration(
+                                  color: Colors.redAccent,
+                                  borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                                ),
+                              ),
+                              Expanded(
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Text("Due Payments", style: TextStyle(color: mutedText, fontSize: 13)),
+                                      const SizedBox(height: 8),
+                                      FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        alignment: Alignment.centerLeft,
+                                        child: Text(formatCurrency(totalExpense), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 32),
+
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text(
-                        "Performance",
-                        style: TextStyle(
-                          color: primaryColor,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w900,
-                        ),
-                      ),
-                      Text(
-                        "IN SELECTED RANGE",
-                        style: TextStyle(
-                          color: mutedText,
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                        ),
-                      ),
+                      const Text("Sales Report", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                      const Text("More >", style: TextStyle(fontSize: 14, color: Colors.redAccent)),
                     ],
                   ),
-                  const SizedBox(height: 16),
-
-                  // Stat cards
-                  _buildHorizontalStatCard(Icons.arrow_downward, "PEMASUKAN", formatCurrency(totalIncome), Colors.green),
-                  const SizedBox(height: 12),
-                  _buildHorizontalStatCard(Icons.arrow_upward, "PENGELUARAN", formatCurrency(totalExpense), Colors.red),
-                  const SizedBox(height: 12),
-                  _buildHorizontalStatCard(Icons.attach_money, "PROFIT", formatCurrency(totalProfit), primaryColor),
-                  const SizedBox(height: 32),
-
-                  Text("Pemasukan & Pengeluaran", style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
                   const SizedBox(height: 4),
+                  Text(formatDateRange(_dateRange), style: TextStyle(color: Colors.grey.shade500, fontSize: 14)),
+                  const SizedBox(height: 32),
+                  
+                  _buildIncomeExpenseChart(),
+                  
+                  const SizedBox(height: 24),
                   Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(width: 10, height: 10, color: Colors.green.shade400), const SizedBox(width: 4),
-                      const Text("Pemasukan", style: TextStyle(fontSize: 10)), const SizedBox(width: 12),
-                      Container(width: 10, height: 10, color: Colors.red.shade400), const SizedBox(width: 4),
-                      const Text("Pengeluaran", style: TextStyle(fontSize: 10)),
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(3))),
+                      const SizedBox(width: 6),
+                      Text("Pemasukan", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      const SizedBox(width: 16),
+                      
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(3))),
+                      const SizedBox(width: 6),
+                      Text("Pengeluaran", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      const SizedBox(width: 16),
+                      
+                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.amber.shade300, borderRadius: BorderRadius.circular(3))),
+                      const SizedBox(width: 6),
+                      Text("Profit", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
                     ],
                   ),
-                  const SizedBox(height: 24),
-                  _buildIncomeExpenseChart(),
-                  const SizedBox(height: 32),
-
-                  Text("Grafik Profit", style: TextStyle(color: primaryColor, fontSize: 16, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 24),
-                  _buildProfitChart(),
                   const SizedBox(height: 32),
 
                   SizedBox(
@@ -621,53 +607,7 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Widget _buildHorizontalStatCard(IconData icon, String title, String value, Color color) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9).withOpacity(0.4),
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: const Color(0xFFE2E8F0),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 22),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: mutedText,
-                    letterSpacing: 0.5,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    color: color,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // Replaced unused stat card widget
 
   Widget _buildNavItem(int index, String label, IconData icon) {
     final isSelected = _selectedIndex == index;

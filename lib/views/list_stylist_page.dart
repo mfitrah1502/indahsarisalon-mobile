@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/user_model.dart';
+import '../controllers/user_controller.dart';
 import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
@@ -24,8 +25,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
   int _selectedIndex = 4;
 
   String _searchQuery = '';
+  final UserController _userController = UserController();
 
-  List<Map<String, dynamic>> _allStylists = [];
+  List<UserModel> _allStylists = [];
   bool _isLoading = true;
 
   @override
@@ -34,23 +36,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
     _fetchStylists();
   }
 
-  String get _kategori {
-    return widget.role == 'Senior Stylist' ? 'senior' : 'junior';
-  }
-
   Future<void> _fetchStylists() async {
     try {
-      final data = await Supabase.instance.client
-          .from('users')
-          .select()
-          .eq('type', 'karyawan')
-          .neq('role', 'pelanggan')
-          .eq('kategori', _kategori)
-          .order('name');
+      final data = await _userController.fetchAllStylists();
           
       if (mounted) {
         setState(() {
-          _allStylists = List<Map<String, dynamic>>.from(data);
+          _allStylists = data;
           _isLoading = false;
         });
       }
@@ -66,8 +58,8 @@ class _ListStylistPageState extends State<ListStylistPage> {
   Widget build(BuildContext context) {
     final filteredStylists = _allStylists.where((stylist) {
       final query = _searchQuery.toLowerCase();
-      return (stylist["name"]?.toString().toLowerCase().contains(query) ?? false) ||
-             (stylist["email"]?.toString().toLowerCase().contains(query) ?? false);
+      return stylist.name.toLowerCase().contains(query) ||
+             stylist.email.toLowerCase().contains(query);
     }).toList();
 
     return Scaffold(
@@ -202,14 +194,14 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(12),
                                       color: const Color(0xFFF1F5F9),
-                                      image: stylist['avatar'] != null && stylist['avatar'].toString().isNotEmpty
+                                      image: stylist.avatar != null && stylist.avatar!.isNotEmpty
                                           ? DecorationImage(
-                                              image: NetworkImage(stylist['avatar']!),
+                                              image: NetworkImage(stylist.avatar!),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
                                     ),
-                                    child: stylist['avatar'] == null || stylist['avatar'].toString().isEmpty
+                                    child: stylist.avatar == null || stylist.avatar!.isEmpty
                                         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 32)
                                         : null,
                                   ),
@@ -221,7 +213,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          stylist['name']?.toString() ?? '-',
+                                          stylist.name.isNotEmpty ? stylist.name : '-',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -230,25 +222,82 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          stylist['email']?.toString() ?? '-',
+                                          stylist.email.isNotEmpty ? stylist.email : '-',
                                           style: TextStyle(
                                             fontSize: 13,
                                             color: mutedText,
                                           ),
                                         ),
                                       ],
+                                    ),
                                   ),
-                                ),
-                                
-                                // Menu Icon
-                                GestureDetector(
-                                  onTap: () => _showAddStylistModal(stylist: stylist),
-                                  child: Icon(
-                                    Icons.more_vert,
-                                    color: Colors.grey.shade400,
+                                  
+                                  // Edit Icon
+                                  GestureDetector(
+                                    onTap: () => _showAddStylistModal(stylist: stylist),
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Icon(
+                                        Icons.edit_outlined,
+                                        color: primaryColor,
+                                        size: 20,
+                                      ),
+                                    ),
                                   ),
-                                ),
-                              ],
+                                  const SizedBox(width: 8),
+                                  
+                                  // Delete Icon
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final confirm = await showDialog<bool>(
+                                        context: context,
+                                        builder: (_) => AlertDialog(
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                          title: Text("Hapus Stylist", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                                          content: Text("Yakin ingin menghapus ${stylist.name} dari tim?"),
+                                          actions: [
+                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+                                            ElevatedButton(
+                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
+                                              onPressed: () => Navigator.pop(context, true),
+                                              child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+                                            ),
+                                          ],
+                                        ),
+                                      );
+
+                                      if (confirm == true && stylist.id != null) {
+                                        try {
+                                          await _userController.deleteStylist(stylist.id!);
+                                          _fetchStylists();
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stylist berhasil dihapus')));
+                                          }
+                                        } catch (e) {
+                                          if (mounted) {
+                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus stylist: $e')));
+                                          }
+                                        }
+                                      }
+                                    },
+                                    child: Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFFEF2F2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.delete_outline,
+                                        color: Color(0xFFDC2626),
+                                        size: 20,
+                                      ),
+                                    ),
+                                  ),
+                                ],
                             ),
                           );
                         },
@@ -295,14 +344,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
     );
   }
 
-  void _showAddStylistModal({Map<String, dynamic>? stylist}) {
+  void _showAddStylistModal({UserModel? stylist}) {
     final isEdit = stylist != null;
-    String selectedRole = isEdit && (stylist['kategori'] == 'senior') ? 'Senior Stylist' : 'Junior Stylist';
-    if (!isEdit) {
-      selectedRole = widget.role;
-    }
-    final nameController = TextEditingController(text: isEdit ? (stylist['name'] ?? '') : '');
-    final emailController = TextEditingController(text: isEdit ? (stylist['email'] ?? '') : '');
+    final nameController = TextEditingController(text: isEdit ? stylist.name : '');
+    final emailController = TextEditingController(text: isEdit ? stylist.email : '');
 
     showModalBottomSheet(
       context: context,
@@ -351,7 +396,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               final dataPayload = {
                                 "name": nameController.text.trim(),
                                 "email": emailValue,
-                                "kategori": selectedRole == 'Senior Stylist' ? 'senior' : 'junior',
+                                "kategori": 'stylist',
                                 "type": 'karyawan',
                                 "role": 'karyawan',
                                 "status": "aktif",
@@ -360,16 +405,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               };
                               
                               try {
-                                if (isEdit) {
-                                  await Supabase.instance.client
-                                      .from('users')
-                                      .update(dataPayload)
-                                      .eq('id', stylist['id']);
-                                } else {
-                                  await Supabase.instance.client
-                                      .from('users')
-                                      .insert(dataPayload);
-                                }
+                                await _userController.saveStylist(dataPayload, id: stylist?.id);
                                 _fetchStylists();
                               } catch (e) {
                                 debugPrint("Error saving stylist: $e");
@@ -407,14 +443,14 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFE2E8F0),
                                       borderRadius: BorderRadius.circular(16),
-                                      image: (isEdit && stylist['avatar'] != null && stylist['avatar'].toString().isNotEmpty)
+                                      image: (isEdit && stylist.avatar != null && stylist.avatar!.isNotEmpty)
                                           ? DecorationImage(
-                                              image: NetworkImage(stylist['avatar']),
+                                              image: NetworkImage(stylist.avatar!),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
                                     ),
-                                    child: (!isEdit || stylist['avatar'] == null || stylist['avatar'].toString().isEmpty)
+                                    child: (!isEdit || stylist.avatar == null || stylist.avatar!.isEmpty)
                                         ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 48)
                                         : null,
                                   ),
@@ -452,79 +488,6 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           _buildTextFieldLabel("EMAIL ADDRESS"),
                           _buildTextField("julianne@salon.com", emailController),
                           const SizedBox(height: 20),
-                          
-                          _buildTextFieldLabel("PHONE NUMBER"),
-                          _buildTextField("+1 (555) 000-0000"),
-                          const SizedBox(height: 20),
-                          
-                          _buildTextFieldLabel("PROFESSIONAL ROLE"),
-                          // Segmented Control
-                          Container(
-                            height: 48,
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFE2E8F0).withOpacity(0.8),
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setModalState(() {
-                                        selectedRole = 'Junior Stylist';
-                                      });
-                                    },
-                                    child: Container(
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: selectedRole == 'Junior Stylist' ? Colors.white : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: selectedRole == 'Junior Stylist'
-                                            ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
-                                            : null,
-                                      ),
-                                      child: Text(
-                                        "Junior Stylist",
-                                        style: TextStyle(
-                                          fontWeight: selectedRole == 'Junior Stylist' ? FontWeight.bold : FontWeight.w600,
-                                          color: selectedRole == 'Junior Stylist' ? primaryColor : mutedText,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                                Expanded(
-                                  child: GestureDetector(
-                                    onTap: () {
-                                      setModalState(() {
-                                        selectedRole = 'Senior Stylist';
-                                      });
-                                    },
-                                    child: Container(
-                                      alignment: Alignment.center,
-                                      decoration: BoxDecoration(
-                                        color: selectedRole == 'Senior Stylist' ? Colors.white : Colors.transparent,
-                                        borderRadius: BorderRadius.circular(8),
-                                        boxShadow: selectedRole == 'Senior Stylist'
-                                            ? [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 4, offset: const Offset(0, 2))]
-                                            : null,
-                                      ),
-                                      child: Text(
-                                        "Senior Stylist",
-                                        style: TextStyle(
-                                          fontWeight: selectedRole == 'Senior Stylist' ? FontWeight.bold : FontWeight.w600,
-                                          color: selectedRole == 'Senior Stylist' ? primaryColor : mutedText,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
                           
                           const SizedBox(height: 24),
                         ],

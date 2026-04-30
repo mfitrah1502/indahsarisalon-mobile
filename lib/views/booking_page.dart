@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../utils/schedule_helper.dart';
+import '../controllers/booking_controller.dart';
 import 'home_page.dart';
 import 'customer_list_page.dart';
 import 'settings_page.dart';
@@ -49,6 +49,8 @@ class _BookingPageState extends State<BookingPage> {
   bool _loadingTimes = true;
   List<String> _times = [];
 
+  final BookingController _bookingController = BookingController();
+
   List<Map<String, dynamic>> _finalServices = [];
   int _finalTotalPrice = 0;
   bool _isColourCircleApplied = false;
@@ -94,7 +96,7 @@ class _BookingPageState extends State<BookingPage> {
     try {
       final selectedDate = widget.selectedDate;
       
-      final slots = await ScheduleHelper.getAvailableTimeSlots(
+      final slots = await _bookingController.getAvailableTimeSlots(
         date: selectedDate,
         stylistId: widget.stylistId,
         totalDuration: widget.totalDuration,

@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/user_model.dart';
+import '../controllers/user_controller.dart';
+import '../models/service_model.dart';
+import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
 import 'home_page.dart';
 import 'settings_page.dart';
@@ -31,8 +34,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   bool _loadingServices = true;
   List<String> _categories = ['All'];
   
-  /// Each entry: { td_id, title, category, category_id, duration, price (num), selected, adjusted_price (num?) }
   List<Map<String, dynamic>> _allServices = [];
+  final ServiceController _serviceController = ServiceController();
 
   // Date Fields
   int _selectedDateIndex = 0;
@@ -41,7 +44,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   // Stylist Fields
   int _selectedStylistIndex = -1;
   bool _loadingStylists = true;
-  List<Map<String, dynamic>> _stylists = [];
+  List<UserModel> _stylists = [];
+  final UserController _userController = UserController();
 
   @override
   void initState() {
@@ -69,32 +73,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     setState(() => _loadingStylists = true);
     try {
       final selectedDate = _dates[_selectedDateIndex]["rawDate"] as DateTime;
-      final dateStr = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2,'0')}-${selectedDate.day.toString().padLeft(2,'0')}";
-
-      // Get active users
-      final userData = await Supabase.instance.client
-          .from('users')
-          .select('id, name, type, role, status, avatar')
-          .eq('type', 'karyawan')
-          .neq('role', 'pelanggan')
-          .eq('status', 'aktif');
-          
-      // Get absensi for date
-      final absensiData = await Supabase.instance.client
-          .from('absensi')
-          .select('user_id, status')
-          .eq('tanggal', dateStr);
-
-      final offUserIds = <int>{};
-      for (var row in absensiData) {
-        if (row['status'] == 'off') {
-          offUserIds.add(row['user_id'] as int);
-        }
-      }
-      
-      final availableStylists = (userData as List<dynamic>)
-          .where((u) => !offUserIds.contains(u['id']))
-          .map((u) => Map<String,dynamic>.from(u)).toList();
+      final availableStylists = await _userController.fetchAvailableStylists(selectedDate);
       
       if (mounted) {
         setState(() {
@@ -111,32 +90,16 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
   Future<void> _fetchCategoriesAndServices() async {
     try {
-      final catData = await Supabase.instance.client
-          .from('categories')
-          .select('id, name')
-          .order('name');
-
-      final svcData = await Supabase.instance.client
-          .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
-          .order('id');
+      final data = await _serviceController.fetchServicesAndCategories();
 
       if (!mounted) return;
 
-      final cats = ['All', ...List<Map<String, dynamic>>.from(catData)
-          .map((c) => c['name'] as String)];
+      final cats = data['categories'] as List<String>;
+      final servicesData = data['services'] as List<ServiceModel>;
 
-      final services = List<Map<String, dynamic>>.from(svcData).map((td) {
-        final treatment = td['treatments'] as Map<String, dynamic>?;
-        final category = treatment?['categories'] as Map<String, dynamic>?;
+      final services = servicesData.map((s) {
         return {
-          'td_id': td['id'],
-          'treatment_id': td['treatment_id'],
-          'detail_name': td['name'] ?? '',
-          'treatment_name': treatment?['name'] ?? '',
-          'category': category?['name'] ?? '',
-          'duration': td['duration'] ?? 0,
-          'price': td['price'] ?? 0,
+          'service': s,
           'selected': false,
           'adjusted_price': null,
         };
@@ -155,12 +118,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   }
 
   List<Map<String, dynamic>> get _filteredServices {
-    return _allServices.where((s) {
+    return _allServices.where((item) {
+      final ServiceModel s = item['service'];
       final matchesCat = _selectedCategory == 'All' ||
-          s['category'].toString().toLowerCase() == _selectedCategory.toLowerCase();
-      final matchesSearch = s['treatment_name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          s['detail_name'].toString().toLowerCase().contains(_searchQuery.toLowerCase()) ||
-          s['category'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
+          s.category.toLowerCase() == _selectedCategory.toLowerCase();
+      final matchesSearch = s.treatmentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          s.detailName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+          s.category.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCat && matchesSearch;
     }).toList();
   }
@@ -168,22 +132,27 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   List<Map<String, dynamic>> get _selectedServices =>
       _allServices.where((s) => s['selected'] == true).toList();
 
-  num get _totalPrice => _selectedServices.fold(0, (sum, s) =>
-      sum + ((s['adjusted_price'] ?? s['price']) as num));
+  num get _totalPrice => _selectedServices.fold(0, (sum, item) {
+    final ServiceModel svc = item['service'];
+    return sum + ((item['adjusted_price'] ?? svc.price) as num);
+  });
 
-  int get _totalMins => _selectedServices.fold(0, (sum, s) =>
-      sum + (s['duration'] as num).toInt());
+  int get _totalMins => _selectedServices.fold(0, (sum, item) {
+    final ServiceModel svc = item['service'];
+    return sum + svc.duration;
+  });
 
-  Future<void> _showPriceDialog(Map<String, dynamic> service) async {
-    final basePrice = (service['price'] as num).toInt();
+  Future<void> _showPriceDialog(Map<String, dynamic> item) async {
+    final ServiceModel service = item['service'];
+    final basePrice = service.price;
     final TextEditingController manualController = TextEditingController(
-      text: (service['adjusted_price'] ?? service['price']).toString(),
+      text: (item['adjusted_price'] ?? service.price).toString(),
     );
-    num? chosenPrice = service['adjusted_price'] ?? service['price'];
+    num? chosenPrice = item['adjusted_price'] ?? service.price;
 
-    final displayTitle = service['treatment_name'] == service['detail_name'] || service['detail_name'].toString().isEmpty
-        ? service['treatment_name']
-        : "${service['treatment_name']} - ${service['detail_name']}";
+    final displayTitle = service.treatmentName == service.detailName || service.detailName.isEmpty
+        ? service.treatmentName
+        : "${service.treatmentName} - ${service.detailName}";
 
     await showModalBottomSheet(
       context: context,
@@ -294,7 +263,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       ),
                       onPressed: () {
                         final finalPrice = int.tryParse(manualController.text) ?? (chosenPrice ?? basePrice);
-                        final idx = _allServices.indexWhere((s) => s['td_id'] == service['td_id']);
+                        final idx = _allServices.indexWhere((s) => (s['service'] as ServiceModel).tdId == service.tdId);
                         if (idx != -1) {
                           setState(() {
                             _allServices[idx]['adjusted_price'] = finalPrice;
@@ -506,7 +475,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        stylist['name'] ?? '-',
+                                        stylist.name,
                                         style: TextStyle(
                                           fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
                                           color: isSelected ? primaryColor : mutedText,
@@ -610,13 +579,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             separatorBuilder: (_, __) => const SizedBox(height: 12),
                             itemBuilder: (_, index) {
                               if (index == filtered.length) return const SizedBox(height: 120);
-                              final service = filtered[index];
-                              final isSelected = service['selected'] == true;
-                              final displayTitle = service['treatment_name'] == service['detail_name'] || service['detail_name'].toString().isEmpty
-                                  ? service['treatment_name']
-                                  : "${service['treatment_name']} - ${service['detail_name']}";
-                              final displayPrice = service['adjusted_price'] ?? service['price'];
-                              final dur = (service['duration'] as num).toInt();
+                              final item = filtered[index];
+                              final ServiceModel service = item['service'];
+                              final isSelected = item['selected'] == true;
+                              final displayTitle = service.treatmentName == service.detailName || service.detailName.isEmpty
+                                  ? service.treatmentName
+                                  : "${service.treatmentName} - ${service.detailName}";
+                              final displayPrice = item['adjusted_price'] ?? service.price;
+                              final dur = service.duration;
 
                               return Container(
                                 padding: const EdgeInsets.all(16),
@@ -652,7 +622,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           ),
                                           const SizedBox(height: 4),
                                           Text(
-                                            service['category'],
+                                            service.category,
                                             style: TextStyle(fontSize: 11, color: mutedText, letterSpacing: 0.3),
                                           ),
                                           const SizedBox(height: 8),
@@ -673,8 +643,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                                   fontWeight: FontWeight.w900,
                                                 ),
                                               ),
-                                              if (service['adjusted_price'] != null &&
-                                                  service['adjusted_price'] != service['price']) ...[
+                                              if (item['adjusted_price'] != null &&
+                                                  item['adjusted_price'] != service.price) ...[
                                                 const SizedBox(width: 6),
                                                 Container(
                                                   padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -694,9 +664,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                     GestureDetector(
                                       onTap: () async {
                                         if (!isSelected) {
-                                          await _showPriceDialog(service);
+                                          await _showPriceDialog(item);
                                         } else {
-                                          final idx = _allServices.indexWhere((s) => s['td_id'] == service['td_id']);
+                                          final idx = _allServices.indexWhere((s) => (s['service'] as ServiceModel).tdId == service.tdId);
                                           if (idx != -1) {
                                             setState(() {
                                               _allServices[idx]['selected'] = false;
@@ -791,10 +761,23 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   MaterialPageRoute(
                                       builder: (_) => BookingPage(
                                         selectedDate: _dates[_selectedDateIndex]["rawDate"] as DateTime,
-                                        stylistId: selectedStylist['id'],
-                                        stylistName: selectedStylist['name'] ?? '',
+                                        stylistId: selectedStylist.id,
+                                        stylistName: selectedStylist.name,
                                         totalDuration: _totalMins,
-                                        selectedServices: selected,
+                                        selectedServices: selected.map((s) {
+                                          final svc = s['service'] as ServiceModel;
+                                          return {
+                                            'td_id': svc.tdId,
+                                            'treatment_id': svc.treatmentId,
+                                            'detail_name': svc.detailName,
+                                            'treatment_name': svc.treatmentName,
+                                            'category': svc.category,
+                                            'duration': svc.duration,
+                                            'price': svc.price,
+                                            'selected': s['selected'],
+                                            'adjusted_price': s['adjusted_price'],
+                                          };
+                                        }).toList(),
                                         totalPrice: _totalPrice.toInt(),
                                       ),
                                   ),

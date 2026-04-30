@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../controllers/booking_controller.dart';
 import 'package:intl/intl.dart';
 import '../app_session.dart';
 import 'home_page.dart';
@@ -57,7 +57,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
   Future<void> _confirmBooking() async {
     setState(() => _processing = true);
-    final supabase = Supabase.instance.client;
+    final BookingController _bookingController = BookingController();
 
     try {
       // Get user_id from current session
@@ -66,82 +66,16 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         throw Exception('Sesi tidak ditemukan. Silakan login ulang.');
       }
       
-      // Safely get first treatment_id (must not be null)
-      int? treatmentId;
-      for (final svc in widget.selectedServices) {
-        if (svc['treatment_id'] != null) {
-          treatmentId = svc['treatment_id'] as int;
-          break;
-        }
-      }
-      if (treatmentId == null) {
-        throw Exception("treatment_id tidak ditemukan. Silakan coba booking ulang.");
-      }
-
-      // Insert into bookings
-      final bookingInsert = await supabase.from('bookings').insert({
-        'user_id': userId,
-        'stylist_id': widget.stylistId,
-        'treatment_id': treatmentId,
-        'reservation_datetime': widget.reservationDatetime,
-        'total_price': widget.totalPrice,
-        'status': 'pending',
-        'payment_status': 'unpaid',
-        'customer_name': widget.customerName,
-        'customer_phone': widget.customerPhone,
-        'customer_email': widget.customerEmail,
-      }).select('id').single();
-
-      final bookingId = bookingInsert['id'];
-
-      // Insert booking_details for each service
-      for (final svc in widget.selectedServices) {
-        final price = svc['adjusted_price'] ?? svc['price'];
-        await supabase.from('booking_details').insert({
-          'booking_id': bookingId,
-          'treatment_detail_id': svc['td_id'],
-          'price': price,
-        });
-      }
-
-      // Check Colour Circle criteria
-      num coloringSpend = 0;
-      for (final svc in widget.selectedServices) {
-        String cat = (svc['category'] ?? '').toString().toLowerCase();
-        String tName = (svc['treatment_name'] ?? '').toString().toLowerCase();
-        if (cat.contains('color') || tName.contains('color')) {
-           coloringSpend += (svc['adjusted_price'] ?? svc['price']);
-        }
-      }
-
-      if (coloringSpend >= 1500000) {
-        // Find user by phone
-        if (widget.customerPhone.isNotEmpty) {
-          final q = await supabase.from('users')
-            .select('id')
-            .eq('role', 'pelanggan')
-            .eq('phone', widget.customerPhone)
-            .maybeSingle();
-          if (q != null && q['id'] != null) {
-            await supabase.from('users').update({
-               'is_colour_circle': true,
-               'colour_circle_expired_at': DateTime.now().add(const Duration(days: 730)).toIso8601String()
-            }).eq('id', q['id']);
-          }
-        }
-      }
-
-      try {
-        await supabase.from('notifikasi').insert({
-          'user_id': userId,
-          'title': 'Booking Berhasil',
-          'message': 'Booking untuk jadwal ${widget.reservationDatetime.substring(0, 16)} dengan stylist ${widget.stylistName} telah berhasil dibuat.',
-        });
-      } catch (e) {
-        debugPrint('Failed to insert notification: $e');
-      }
-
-      if (!mounted) return;
+      final bookingId = await _bookingController.confirmBooking(
+        userId: userId,
+        stylistId: widget.stylistId,
+        reservationDatetime: widget.reservationDatetime,
+        totalPrice: widget.totalPrice,
+        customerName: widget.customerName,
+        customerPhone: widget.customerPhone,
+        customerEmail: widget.customerEmail,
+        selectedServices: widget.selectedServices,
+      );
 
       if (!mounted) return;
 

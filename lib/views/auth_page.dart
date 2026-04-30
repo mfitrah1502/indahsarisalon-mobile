@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:bcrypt/bcrypt.dart';
+import '../controllers/auth_controller.dart';
 import 'home_page.dart';
-import '../app_session.dart';
 import 'forgot_password_page.dart';
 
 class AuthPage extends StatefulWidget {
@@ -23,61 +21,33 @@ class _AuthPageState extends State<AuthPage> {
 
   bool rememberMe = false;
 
+  final AuthController _authController = AuthController();
+
   // 🔥 LOGIN FUNCTION (SUPABASE)
   Future login() async {
     try {
-      final supabase = Supabase.instance.client;
-      
-      // Query ke tabel users custom di public
-      final user = await supabase
-          .from('users')
-          .select()
-          .eq('username', username.text)
-          .maybeSingle();
-
+      final success = await _authController.login(username.text, password.text);
       if (!mounted) return;
 
-      if (user != null) {
-        // Cek kecocokan password karena tersimpan sebagai Bcrypt hash
-        bool isPasswordCorrect = false;
-        try {
-          isPasswordCorrect = BCrypt.checkpw(password.text, user['password']);
-        } catch (e) {
-          debugPrint("Bcrypt Cek Error: $e");
-        }
-
-        if (isPasswordCorrect) {
-          // Simpan sesi pengguna
-          AppSession.userId = user['id'] as int;
-          AppSession.userName = user['name'] as String? ?? '';
-          AppSession.userRole = user['role'] as String? ?? '';
-          AppSession.userEmail = user['email'] as String? ?? '';
-
-          // Berhasil login
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Login berhasil!")),
-          );
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HomePage()),
-          );
-        } else {
-          // Gagal login - Password salah
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Username atau password salah")),
-          );
-        }
+      if (success) {
+        // Berhasil login
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Login berhasil!")),
+        );
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
       } else {
-        // Gagal login - Username tidak ada
+        // Gagal login
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Username atau password salah")),
         );
       }
     } catch (e) {
-      debugPrint("ERROR: $e");
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Terjadi kesalahan saat memproses login")),
+        SnackBar(content: Text(e.toString())),
       );
     }
   }

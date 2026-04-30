@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
-class ScheduleHelper {
+class BookingController {
   /// Mendapatkan list jam yang tersedia (contoh: ["09:00", "09:15", ...])
   /// - [date]: Tanggal booking yang dipilih
   /// - [stylistId]: ID dari stylist
   /// - [totalDuration]: Total durasi semua layanan yang dipilih (dalam menit)
   /// - [shiftStartHour], [shiftEndHour]: Jam operasional/shift (misal: 9 - 18)
-  static Future<List<String>> getAvailableTimeSlots({
+  Future<List<String>> getAvailableTimeSlots({
     required DateTime date,
     required int stylistId,
     required int totalDuration,
@@ -126,6 +126,91 @@ class ScheduleHelper {
       // Fallback aman jika terjadi error
       return []; 
     }
+  }
+
+  Future<String?> confirmBooking({
+    required int userId,
+    required int stylistId,
+    required String reservationDatetime,
+    required int totalPrice,
+    required String customerName,
+    required String customerPhone,
+    required String customerEmail,
+    required List<Map<String, dynamic>> selectedServices,
+  }) async {
+    final supabase = Supabase.instance.client;
+
+    int? treatmentId;
+    for (final svc in selectedServices) {
+      if (svc['treatment_id'] != null) {
+        treatmentId = svc['treatment_id'] as int;
+        break;
+      }
+    }
+    if (treatmentId == null) {
+      throw Exception("treatment_id tidak ditemukan. Silakan coba booking ulang.");
+    }
+
+    final bookingInsert = await supabase.from('bookings').insert({
+      'user_id': userId,
+      'stylist_id': stylistId,
+      'treatment_id': treatmentId,
+      'reservation_datetime': reservationDatetime,
+      'total_price': totalPrice,
+      'status': 'pending',
+      'payment_status': 'unpaid',
+      'customer_name': customerName,
+      'customer_phone': customerPhone,
+      'customer_email': customerEmail,
+    }).select('id').single();
+
+    final bookingId = bookingInsert['id'];
+
+    for (final svc in selectedServices) {
+      final price = svc['adjusted_price'] ?? svc['price'];
+      await supabase.from('booking_details').insert({
+        'booking_id': bookingId,
+        'treatment_detail_id': svc['td_id'],
+        'price': price,
+      });
+    }
+
+    num coloringSpend = 0;
+    for (final svc in selectedServices) {
+      String cat = (svc['category'] ?? '').toString().toLowerCase();
+      String tName = (svc['treatment_name'] ?? '').toString().toLowerCase();
+      if (cat.contains('color') || tName.contains('color')) {
+         coloringSpend += (svc['adjusted_price'] ?? svc['price']);
+      }
+    }
+
+    if (coloringSpend >= 1500000) {
+      if (customerPhone.isNotEmpty) {
+        final q = await supabase.from('users')
+          .select('id')
+          .eq('role', 'pelanggan')
+          .eq('phone', customerPhone)
+          .maybeSingle();
+        if (q != null && q['id'] != null) {
+          await supabase.from('users').update({
+             'is_colour_circle': true,
+             'colour_circle_expired_at': DateTime.now().add(const Duration(days: 730)).toIso8601String()
+          }).eq('id', q['id']);
+        }
+      }
+    }
+
+    try {
+      await supabase.from('notifikasi').insert({
+        'user_id': userId,
+        'title': 'Booking Berhasil',
+        'message': 'Booking untuk jadwal ${reservationDatetime.substring(0, 16)} telah berhasil dibuat.',
+      });
+    } catch (e) {
+      debugPrint('Failed to insert notification: \$e');
+    }
+
+    return bookingId.toString();
   }
 }
 

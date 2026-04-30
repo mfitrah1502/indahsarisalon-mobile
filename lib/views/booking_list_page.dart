@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../models/booking_list_model.dart';
+import '../controllers/booking_list_controller.dart';
 import 'package:intl/intl.dart';
 import 'home_page.dart';
 import 'settings_page.dart';
@@ -24,9 +25,10 @@ class _BookingListPageState extends State<BookingListPage> {
 
   int _selectedIndex = 1;
   bool _loading = true;
-  List<Map<String, dynamic>> _bookings = [];
-  List<Map<String, dynamic>> _filteredBookings = [];
+  List<BookingListModel> _bookings = [];
+  List<BookingListModel> _filteredBookings = [];
   final TextEditingController _searchController = TextEditingController();
+  final BookingListController _bookingListController = BookingListController();
 
   @override
   void initState() {
@@ -37,74 +39,11 @@ class _BookingListPageState extends State<BookingListPage> {
   Future<void> _fetchBookings() async {
     setState(() => _loading = true);
     try {
-      // Fetch bookings with stylist name and customer info (if user_id present)
-      final data = await Supabase.instance.client
-          .from('bookings')
-          .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
-          .order('created_at', ascending: false); // Order by creation date DESC
-
-      // For each booking, fetch service names from booking_details
-      final List<Map<String, dynamic>> enriched = [];
-      for (final row in data) {
-        final bookingId = row['id'];
-        final details = await Supabase.instance.client
-            .from('booking_details')
-            .select('treatment_detail_id, treatment_details(name, treatment_id, treatments(name))')
-            .eq('booking_id', bookingId);
-
-        List<String> serviceNames = [];
-        for (final d in details) {
-          final td = d['treatment_details'] as Map<String, dynamic>?;
-          final t = td?['treatments'] as Map<String, dynamic>?;
-          final tName = t?['name'] ?? '';
-          final dName = td?['name'] ?? '';
-          if (tName == dName || dName.isEmpty) {
-            serviceNames.add(tName);
-          } else {
-            serviceNames.add("$tName - $dName");
-          }
-        }
-
-        dynamic stylistData = row['users'];
-        String stylistName = 'Unknown';
-        if (stylistData != null) {
-          if (stylistData is Map) {
-            stylistName = stylistData['name'] ?? 'Unknown';
-          } else if (stylistData is List && stylistData.isNotEmpty) {
-            stylistName = stylistData[0]['name'] ?? 'Unknown';
-          }
-        }
-
-        // Fallback for phone and email from the users table (customer:users!bookings_user_id_fkey)
-        Map<String, dynamic>? linkedCustomer = row['customer'] as Map<String, dynamic>?;
-        String finalPhone = row['customer_phone'] ?? '-';
-        String finalEmail = row['customer_email'] ?? '-';
-
-        if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
-          finalPhone = linkedCustomer['phone'] ?? '-';
-        }
-        if ((finalEmail == '-' || finalEmail == 'null') && linkedCustomer != null) {
-          finalEmail = linkedCustomer['email'] ?? '-';
-        }
-
-        enriched.add({
-          'id': bookingId,
-          'created_at': row['created_at'],
-          'stylist': stylistName,
-          'services': serviceNames.isEmpty ? ['Booking #$bookingId'] : serviceNames,
-          'datetime': row['reservation_datetime'],
-          'total_price': row['total_price'],
-          'status': row['status'] ?? 'pending',
-          'customer_name': row['customer_name'] ?? '-',
-          'customer_phone': finalPhone,
-          'customer_email': finalEmail,
-        });
-      }
-
+      final data = await _bookingListController.fetchBookings();
       if (mounted) {
         setState(() {
-          _bookings = enriched;
-          _filteredBookings = enriched;
+          _bookings = data;
+          _filteredBookings = data;
           _loading = false;
         });
       }
@@ -114,10 +53,10 @@ class _BookingListPageState extends State<BookingListPage> {
     }
   }
 
-  Map<String, List<Map<String, dynamic>>> _getGroupedBookings() {
-    Map<String, List<Map<String, dynamic>>> groups = {};
+  Map<String, List<BookingListModel>> _getGroupedBookings() {
+    Map<String, List<BookingListModel>> groups = {};
     for (var b in _filteredBookings) {
-      final createdAtStr = b['created_at'] as String?;
+      final createdAtStr = b.createdAt;
       if (createdAtStr == null) continue;
       
       final date = DateTime.parse(createdAtStr).toLocal();
@@ -151,10 +90,10 @@ class _BookingListPageState extends State<BookingListPage> {
     final lowerQuery = query.toLowerCase();
     setState(() {
       _filteredBookings = _bookings.where((b) {
-        final custName = (b['customer_name'] ?? '').toString().toLowerCase();
-        final stylName = (b['stylist'] ?? '').toString().toLowerCase();
-        final phone = (b['customer_phone'] ?? '').toString().toLowerCase();
-        final email = (b['customer_email'] ?? '').toString().toLowerCase();
+        final custName = b.customerName.toLowerCase();
+        final stylName = b.stylist.toLowerCase();
+        final phone = b.customerPhone.toLowerCase();
+        final email = b.customerEmail.toLowerCase();
         return custName.contains(lowerQuery) || stylName.contains(lowerQuery) ||
                phone.contains(lowerQuery) || email.contains(lowerQuery);
       }).toList();
@@ -182,8 +121,7 @@ class _BookingListPageState extends State<BookingListPage> {
     if (confirm == true) {
       setState(() => _loading = true);
       try {
-        await Supabase.instance.client.from('booking_details').delete().neq('id', 0);
-        await Supabase.instance.client.from('bookings').delete().neq('id', 0);
+        await _bookingListController.deleteAllBookings();
         _fetchBookings();
 
       } catch (e) {
@@ -363,8 +301,8 @@ class _BookingListPageState extends State<BookingListPage> {
                                     ),
                                   ),
                                   ...entry.value.map((booking) {
-                                    final status = booking['status'] as String;
-                                    final services = booking['services'] as List<String>;
+                                    final status = booking.status;
+                                    final services = booking.services;
                                     final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2} lainnya" : "");
 
                                     return Padding(
@@ -374,7 +312,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                           Navigator.push(
                                             context,
                                             MaterialPageRoute(
-                                              builder: (_) => BookingDetailsPage(booking: booking),
+                                              builder: (_) => BookingDetailsPage(booking: booking.toMap()),
                                             ),
                                           ).then((_) => _fetchBookings()); // Refresh on return
                                         },
@@ -407,7 +345,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(
-                                                          booking['customer_name'] != '-' ? "${booking['customer_name']}" : "Pelanggan",
+                                                          booking.customerName != '-' ? booking.customerName : "Pelanggan",
                                                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
@@ -421,7 +359,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                         ),
                                                         const SizedBox(height: 2),
                                                         Text(
-                                                          "dengan ${booking['stylist']}",
+                                                          "dengan ${booking.stylist}",
                                                           style: TextStyle(fontSize: 12, color: mutedText),
                                                         ),
                                                       ],
@@ -457,13 +395,13 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       Icon(Icons.calendar_today_outlined, size: 13, color: mutedText),
                                                       const SizedBox(width: 6),
                                                       Text(
-                                                        _formatDateTime(booking['datetime']),
+                                                        _formatDateTime(booking.datetime),
                                                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
                                                       ),
                                                     ],
                                                   ),
                                                   Text(
-                                                    _currency.format((booking['total_price'] as num).toDouble()),
+                                                    _currency.format(booking.totalPrice.toDouble()),
                                                     style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: primaryColor),
                                                   ),
                                                 ],

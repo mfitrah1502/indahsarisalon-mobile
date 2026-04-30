@@ -9,6 +9,7 @@ import 'edit_profile_page.dart';
 import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
+import '../controllers/auth_controller.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -533,8 +534,8 @@ class _SettingsPageState extends State<SettingsPage> {
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       elevation: 0,
                     ),
-                    onPressed: () {
-                      AppSession.clear();
+                    onPressed: () async {
+                      await AuthController().logout();
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(builder: (context) => const AuthPage()),

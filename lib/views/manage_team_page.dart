@@ -23,13 +23,8 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
 
   final List<Map<String, dynamic>> _roles = [
     {
-      "title": "Senior Stylist",
-      "subtitle": "Senior professional with over 10 years experience in advanced cuts and styling.",
-      "icon": Icons.content_cut,
-    },
-    {
-      "title": "Junior Stylist",
-      "subtitle": "Professional stylist handling standard cuts, blowouts, and basic coloring.",
+      "title": "Stylist",
+      "subtitle": "Professional stylists handling all salon services and treatments.",
       "icon": Icons.content_cut,
     },
     {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../controllers/home_controller.dart';
+import '../models/promo_model.dart';
 import 'notifications_page.dart';
 import 'booking_page.dart';
 import 'settings_page.dart';
@@ -35,7 +36,9 @@ class _HomePageState extends State<HomePage> {
   num bookingsIncrease = 0;
   num revenueIncrease = 0;
   num customersIncrease = 0;
-  List<Map<String, dynamic>> _promos = [];
+  List<PromoModel> _promos = [];
+
+  final HomeController _homeController = HomeController();
 
   @override
   void initState() {
@@ -46,92 +49,33 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchPromos() async {
     try {
-      final now = DateTime.now().toIso8601String();
-      final data = await Supabase.instance.client
-          .from('promos')
-          .select()
-          .eq('is_active', true)
-          .lte('start_at', now)
-          .gte('end_at', now)
-          .order('created_at', ascending: false);
-      
+      final promos = await _homeController.fetchPromos();
       if (mounted) {
         setState(() {
-          _promos = List<Map<String, dynamic>>.from(data);
+          _promos = promos;
         });
       }
     } catch (e) {
-      debugPrint("Error fetching promos: $e");
+      debugPrint(e.toString());
     }
   }
 
   Future<void> _fetchDashboardData() async {
-    final supabase = Supabase.instance.client;
-
     try {
-      final now = DateTime.now();
-      // Today bounds
-      final todayStart = DateTime(now.year, now.month, now.day).toIso8601String();
-      final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
-      
-      // Yesterday bounds
-      final yesterdayStart = DateTime(now.year, now.month, now.day - 1).toIso8601String();
-      final yesterdayEnd = DateTime(now.year, now.month, now.day - 1, 23, 59, 59).toIso8601String();
-
-      // Fetch Today's bookingss
-      final todayData = await supabase
-          .from('bookings')
-          .select('id, user_id, total_price, reservation_datetime')
-          .gte('reservation_datetime', todayStart)
-          .lte('reservation_datetime', todayEnd);
-
-      // Fetch Yesterday's bookings
-      final yesterdayData = await supabase
-          .from('bookings')
-          .select('id, user_id, total_price, reservation_datetime')
-          .gte('reservation_datetime', yesterdayStart)
-          .lte('reservation_datetime', yesterdayEnd);
-
-      // Calculate Today Stats
-      int tBookings = todayData.length;
-      int tRev = 0;
-      Set<int> tCustomers = {};
-      for (var b in todayData) {
-        tRev += (b['total_price'] as num?)?.toInt() ?? 0;
-        final uId = (b['user_id'] as num?)?.toInt();
-        if (uId != null) tCustomers.add(uId);
-      }
-
-      // Calculate Yesterday Stats
-      int yBookings = yesterdayData.length;
-      int yRev = 0;
-      Set<int> yCustomers = {};
-      for (var b in yesterdayData) {
-        yRev += (b['total_price'] as num?)?.toInt() ?? 0;
-        final uId = (b['user_id'] as num?)?.toInt();
-        if (uId != null) yCustomers.add(uId);
-      }
-
-      // Calculate percentage increase
-      double bInc = yBookings == 0 ? (tBookings > 0 ? 100 : 0) : ((tBookings - yBookings) / yBookings) * 100;
-      double rInc = yRev == 0 ? (tRev > 0 ? 100 : 0) : ((tRev - yRev) / yRev) * 100;
-      double cInc = yCustomers.isEmpty ? (tCustomers.isNotEmpty ? 100 : 0) : ((tCustomers.length - yCustomers.length) / yCustomers.length) * 100;
-
+      final stats = await _homeController.fetchDashboardData();
       if (mounted) {
         setState(() {
-          todayBookings = tBookings;
-          todayRevenue = tRev;
-          todayCustomers = tCustomers.length;
-          
-          bookingsIncrease = bInc;
-          revenueIncrease = rInc;
-          customersIncrease = cInc;
-          
+          todayBookings = stats.todayBookings;
+          todayRevenue = stats.todayRevenue;
+          todayCustomers = stats.todayCustomers;
+          bookingsIncrease = stats.bookingsIncrease;
+          revenueIncrease = stats.revenueIncrease;
+          customersIncrease = stats.customersIncrease;
           isLoading = false;
         });
       }
     } catch (e) {
-      debugPrint("Error fetching dashboard data: $e");
+      debugPrint(e.toString());
       if (mounted) {
         setState(() {
           isLoading = false;
@@ -313,16 +257,16 @@ class _HomePageState extends State<HomePage> {
                             width: 280,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              image: p['image_url'] != null && p['image_url'].toString().isNotEmpty
-                                ? DecorationImage(image: NetworkImage(p['image_url']), fit: BoxFit.cover)
+                              image: p.imageUrl != null && p.imageUrl!.isNotEmpty
+                                ? DecorationImage(image: NetworkImage(p.imageUrl!), fit: BoxFit.cover)
                                 : null,
-                              gradient: p['image_url'] == null || p['image_url'].toString().isEmpty
+                              gradient: p.imageUrl == null || p.imageUrl!.isEmpty
                                 ? LinearGradient(colors: [primaryColor, buttonColor])
                                 : null,
                             ),
                             child: Stack(
                               children: [
-                                if (p['image_url'] == null || p['image_url'].toString().isEmpty)
+                                if (p.imageUrl == null || p.imageUrl!.isEmpty)
                                   const Center(child: Icon(Icons.star, color: Colors.white, size: 48)),
                                 Positioned(
                                   bottom: 0,
@@ -342,13 +286,13 @@ class _HomePageState extends State<HomePage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          p['title'] ?? "Promo Menarik",
+                                          p.title,
                                           style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
-                                          formatCurrency((p['price'] as num?)?.toInt() ?? 0),
+                                          formatCurrency(p.price),
                                           style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
                                         ),
                                       ],
@@ -467,7 +411,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showPromoDetail(Map<String, dynamic> promo) {
+  void _showPromoDetail(PromoModel promo) {
     showDialog(
       context: context,
       builder: (context) => Dialog(
@@ -481,12 +425,12 @@ class _HomePageState extends State<HomePage> {
               width: double.infinity,
               decoration: BoxDecoration(
                 borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-                image: promo['image_url'] != null && promo['image_url'].toString().isNotEmpty
-                  ? DecorationImage(image: NetworkImage(promo['image_url']), fit: BoxFit.cover)
+                image: promo.imageUrl != null && promo.imageUrl!.isNotEmpty
+                  ? DecorationImage(image: NetworkImage(promo.imageUrl!), fit: BoxFit.cover)
                   : null,
                 color: primaryColor,
               ),
-              child: promo['image_url'] == null || promo['image_url'].toString().isEmpty
+              child: promo.imageUrl == null || promo.imageUrl!.isEmpty
                 ? const Icon(Icons.local_offer, color: Colors.white, size: 80)
                 : null,
             ),
@@ -501,7 +445,7 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Expanded(
                         child: Text(
-                          promo['title'] ?? "Promo Detail",
+                          promo.title,
                           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                       ),
@@ -519,10 +463,10 @@ class _HomePageState extends State<HomePage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    formatCurrency((promo['price'] as num?)?.toInt() ?? 0),
+                    formatCurrency(promo.price),
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black),
                   ),
-                  if (promo['description'] != null && promo['description'].toString().isNotEmpty) ...[
+                  if (promo.description != null && promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
                       "Termasuk Treatment:",
@@ -530,7 +474,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      promo['description'],
+                      promo.description!,
                       style: const TextStyle(fontSize: 14, color: Colors.black87),
                     ),
                   ],
@@ -542,7 +486,7 @@ class _HomePageState extends State<HomePage> {
                       Icon(Icons.access_time, size: 16, color: mutedText),
                       const SizedBox(width: 8),
                       Text(
-                        "Berlaku sampai: ${DateFormat('dd MMM yyyy').format(DateTime.parse(promo['end_at']))}",
+                        "Berlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}",
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                     ],
@@ -576,7 +520,7 @@ class _HomePageState extends State<HomePage> {
                               phone = '62$phone';
                             }
 
-                            final message = "Halo ${selectedCustomer['name']}! Cek promo menarik ini di Indah Sari Salon: ${promo['title']} hanya dengan ${formatCurrency((promo['price'] as num?)?.toInt() ?? 0)}! Berlaku sampai ${DateFormat('dd MMM yyyy').format(DateTime.parse(promo['end_at']))}. Yuk booking sekarang!";
+                            final message = "Halo ${selectedCustomer['name']}! Cek promo menarik ini di Indah Sari Salon: ${promo.title} hanya dengan ${formatCurrency(promo.price)}! Berlaku sampai ${DateFormat('dd MMM yyyy').format(promo.endAt)}. Yuk booking sekarang!";
                             final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
                             
                             if (await canLaunchUrl(Uri.parse(url))) {

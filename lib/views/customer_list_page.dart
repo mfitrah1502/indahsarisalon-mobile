@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import '../controllers/user_controller.dart';
 import 'package:intl/intl.dart';
 
 class CustomerListPage extends StatefulWidget {
@@ -24,6 +24,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
   List<Map<String, dynamic>> _customers = [];
   List<Map<String, dynamic>> _filteredCustomers = [];
   final TextEditingController _searchController = TextEditingController();
+  final UserController _userController = UserController();
 
   @override
   void initState() {
@@ -34,91 +35,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
   Future<void> _fetchCustomers() async {
     setState(() => _loading = true);
     try {
-      final supabase = Supabase.instance.client;
-
-      // 1. Fetch all users with role 'pelanggan'
-      final usersData = await supabase
-          .from('users')
-          .select('id, name, email, phone, is_colour_circle, colour_circle_expired_at')
-          .eq('role', 'pelanggan');
-
-      // 2. Fetch all bookings for spend calculation
-      final bookingsData = await supabase
-          .from('bookings')
-          .select('customer_name, customer_phone, customer_email, total_price, status, user_id');
-          
-      // Grouping logic
-      final Map<String, Map<String, dynamic>> map = {};
-      
-      // Initialize with registered users
-      for (final user in usersData) {
-        final name = (user['name'] ?? 'Customer').toString().trim();
-        final phone = (user['phone'] ?? '').toString().trim();
-        final email = (user['email'] ?? '').toString().trim();
-        
-        // Use phone as main key, fallback to email if phone missing
-        final key = phone.isNotEmpty ? phone : (email.isNotEmpty ? email : "id_${user['id']}");
-        
-        map[key] = {
-          'id': user['id'],
-          'name': name,
-          'phone': phone,
-          'email': email,
-          'spend': 0,
-          'key': key,
-          'is_colour_circle': user['is_colour_circle'] ?? false,
-          'colour_circle_expired_at': user['colour_circle_expired_at'],
-        };
-      }
-
-      // Merge with booking data
-      for (final row in bookingsData) {
-        final name = (row['customer_name'] ?? 'Customer').toString().trim();
-        final phone = (row['customer_phone'] ?? '').toString().trim();
-        final email = (row['customer_email'] ?? '').toString().trim();
-        final userId = row['user_id'];
-        
-        String? key;
-        if (phone.isNotEmpty) {
-          key = phone;
-        } else if (email.isNotEmpty) {
-          key = email;
-        }
-
-        // If no key found by phone/email, check if we can match by user_id
-        if (key == null && userId != null) {
-          // Find key in map where 'id' matches userId
-          try {
-            key = map.entries.firstWhere((e) => e.value['id'] == userId).key;
-          } catch (_) {
-            key = "id_$userId";
-          }
-        }
-
-        if (key == null) continue;
-
-        if (!map.containsKey(key)) {
-          // Guest customer found in bookings but not in users table
-          map[key] = {
-            'name': name,
-            'phone': phone,
-            'email': email,
-            'spend': 0,
-            'key': key,
-            'is_colour_circle': false,
-            'colour_circle_expired_at': null,
-          };
-        }
-        
-        if (row['status'] != 'dibatalkan') {
-          map[key]!['spend'] += (row['total_price'] as num?)?.toInt() ?? 0;
-        }
-      }
-
-
-      final list = map.values.toList();
-      // Sort by spend descending
-      list.sort((a, b) => (b['spend'] as int).compareTo(a['spend'] as int));
+      final list = await _userController.fetchCustomersWithSpend();
 
       if (mounted) {
         setState(() {
@@ -375,70 +292,12 @@ class _CustomerListPageState extends State<CustomerListPage> {
 
     setState(() => _loading = true);
     try {
-      final supabase = Supabase.instance.client;
-      
-      // Separate registered IDs and guest keys
-      List<int> userIds = [];
-      List<String> phones = [];
-      List<String> emails = [];
-
+      List<Map<String, dynamic>> customersToDelete = [];
       for (var key in _selectedKeys) {
-        final cust = _customers.firstWhere((c) => c['key'] == key);
-        if (cust['id'] != null) {
-          userIds.add(cust['id'] as int);
-        }
-        if (cust['phone'] != null && cust['phone'].toString().isNotEmpty) {
-          phones.add(cust['phone'].toString());
-        }
-        if (cust['email'] != null && cust['email'].toString().isNotEmpty) {
-          emails.add(cust['email'].toString());
-        }
-      }
-
-      // --- NEW: Find all relevant booking IDs to clear details first ---
-      List<int> bookingIds = [];
-      
-      var query = supabase.from('bookings').select('id');
-      
-      // We need to fetch IDs. Since Supabase OR filters are a bit complex in bulk, 
-      // we'll do simple fetches or one combined if possible.
-      // But for simplicity and reliability:
-      if (userIds.isNotEmpty) {
-        final res = await supabase.from('bookings').select('id').inFilter('user_id', userIds);
-        bookingIds.addAll((res as List).map((e) => e['id'] as int));
-      }
-      if (phones.isNotEmpty) {
-        final res = await supabase.from('bookings').select('id').inFilter('customer_phone', phones);
-        bookingIds.addAll((res as List).map((e) => e['id'] as int));
-      }
-      if (emails.isNotEmpty) {
-        final res = await supabase.from('bookings').select('id').inFilter('customer_email', emails);
-        bookingIds.addAll((res as List).map((e) => e['id'] as int));
+        customersToDelete.add(_customers.firstWhere((c) => c['key'] == key));
       }
       
-      bookingIds = bookingIds.toSet().toList(); // unique
-
-      // 1. Delete Booking Details first
-      if (bookingIds.isNotEmpty) {
-        await supabase.from('booking_details').delete().inFilter('booking_id', bookingIds);
-      }
-
-      // 1b. Cleanup references where these users might be stylists or cashiers in other bookings
-      if (userIds.isNotEmpty) {
-        await supabase.from('booking_details').update({'stylist_id': null}).inFilter('stylist_id', userIds);
-        await supabase.from('bookings').update({'stylist_id': null}).inFilter('stylist_id', userIds);
-        await supabase.from('bookings').update({'cashier_id': null, 'stylist_id': null}).inFilter('cashier_id', userIds);
-      }
-
-      // 2. Delete Bookings
-      if (bookingIds.isNotEmpty) {
-        await supabase.from('bookings').delete().inFilter('id', bookingIds);
-      }
-
-      // 3. Delete Users
-      if (userIds.isNotEmpty) {
-        await supabase.from('users').delete().inFilter('id', userIds);
-      }
+      await _userController.deleteCustomers(customersToDelete);
       
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data pelanggan berhasil dibersihkan")));
