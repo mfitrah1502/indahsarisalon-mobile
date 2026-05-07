@@ -10,6 +10,9 @@ import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
 import '../controllers/auth_controller.dart';
+import '../utils/translations.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'report_page.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -21,7 +24,11 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool isDarkMode = false; // Default to light mode
   int _selectedIndex = 4; // Settings is active
-  String _selectedLanguage = 'English'; // Default Language
+
+  @override
+  void initState() {
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -52,7 +59,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    "Settings",
+                    "Settings".tr,
                     style: TextStyle(
                       color: mainTextColor,
                       fontSize: 24,
@@ -126,7 +133,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     // ACCOUNT PREFERENCES
                     Text(
-                      "ACCOUNT PREFERENCES",
+                      "ACCOUNT PREFERENCES".tr,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -146,7 +153,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _buildSettingTile(
                             icon: Icons.person_outline,
-                            title: "Edit Profile",
+                            title: "Edit Profile".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () async {
@@ -159,7 +166,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           _buildSettingTile(
                             icon: Icons.groups_outlined,
-                            title: "Manage Team",
+                            title: "Manage Team".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () {
@@ -171,14 +178,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           _buildSettingTile(
                             icon: Icons.lock_outline,
-                            title: "Change Password",
+                            title: "Change Password".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () {},
                           ),
                           _buildSettingTile(
                             icon: Icons.person_add_alt,
-                            title: "Add Another Account",
+                            title: "Add Another Account".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () {
@@ -196,7 +203,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     // SYSTEM
                     Text(
-                      "SYSTEM",
+                      "SYSTEM".tr,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -216,7 +223,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _buildSettingTile(
                             icon: Icons.dark_mode_outlined,
-                            title: "Dark Mode",
+                            title: "Dark Mode".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             trailing: CupertinoSwitch(
@@ -231,14 +238,14 @@ class _SettingsPageState extends State<SettingsPage> {
                           ),
                           _buildSettingTile(
                             icon: Icons.language,
-                            title: "Language",
+                            title: "Language".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 Text(
-                                  _selectedLanguage,
+                                  AppTranslations.currentLanguage,
                                   style: TextStyle(color: mutedText, fontSize: 13),
                                 ),
                                 const SizedBox(width: 8),
@@ -264,7 +271,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       child: _buildSettingTile(
                         icon: Icons.logout,
-                        title: "Logout",
+                        title: "Logout".tr,
                         mainTextColor: mainTextColor,
                         iconBoxBg: iconBoxBg,
                         titleColor: const Color(0xFFEF4444), // Light Red for dark mode / text red
@@ -384,7 +391,7 @@ class _SettingsPageState extends State<SettingsPage> {
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: Text(
-                  "Select Language",
+                  "Select Language".tr,
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -395,22 +402,26 @@ class _SettingsPageState extends State<SettingsPage> {
               const SizedBox(height: 16),
               ListTile(
                 title: Text("English", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: _selectedLanguage == 'English' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
-                onTap: () {
+                trailing: AppTranslations.currentLanguage == 'English' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
+                onTap: () async {
                   setState(() {
-                    _selectedLanguage = 'English';
+                    AppTranslations.currentLanguage = 'English';
                   });
-                  Navigator.pop(ctx);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('language', 'English');
+                  if (mounted) Navigator.pop(ctx);
                 },
               ),
               ListTile(
                 title: Text("Indonesia", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: _selectedLanguage == 'Indonesia' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
-                onTap: () {
+                trailing: AppTranslations.currentLanguage == 'Indonesia' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
+                onTap: () async {
                   setState(() {
-                    _selectedLanguage = 'Indonesia';
+                    AppTranslations.currentLanguage = 'Indonesia';
                   });
-                  Navigator.pop(ctx);
+                  final prefs = await SharedPreferences.getInstance();
+                  await prefs.setString('language', 'Indonesia');
+                  if (mounted) Navigator.pop(ctx);
                 },
               ),
               const SizedBox(height: 16),
@@ -446,6 +457,12 @@ class _SettingsPageState extends State<SettingsPage> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const ManageServicesPage()),
+            (route) => false,
+          );
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const ReportPage()),
             (route) => false,
           );
         } else {
@@ -505,7 +522,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 20),
                 Text(
-                  "Logout",
+                  "Logout".tr,
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
@@ -514,7 +531,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Are you sure you want to log out?",
+                  "Are you sure you want to log out?".tr,
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 15,
@@ -542,7 +559,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         (route) => false,
                       );
                     },
-                    child: const Text("Yes", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                    child: Text("Yes".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -558,7 +575,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     onPressed: () => Navigator.pop(ctx),
                     child: Text(
-                      "No",
+                      "No".tr,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,

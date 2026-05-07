@@ -7,6 +7,7 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import '../app_session.dart';
+import '../utils/translations.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -97,14 +98,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Batalkan Booking?", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text("Booking yang dibatalkan tidak dapat dikembalikan."),
+        title: Text("Cancel Booking?".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text("Cancelled bookings cannot be restored.".tr),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Tidak")),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No".tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Ya, Batalkan", style: TextStyle(color: Colors.white)),
+            child: Text("Yes, Cancel".tr, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -135,7 +136,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                   ),
                   const SizedBox(width: 16),
-                  Text("Detail Booking", style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold)),
+                  Text("Booking Details".tr, style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -158,7 +159,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           Icon(Icons.info_outline, size: 16, color: _statusColor(_status)),
                           const SizedBox(width: 8),
                           Text(
-                            "Status: ${_status.toUpperCase()}",
+                            "${"Status: ".tr}${_status.toUpperCase()}",
                             style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: _statusColor(_status)),
                           ),
                         ],
@@ -198,7 +199,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("LAYANAN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.8)),
+                                Text("SERVICES".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.8)),
                                 const SizedBox(height: 8),
                                 ...services.map((s) => Padding(
                                   padding: const EdgeInsets.only(bottom: 6.0),
@@ -229,7 +230,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("WAKTU", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                                Text("TIME".tr, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                 const SizedBox(height: 8),
                                 Row(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -256,7 +257,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("TOTAL", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                                Text("TOTAL".tr, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                 const SizedBox(height: 8),
                                 Text(
                                   _currency.format(totalPrice),
@@ -308,7 +309,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text("INFORMASI PELANGGAN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.8)),
+                          Text("CUSTOMER INFORMATION".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.8)),
                           const SizedBox(height: 12),
                           Row(
                             children: [
@@ -325,7 +326,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               Icon(Icons.phone_outlined, size: 18, color: primaryColor),
                               const SizedBox(width: 12),
                               Expanded(
-                                child: Text(booking['customer_phone'] != null && booking['customer_phone'] != '-' ? booking['customer_phone'] : 'Belum ada nomor HP', style: TextStyle(fontSize: 14, color: mutedText)),
+                                child: Text(booking['customer_phone'] != null && booking['customer_phone'] != '-' ? booking['customer_phone'] : 'No phone number'.tr, style: TextStyle(fontSize: 14, color: mutedText)),
                               ),
                             ],
                           ),
@@ -359,16 +360,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           onPressed: _updating ? null : () => _updateStatus('berhasil'),
                           child: _updating
                               ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                              : const Text("Mark as Done", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                              : Text("Mark as Done".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                         ),
                       ),
                       const SizedBox(height: 12),
                       Center(
                         child: GestureDetector(
                           onTap: _updating ? null : _cancelBooking,
-                          child: const Padding(
+                          child: Padding(
                             padding: EdgeInsets.all(8.0),
-                            child: Text("Cancel Booking", style: TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold, fontSize: 15)),
+                            child: Text("Cancel Booking".tr, style: const TextStyle(color: Color(0xFFDC2626), fontWeight: FontWeight.bold, fontSize: 15)),
                           ),
                         ),
                       ),
@@ -380,7 +381,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          "Booking ini sudah berstatus ${_status.toUpperCase()}.",
+                          "${"This booking is already ".tr}${_status.toUpperCase()}.",
                           textAlign: TextAlign.center,
                           style: TextStyle(color: _statusColor(_status), fontWeight: FontWeight.bold),
                         ),

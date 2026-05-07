@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:io';
+import 'dart:typed_data';
 import '../models/service_model.dart';
 import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
@@ -8,6 +11,7 @@ import 'booking_list_page.dart';
 import 'settings_page.dart';
 import 'report_page.dart';
 import 'add_promo_page.dart';
+import '../utils/translations.dart';
 
 class ManageServicesPage extends StatefulWidget {
   const ManageServicesPage({super.key});
@@ -62,6 +66,10 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           s.category.toLowerCase().contains(q);
       final matchesCat = _selectedCategory == 'All' ||
           s.category.toLowerCase() == _selectedCategory.toLowerCase();
+      
+      // Hide inactive services (Soft Deleted)
+      if (!s.isActive) return false;
+
       return matchesSearch && matchesCat;
     }).toList();
   }
@@ -71,14 +79,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Hapus Layanan", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-        content: Text("Yakin ingin menghapus \"${service.displayName}\"?"),
+        title: Text("Delete Service".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+        content: Text("${"Are you sure you want to delete".tr} \"${service.displayName}\"?"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Hapus", style: TextStyle(color: Colors.white)),
+            child: Text("Delete".tr, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -89,12 +97,200 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         await _serviceController.deleteService(service.tdId);
         _fetchAll();
       } catch (e) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal menghapus: $e"), backgroundColor: Colors.red));
+        String errorMsg = "Gagal menghapus: $e";
+        if (e.toString().contains("violates foreign key constraint")) {
+          errorMsg = "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
+        }
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg), backgroundColor: Colors.red));
       }
     }
   }
 
+  void _showPromoEditDialog(ServiceModel service) async {
+    setState(() => _loading = true);
+    final promo = await _serviceController.fetchPromoDetails(service.promoId!);
+    setState(() => _loading = false);
+
+    if (promo == null) return;
+
+    DateTime startAt = DateTime.parse(promo['start_at']);
+    DateTime endAt = DateTime.parse(promo['end_at']);
+    bool isActive = promo['is_active'];
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (ctx, setStateDialog) {
+            return Dialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              child: Padding(
+                padding: const EdgeInsets.all(24.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      "Edit Promo".tr,
+                      style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Status Switch
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFF8FAFC),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text("Status Promo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                              Text(isActive ? "Aktif" : "Nonaktif", style: TextStyle(color: mutedText, fontSize: 12)),
+                            ],
+                          ),
+                          Switch(
+                            value: isActive,
+                            onChanged: (val) => setStateDialog(() => isActive = val),
+                            activeColor: primaryColor,
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                    
+                    // Start Date
+                    _fieldLabel("WAKTU MULAI"),
+                    const SizedBox(height: 8),
+                    _dateBox(
+                      text: DateFormat('dd MMM yyyy, HH:mm').format(startAt),
+                      icon: Icons.calendar_today,
+                      onTap: () async {
+                        final picked = await _selectDateTimeQuick(ctx, startAt);
+                        if (picked != null) setStateDialog(() => startAt = picked);
+                      },
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    
+                    // End Date
+                    _fieldLabel("WAKTU SELESAI"),
+                    const SizedBox(height: 8),
+                    _dateBox(
+                      text: DateFormat('dd MMM yyyy, HH:mm').format(endAt),
+                      icon: Icons.calendar_today,
+                      onTap: () async {
+                        final picked = await _selectDateTimeQuick(ctx, endAt);
+                        if (picked != null) setStateDialog(() => endAt = picked);
+                      },
+                    ),
+
+                    const SizedBox(height: 32),
+                    
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                        ),
+                        onPressed: () async {
+                          Navigator.pop(ctx);
+                          await _serviceController.updatePromoStatus(
+                            promoId: service.promoId!,
+                            isActive: isActive,
+                            startAt: startAt,
+                            endAt: endAt,
+                          );
+                          _fetchAll();
+                        },
+                        child: Text("Simpan Perubahan".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.pop(ctx),
+                        child: Text("Batal".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
+  Future<DateTime?> _selectDateTimeQuick(BuildContext context, DateTime initial) async {
+    final date = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2101),
+      builder: (context, child) => Theme(
+        data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+        child: child!,
+      ),
+    );
+
+    if (date != null) {
+      if (!mounted) return null;
+      final time = await showTimePicker(
+        context: context,
+        initialTime: TimeOfDay.fromDateTime(initial),
+        initialEntryMode: TimePickerEntryMode.input, // Text input, no dial
+        builder: (context, child) => Theme(
+          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+          child: child!,
+        ),
+      );
+      if (time != null) {
+        return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+      }
+    }
+    return null;
+  }
+
+  Widget _dateBox({required String text, required IconData icon, required VoidCallback onTap}) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        decoration: BoxDecoration(
+          color: const Color(0xFFF1F5F9), 
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: const Color(0xFFE2E8F0)),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: primaryColor),
+            const SizedBox(width: 12),
+            Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+            Icon(Icons.edit, size: 14, color: mutedText),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showServiceDialog({ServiceModel? service}) {
+    if (service?.isPromo == true && service?.promoId != null) {
+      _showPromoEditDialog(service!);
+      return;
+    }
+
     final isEdit = service != null;
     final nameController = TextEditingController(text: isEdit ? service.detailName : '');
     final treatmentController = TextEditingController(text: isEdit ? service.treatmentName : '');
@@ -102,45 +298,88 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     final durationController = TextEditingController(text: isEdit ? service.duration.toString() : '');
     String selectedCategory = isEdit ? service.category : (_categories.length > 1 ? _categories[1] : 'All');
 
+    XFile? dialogImage;
+    final ImagePicker picker = ImagePicker();
+
     showDialog(
       context: context,
       builder: (ctx) {
         return Dialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.all(24.0),
-              child: StatefulBuilder(
-                builder: (ctx, setStateDialog) {
-                  return Column(
+          child: StatefulBuilder(
+            builder: (ctx, setStateDialog) {
+              return SingleChildScrollView(
+                child: Padding(
+                  padding: const EdgeInsets.all(24.0),
+                  child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        isEdit ? "Edit Layanan" : "Tambah Layanan Baru",
+                        isEdit ? "Edit Service".tr : "Add New Service".tr,
                         style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isEdit ? "Perbarui detail layanan" : "Buat layanan baru untuk klien",
+                        isEdit ? "Update service details".tr : "Create new service for clients".tr,
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                       const SizedBox(height: 24),
 
+                      // Image Picker
+                      GestureDetector(
+                        onTap: () async {
+                          try {
+                            final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
+                            if (picked != null) setStateDialog(() => dialogImage = picked);
+                          } catch (e) {
+                            debugPrint("Error picking image: $e");
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text("Gagal mengambil gambar: $e")),
+                            );
+                          }
+                        },
+                        child: Container(
+                          width: double.infinity,
+                          height: 120,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF1F5F9),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(16),
+                            child: dialogImage != null
+                                ? Image.file(File(dialogImage!.path), fit: BoxFit.cover)
+                                : (isEdit && service.imageUrl != null)
+                                    ? Image.network(service.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.add_a_photo, size: 30))
+                                    : Column(
+                                        mainAxisAlignment: MainAxisAlignment.center,
+                                        children: [
+                                          Icon(Icons.add_a_photo_outlined, color: primaryColor, size: 30),
+                                          const SizedBox(height: 8),
+                                          Text("Add Service Photo".tr, style: TextStyle(color: mutedText, fontSize: 12)),
+                                        ],
+                                      ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
                       // Treatment Name
-                      _fieldLabel("NAMA TREATMENT / KATEGORI LAYANAN"),
+                      _fieldLabel("TREATMENT NAME / SERVICE CATEGORY".tr),
                       const SizedBox(height: 8),
-                      _textField(controller: treatmentController, hint: "e.g. Colouring Uban"),
+                      _textField(controller: treatmentController, hint: "e.g. Grey Hair Colouring".tr),
 
                       const SizedBox(height: 16),
                       // Detail Name (Variant)
-                      _fieldLabel("NAMA DETAIL / VARIAN"),
+                      _fieldLabel("DETAIL NAME / VARIANT".tr),
                       const SizedBox(height: 8),
-                      _textField(controller: nameController, hint: "e.g. Short, Medium, Long (boleh kosong)"),
+                      _textField(controller: nameController, hint: "e.g. Short, Medium, Long (optional)".tr),
 
                       const SizedBox(height: 16),
                       // Category Dropdown
-                      _fieldLabel("KATEGORI"),
+                      _fieldLabel("CATEGORY".tr),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -168,7 +407,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _fieldLabel("HARGA (Rp)"),
+                                _fieldLabel("PRICE (Rp)".tr),
                                 const SizedBox(height: 8),
                                 _textField(controller: priceController, hint: "150000", numeric: true),
                               ],
@@ -179,7 +418,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _fieldLabel("DURASI (MENIT)"),
+                                _fieldLabel("DURATION (MINUTES)".tr),
                                 const SizedBox(height: 8),
                                 _textField(controller: durationController, hint: "60", numeric: true),
                               ],
@@ -200,6 +439,15 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           onPressed: () async {
                             if (treatmentController.text.isEmpty && nameController.text.isEmpty) return;
                             Navigator.pop(ctx);
+                            
+                            String? imageUrl;
+                            if (dialogImage != null) {
+                              final bytes = await dialogImage!.readAsBytes();
+                              final ext = dialogImage!.name.split('.').last;
+                              final fileName = 'svc_${DateTime.now().millisecondsSinceEpoch}.$ext';
+                              imageUrl = await _serviceController.uploadImage(bytes, fileName, 'services');
+                            }
+
                             await _saveService(
                               isEdit: isEdit,
                               existingService: service,
@@ -208,10 +456,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               category: selectedCategory,
                               price: int.tryParse(priceController.text) ?? 0,
                               duration: int.tryParse(durationController.text) ?? 0,
+                              imageUrl: imageUrl,
                             );
                           },
                           child: Text(
-                            isEdit ? "Simpan Perubahan" : "Tambah Layanan",
+                            isEdit ? "Save Changes".tr : "Add Service".tr,
                             style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                           ),
                         ),
@@ -221,14 +470,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: Text("Batal", style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.bold)),
+                          child: Text("Cancel".tr, style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.bold)),
                         ),
                       ),
                     ],
-                  );
-                },
-              ),
-            ),
+                  ),
+                ),
+              );
+            },
           ),
         );
       },
@@ -261,6 +510,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     required String category,
     required int price,
     required int duration,
+    String? imageUrl,
   }) async {
     try {
       await _serviceController.saveService(
@@ -271,6 +521,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         category: category,
         price: price,
         duration: duration,
+        imageUrl: imageUrl,
       );
       _fetchAll();
     } catch (e) {
@@ -302,7 +553,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     child: Center(
                       child: Padding(
                         padding: const EdgeInsets.only(right: 28.0),
-                        child: Text("Kelola Layanan", style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
+                        child: Text("Manage Services".tr, style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
                       ),
                     ),
                   ),
@@ -330,7 +581,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             padding: const EdgeInsets.only(left: 8.0),
                             child: Icon(Icons.search, color: mutedText, size: 20),
                           ),
-                          hintText: "Cari layanan...",
+                          hintText: "Search services...".tr,
                           hintStyle: TextStyle(color: mutedText, fontSize: 14),
                           border: InputBorder.none,
                         ),
@@ -384,12 +635,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           elevation: 2,
                         ),
                         onPressed: () => _showServiceDialog(),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(Icons.add, color: Colors.white, size: 20),
                             SizedBox(width: 8),
-                            Text("Tambah Layanan Baru", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                            Text("Add New Service".tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
                           ],
                         ),
                       ),
@@ -417,7 +668,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           children: [
                             Icon(Icons.local_offer_outlined, color: primaryColor, size: 20),
                             const SizedBox(width: 8),
-                            Text("Tambah Promo", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
+                            Text("Add Promo".tr, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
                           ],
                         ),
                       ),
@@ -426,7 +677,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
                     // Count
                     Text(
-                      "${filtered.length} layanan",
+                      "${filtered.length}${" services".tr}",
                       style: TextStyle(fontSize: 13, color: mutedText, fontWeight: FontWeight.w500),
                     ),
                     const SizedBox(height: 12),
@@ -437,7 +688,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         : filtered.isEmpty
                             ? Center(child: Padding(
                                 padding: const EdgeInsets.all(32.0),
-                                child: Text("Tidak ada layanan.", style: TextStyle(color: mutedText)),
+                                child: Text("No services.".tr, style: TextStyle(color: mutedText)),
                               ))
                             : ListView.separated(
                                 shrinkWrap: true,
@@ -459,14 +710,20 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                     child: Row(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        // Category Icon
+                                        // Category Icon / Service Image
                                         Container(
-                                          padding: const EdgeInsets.all(10),
+                                          width: 44,
+                                          height: 44,
                                           decoration: BoxDecoration(
                                             color: const Color(0xFFE4F0FA),
                                             borderRadius: BorderRadius.circular(12),
                                           ),
-                                          child: Icon(Icons.content_cut_rounded, size: 20, color: primaryColor),
+                                          child: ClipRRect(
+                                            borderRadius: BorderRadius.circular(12),
+                                            child: svc.imageUrl != null
+                                                ? Image.network(svc.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.content_cut_rounded, size: 20, color: primaryColor))
+                                                : Icon(Icons.content_cut_rounded, size: 20, color: primaryColor),
+                                          ),
                                         ),
                                         const SizedBox(width: 14),
                                         Expanded(
@@ -485,7 +742,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                                   if (dur > 0) ...[
                                                     Icon(Icons.access_time_outlined, size: 13, color: mutedText),
                                                     const SizedBox(width: 3),
-                                                    Text("$dur mnt", style: TextStyle(fontSize: 12, color: mutedText)),
+                                                    Text("$dur${" min".tr}", style: TextStyle(fontSize: 12, color: mutedText)),
                                                     const SizedBox(width: 10),
                                                   ],
                                                   Text(

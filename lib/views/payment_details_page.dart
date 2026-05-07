@@ -79,8 +79,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
       if (!mounted) return;
 
-      // Handle Midtrans ONLY for E-Wallet (Index 1)
-      if (_selectedPaymentIndex == 1) {
+      // Handle Midtrans for Bank Transfer (Index 0) and E-Wallet (Index 1)
+      if (_selectedPaymentIndex == 0 || _selectedPaymentIndex == 1) {
         try {
           final redirectUrl = await MidtransHelper.createTransaction(
             orderId: "BOOKING-$bookingId-${DateTime.now().millisecondsSinceEpoch}",

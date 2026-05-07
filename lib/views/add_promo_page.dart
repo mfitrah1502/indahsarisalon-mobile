@@ -1,3 +1,7 @@
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
+import '../controllers/service_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
@@ -18,7 +22,6 @@ class _AddPromoPageState extends State<AddPromoPage> {
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _imageUrlController = TextEditingController();
   final TextEditingController _priceController = TextEditingController();
   
   DateTime? _startDate;
@@ -28,6 +31,29 @@ class _AddPromoPageState extends State<AddPromoPage> {
 
   bool _loading = false;
   bool _isPromoActive = true;
+  
+  XFile? _imageFile;
+  final ImagePicker _picker = ImagePicker();
+  final ServiceController _serviceController = ServiceController();
+
+  Future<void> _pickImage() async {
+    try {
+      final XFile? picked = await _picker.pickImage(
+        source: ImageSource.gallery, 
+        imageQuality: 70,
+      );
+      if (picked != null) {
+        setState(() => _imageFile = picked);
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Gagal mengambil gambar: $e")),
+        );
+      }
+    }
+  }
 
   Future<void> _selectDateTime(BuildContext context, bool isStart) async {
     final DateTime? pickedDate = await showDatePicker(
@@ -92,6 +118,24 @@ class _AddPromoPageState extends State<AddPromoPage> {
       final start = DateTime(_startDate!.year, _startDate!.month, _startDate!.day, _startTime!.hour, _startTime!.minute);
       final end = DateTime(_endDate!.year, _endDate!.month, _endDate!.day, _endTime!.hour, _endTime!.minute);
 
+      String? uploadedUrl;
+      if (_imageFile != null) {
+        try {
+          final bytes = await _imageFile!.readAsBytes();
+          final ext = _imageFile!.name.split('.').last;
+          final fileName = 'promo_${DateTime.now().millisecondsSinceEpoch}.$ext';
+          uploadedUrl = await _serviceController.uploadImage(bytes, fileName, 'promos');
+        } catch (uploadError) {
+          debugPrint("Upload process failed: $uploadError");
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text("Gagal upload gambar: $uploadError. Pastikan bucket 'treatments' sudah ada.")),
+            );
+          }
+          // Continue saving without image if upload fails, or return if you want to force image
+        }
+      }
+
       final supabase = Supabase.instance.client;
 
       // 1. Dapatkan ID kategori 'Promo'
@@ -104,34 +148,67 @@ class _AddPromoPageState extends State<AddPromoPage> {
       int? promoCategoryId = catResult?['id'];
 
       // 2. Insert ke tabel promos (untuk manajemen promo/banner)
-      await supabase.from('promos').insert({
+      final Map<String, dynamic> promoData = {
         'title': _titleController.text,
         'description': _descriptionController.text,
-        'image_url': _imageUrlController.text,
         'price': double.tryParse(_priceController.text) ?? 0.0,
         'start_at': start.toIso8601String(),
         'end_at': end.toIso8601String(),
         'is_active': _isPromoActive,
-      });
+      };
+      
+      try {
+        if (uploadedUrl != null) promoData['image_url'] = uploadedUrl;
+        await supabase.from('promos').insert(promoData);
+      } catch (e) {
+        if (e.toString().contains("image_url")) {
+          promoData.remove('image_url');
+          await supabase.from('promos').insert(promoData);
+        } else {
+          rethrow;
+        }
+      }
 
       // 3. Insert ke tabel treatments & treatment_details agar muncul di daftar layanan
       if (promoCategoryId != null) {
-        final newTreatment = await supabase.from('treatments').insert({
+        final Map<String, dynamic> treatData = {
           'name': _titleController.text,
           'category_id': promoCategoryId,
           'is_promo': true,
           'promo_type': 'Fixed',
           'promo_value': double.tryParse(_priceController.text) ?? 0.0,
-          'image': _imageUrlController.text,
-        }).select('id').single();
+        };
+        
+        int? treatmentId;
+        try {
+          if (uploadedUrl != null) treatData['image'] = uploadedUrl;
+          final res = await supabase.from('treatments').insert(treatData).select('id').single();
+          treatmentId = res['id'];
+        } catch (e) {
+          treatData.remove('image');
+          final res = await supabase.from('treatments').insert(treatData).select('id').single();
+          treatmentId = res['id'];
+        }
 
-        await supabase.from('treatment_details').insert({
-          'treatment_id': newTreatment['id'],
+        final Map<String, dynamic> detailData = {
+          'treatment_id': treatmentId,
           'name': _titleController.text,
           'price': double.tryParse(_priceController.text) ?? 0.0,
-          'duration': 60, // default 1 hour for promo
+          'duration': 60,
           'description': _descriptionController.text.isNotEmpty ? _descriptionController.text : 'Promo: ${_titleController.text}',
-        });
+        };
+
+        try {
+          if (uploadedUrl != null) detailData['image_url'] = uploadedUrl;
+          await supabase.from('treatment_details').insert(detailData);
+        } catch (e) {
+          if (e.toString().contains("image_url")) {
+            detailData.remove('image_url');
+            await supabase.from('treatment_details').insert(detailData);
+          } else {
+            rethrow;
+          }
+        }
       }
 
       if (mounted) {
@@ -144,7 +221,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
       debugPrint("Error saving promo: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal menyimpan promo")),
+          SnackBar(content: Text("Gagal menyimpan promo: $e")),
         );
         setState(() => _loading = false);
       }
@@ -190,9 +267,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                     
                     // Banner Preview
                     GestureDetector(
-                      onTap: () {
-                        // Logic to pick image could go here
-                      },
+                      onTap: _pickImage,
                       child: Container(
                         width: double.infinity,
                         height: 160,
@@ -200,35 +275,30 @@ class _AddPromoPageState extends State<AddPromoPage> {
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(20),
                           border: Border.all(color: const Color(0xFFE2E8F0)),
-                          image: _imageUrlController.text.isNotEmpty 
-                            ? DecorationImage(image: NetworkImage(_imageUrlController.text), fit: BoxFit.cover)
-                            : null,
                         ),
-                        child: _imageUrlController.text.isEmpty 
-                          ? Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(Icons.add_photo_alternate_outlined, color: primaryColor, size: 40),
-                                const SizedBox(height: 8),
-                                Text("Klik untuk upload banner", style: TextStyle(color: mutedText, fontSize: 13)),
-                              ],
-                            )
-                          : null,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(20),
+                          child: _imageFile != null 
+                            ? Image.file(
+                                File(_imageFile!.path),
+                                fit: BoxFit.cover,
+                                errorBuilder: (ctx, _, __) => const Icon(Icons.error),
+                              )
+                            : Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.add_photo_alternate_outlined, color: primaryColor, size: 40),
+                                  const SizedBox(height: 8),
+                                  Text("Klik untuk upload banner", style: TextStyle(color: mutedText, fontSize: 13)),
+                                ],
+                              ),
+                        ),
                       ),
                     ),
                     
                     const SizedBox(height: 24),
 
                     // Inputs
-                    _fieldLabel("LINK GAMBAR BANNER"),
-                    const SizedBox(height: 8),
-                    _textField(
-                      controller: _imageUrlController, 
-                      hint: "https://example.com/promo.jpg",
-                      onChanged: (v) => setState(() {}),
-                    ),
-
-                    const SizedBox(height: 20),
                     _fieldLabel("JUDUL PROMO"),
                     const SizedBox(height: 8),
                     _textField(controller: _titleController, hint: "e.g. Ramadhan Sale 50%"),

@@ -10,7 +10,7 @@ class HomeController {
       final now = DateTime.now().toIso8601String();
       final data = await _supabase
           .from('promos')
-          .select()
+          .select('id, title, description, price, image_url, start_at, end_at, is_active')
           .eq('is_active', true)
           .lte('start_at', now)
           .gte('end_at', now)
@@ -25,44 +25,43 @@ class HomeController {
   Future<DashboardStatsModel> fetchDashboardData() async {
     try {
       final now = DateTime.now();
-      // Today bounds
+      // Today bounds (Local)
       final todayStart = DateTime(now.year, now.month, now.day).toIso8601String();
       final todayEnd = DateTime(now.year, now.month, now.day, 23, 59, 59).toIso8601String();
       
-      // Yesterday bounds
-      final yesterdayStart = DateTime(now.year, now.month, now.day - 1).toIso8601String();
-      final yesterdayEnd = DateTime(now.year, now.month, now.day - 1, 23, 59, 59).toIso8601String();
+      // Yesterday bounds (Local)
+      final yesterday = now.subtract(const Duration(days: 1));
+      final yesterdayStart = DateTime(yesterday.year, yesterday.month, yesterday.day).toIso8601String();
+      final yesterdayEnd = DateTime(yesterday.year, yesterday.month, yesterday.day, 23, 59, 59).toIso8601String();
 
-      // Fetch Today's bookings
+      // Fetch Today's bookings based on reservation date
       final todayData = await _supabase
           .from('bookings')
           .select('id, user_id, total_price, reservation_datetime, payment_status, status, customer_name')
           .gte('reservation_datetime', todayStart)
           .lte('reservation_datetime', todayEnd)
-          .neq('status', 'cancelled');
+          .neq('status', 'dibatalkan');
 
-      // Fetch Yesterday's bookings
+      // Fetch Yesterday's bookings based on reservation date
       final yesterdayData = await _supabase
           .from('bookings')
           .select('id, user_id, total_price, reservation_datetime, payment_status, status, customer_name')
           .gte('reservation_datetime', yesterdayStart)
           .lte('reservation_datetime', yesterdayEnd)
-          .neq('status', 'cancelled');
+          .neq('status', 'dibatalkan');
 
       // Calculate Today Stats
       int tBookings = todayData.length;
       int tRev = 0;
       Set<String> tCustomers = {};
       for (var b in todayData) {
-        // Only count revenue for paid bookings
-        if (b['payment_status'] == 'paid') {
-          tRev += (b['total_price'] as num?)?.toInt() ?? 0;
-        }
+        // Count all non-cancelled bookings for revenue (to match ReportController)
+        tRev += (b['total_price'] as num?)?.toInt() ?? 0;
         
         final uId = b['user_id']?.toString();
         final cName = b['customer_name']?.toString();
         
-        if (uId != null) {
+        if (uId != null && uId != 'null') {
           tCustomers.add("u_$uId");
         } else if (cName != null) {
           tCustomers.add("g_$cName");
@@ -74,14 +73,12 @@ class HomeController {
       int yRev = 0;
       Set<String> yCustomers = {};
       for (var b in yesterdayData) {
-        if (b['payment_status'] == 'paid') {
-          yRev += (b['total_price'] as num?)?.toInt() ?? 0;
-        }
+        yRev += (b['total_price'] as num?)?.toInt() ?? 0;
         
         final uId = b['user_id']?.toString();
         final cName = b['customer_name']?.toString();
         
-        if (uId != null) {
+        if (uId != null && uId != 'null') {
           yCustomers.add("u_$uId");
         } else if (cName != null) {
           yCustomers.add("g_$cName");

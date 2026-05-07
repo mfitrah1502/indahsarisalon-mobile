@@ -11,6 +11,7 @@ import 'booking_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
+import '../utils/translations.dart';
 
 class SelectServicesPage extends StatefulWidget {
   const SelectServicesPage({super.key});
@@ -120,6 +121,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   List<Map<String, dynamic>> get _filteredServices {
     return _allServices.where((item) {
       final ServiceModel s = item['service'];
+      
+      // Filter out inactive services (Soft Deleted)
+      if (!s.isActive) return false;
+
       final matchesCat = _selectedCategory == 'All' ||
           s.category.toLowerCase() == _selectedCategory.toLowerCase();
       final matchesSearch = s.treatmentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
@@ -186,11 +191,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   const SizedBox(height: 20),
                   Text(displayTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
                   const SizedBox(height: 4),
-                  Text("Pilih atau sesuaikan harga layanan", style: TextStyle(color: mutedText, fontSize: 13)),
+                  Text("Choose or adjust service price".tr, style: TextStyle(color: mutedText, fontSize: 13)),
                   const SizedBox(height: 20),
 
                   if (basePrice > 0) ...[
-                    Text("HARGA STANDAR", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
+                    Text("STANDARD PRICE".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
                     const SizedBox(height: 12),
                     GestureDetector(
                       onTap: () {
@@ -219,7 +224,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     const SizedBox(height: 20),
                   ],
 
-                  Text("INPUT HARGA MANUAL", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
+                  Text("MANUAL PRICE INPUT".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
                   const SizedBox(height: 12),
                   TextField(
                     controller: manualController,
@@ -272,7 +277,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         }
                         Navigator.pop(ctx);
                       },
-                      child: const Text("Tambahkan ke Booking", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Text("Add to Booking".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
                     ),
                   ),
                 ],
@@ -309,7 +314,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 28.0),
                         child: Text(
-                          "New Booking",
+                          "New Booking".tr,
                           style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -330,7 +335,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         
                         // Select Date
                         Text(
-                          "Pilih Tanggal",
+                          "Select Date".tr,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -424,7 +429,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "Belum ada stylist yang terdaftar.",
+                              "No stylists registered yet.".tr,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: mutedText, fontSize: 14),
                             ),
@@ -492,7 +497,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         const SizedBox(height: 28),
 
                         Text(
-                          "Pilih Layanan",
+                          "Select Service".tr,
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -515,7 +520,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 padding: const EdgeInsets.only(left: 8.0),
                                 child: Icon(Icons.search, color: mutedText, size: 20),
                               ),
-                              hintText: "Cari layanan...",
+                              hintText: "Search services...".tr,
                               hintStyle: TextStyle(color: mutedText, fontSize: 14),
                               border: InputBorder.none,
                             ),
@@ -568,7 +573,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(32.0),
-                              child: Text("Tidak ada layanan ditemukan.", style: TextStyle(color: mutedText)),
+                              child: Text("No services found.".tr, style: TextStyle(color: mutedText)),
                             ),
                           )
                         else
@@ -631,7 +636,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                               Icon(Icons.access_time_outlined, size: 13, color: mutedText),
                                               const SizedBox(width: 4),
                                               Text(
-                                                dur > 0 ? "$dur Menit" : "- Menit",
+                                                dur > 0 ? "$dur${" Minutes".tr}" : "- Minutes".tr,
                                                 style: TextStyle(color: mutedText, fontSize: 12),
                                               ),
                                               const SizedBox(width: 10),
@@ -721,7 +726,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "${selected.length} layanan dipilih",
+                                      "${selected.length}${" services selected".tr}",
                                       style: TextStyle(color: mutedText, fontSize: 13),
                                     ),
                                     if (_totalMins > 0) ...[
@@ -784,7 +789,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 );
                               },
                               child: Text(
-                                _selectedStylistIndex == -1 ? "Pilih Stylist di Atas" : "Lanjut ke Jadwal", 
+                                _selectedStylistIndex == -1 ? "Select Stylist Above".tr : "Continue to Schedule".tr, 
                                 style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)
                               ),
                             ),

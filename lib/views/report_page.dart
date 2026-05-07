@@ -12,6 +12,7 @@ import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'settings_page.dart';
+import '../utils/translations.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -34,6 +35,8 @@ class _ReportPageState extends State<ReportPage> {
   int totalExpense = 0;
   int totalProfit = 0;
   List<ReportDailyStat> dailyStats = [];
+  List<IncomeDetail> incomeDetails = [];
+  List<ExpenseDetail> expenseDetails = [];
   bool isLoading = true;
   
   final ReportController _reportController = ReportController();
@@ -62,6 +65,8 @@ class _ReportPageState extends State<ReportPage> {
           totalExpense = summary.totalExpense;
           totalProfit = summary.totalProfit;
           dailyStats = summary.dailyStats;
+          incomeDetails = summary.incomeDetails;
+          expenseDetails = summary.expenseDetails;
           isLoading = false;
         });
       }
@@ -86,33 +91,81 @@ class _ReportPageState extends State<ReportPage> {
     return "$start - $end";
   }
 
-  Future<void> _pickDateRange(BuildContext context) async {
-    final picked = await showDateRangePicker(
-      context: context,
-      initialDateRange: _dateRange,
-      firstDate: DateTime(2020),
-      lastDate: DateTime(2035),
-      builder: (context, child) {
-        return Theme(
-          data: ThemeData.light().copyWith(
-            primaryColor: primaryColor,
-            colorScheme: ColorScheme.light(primary: primaryColor),
-            buttonTheme: const ButtonThemeData(textTheme: ButtonTextTheme.primary),
-          ),
-          child: child!,
-        );
-      },
-    );
+  String _selectedFilter = 'Monthly';
 
-    if (picked != null && picked != _dateRange) {
-      setState(() {
-        _dateRange = picked;
-      });
-      _fetchData();
-    }
+  void _setFilter(String filter) {
+    if (_selectedFilter == filter) return;
+    setState(() {
+      _selectedFilter = filter;
+      final now = DateTime.now();
+      if (filter == 'Weekly') {
+        int currentDay = now.weekday; 
+        DateTime start = now.subtract(Duration(days: currentDay - 1));
+        DateTime end = start.add(const Duration(days: 6));
+        _dateRange = DateTimeRange(start: start, end: end);
+      } else if (filter == 'Monthly') {
+        _dateRange = DateTimeRange(
+          start: DateTime(now.year, now.month, 1),
+          end: DateTime(now.year, now.month + 1, 0),
+        );
+      } else if (filter == 'Yearly') {
+        _dateRange = DateTimeRange(
+          start: DateTime(now.year, 1, 1),
+          end: DateTime(now.year, 12, 31),
+        );
+      }
+    });
+    _fetchData();
+  }
+
+  Widget _buildFilterSlider() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: const Color(0xFFF1F5F9),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Row(
+        children: ['Weekly', 'Monthly', 'Yearly'].map((filter) {
+          final isSelected = _selectedFilter == filter;
+          return Expanded(
+            child: GestureDetector(
+              onTap: () => _setFilter(filter),
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: isSelected
+                      ? [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.05),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          )
+                        ]
+                      : [],
+                ),
+                child: Center(
+                  child: Text(
+                    filter.tr,
+                    style: TextStyle(
+                      color: isSelected ? primaryColor : mutedText,
+                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          );
+        }).toList(),
+      ),
+    );
   }
 
   Future<void> _showAddExpenseDialog() async {
+    final nameCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
     String category = 'gaji karyawan';
     
@@ -127,6 +180,15 @@ class _ReportPageState extends State<ReportPage> {
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
+                  TextField(
+                    controller: nameCtrl,
+                    decoration: InputDecoration(
+                      labelText: "Nama Pengeluaran",
+                      hintText: "Contoh: Listrik, Gaji Budi",
+                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                  const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     value: category,
                     decoration: InputDecoration(
@@ -165,9 +227,10 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   onPressed: () async {
                     final amount = int.tryParse(amountCtrl.text) ?? 0;
-                    if (amount > 0) {
+                    final name = nameCtrl.text.trim();
+                    if (amount > 0 && name.isNotEmpty) {
                       try {
-                        await _reportController.addExpense(amount: amount, category: category);
+                        await _reportController.addExpense(name: name, amount: amount, category: category);
                         if (!context.mounted) return;
                         Navigator.pop(context);
                         _fetchData();
@@ -177,6 +240,8 @@ class _ReportPageState extends State<ReportPage> {
                         if (!context.mounted) return;
                         ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: $e")));
                       }
+                    } else {
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Harap isi semua field")));
                     }
                   },
                   child: const Text("Simpan", style: TextStyle(color: Colors.white)),
@@ -192,45 +257,115 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> _exportToExcel() async {
     try {
       var excel = Excel.createExcel();
-      Sheet sheetObject = excel['Report'];
-      excel.setDefaultSheet('Report');
-
-      // Add Headers
-      sheetObject.appendRow([
+      
+      // 1. Sheet Pemasukan
+      Sheet sheetPemasukan = excel['Pemasukan'];
+      excel.setDefaultSheet('Pemasukan');
+      sheetPemasukan.appendRow([
         TextCellValue('Tanggal'),
-        TextCellValue('Pemasukan'),
-        TextCellValue('Pengeluaran'),
-        TextCellValue('Profit'),
+        TextCellValue('Invoice ID'),
+        TextCellValue('Nama Pelanggan'),
+        TextCellValue('Layanan/Produk'),
+        TextCellValue('Kategori'),
+        TextCellValue('Harga'),
       ]);
 
-      // Add Data
-      for (var s in dailyStats) {
-        final date = DateFormat('yyyy-MM-dd').format(s.date);
-        sheetObject.appendRow([
-          TextCellValue(date),
-          IntCellValue(s.income),
-          IntCellValue(s.expense),
-          IntCellValue(s.profit),
+      for (var inc in incomeDetails) {
+        sheetPemasukan.appendRow([
+          TextCellValue(DateFormat('yyyy-MM-dd').format(inc.date)),
+          TextCellValue(inc.invoiceId),
+          TextCellValue(inc.customerName),
+          TextCellValue(inc.services),
+          TextCellValue(inc.category),
+          IntCellValue(inc.price),
         ]);
       }
-      
-      // Add Totals
-      sheetObject.appendRow([
+      // Total Pemasukan
+      sheetPemasukan.appendRow([
         TextCellValue('TOTAL'),
+        TextCellValue(''),
+        TextCellValue(''),
+        TextCellValue(''),
+        TextCellValue(''),
         IntCellValue(totalIncome),
-        IntCellValue(totalExpense),
-        IntCellValue(totalProfit),
       ]);
+
+      // 2. Sheet Pengeluaran
+      Sheet sheetPengeluaran = excel['Pengeluaran'];
+      sheetPengeluaran.appendRow([
+        TextCellValue('Tanggal'),
+        TextCellValue('Nama Pengeluaran'),
+        TextCellValue('Kategori'),
+        TextCellValue('Jumlah'),
+      ]);
+
+      for (var exp in expenseDetails) {
+        sheetPengeluaran.appendRow([
+          TextCellValue(DateFormat('yyyy-MM-dd').format(exp.date)),
+          TextCellValue(exp.name),
+          TextCellValue(exp.category),
+          IntCellValue(exp.amount),
+        ]);
+      }
+      // Total Pengeluaran
+      sheetPengeluaran.appendRow([
+        TextCellValue('TOTAL'),
+        TextCellValue(''),
+        TextCellValue(''),
+        IntCellValue(totalExpense),
+      ]);
+
+      // 3. Sheet Profit
+      Sheet sheetProfit = excel['Profit'];
+      sheetProfit.appendRow([
+        TextCellValue('Bulan'),
+        TextCellValue('Total Pemasukan'),
+        TextCellValue('Total Pengeluaran'),
+        TextCellValue('Profit Bersih'),
+      ]);
+
+      // If dailyStats are grouped by month (Yearly filter) or just current range
+      if (_selectedFilter == 'Yearly') {
+        for (var s in dailyStats) {
+          sheetProfit.appendRow([
+            TextCellValue(DateFormat('MMMM yyyy').format(s.date)),
+            IntCellValue(s.income),
+            IntCellValue(s.expense),
+            IntCellValue(s.profit),
+          ]);
+        }
+      } else {
+        sheetProfit.appendRow([
+          TextCellValue(formatDateRange(_dateRange)),
+          IntCellValue(totalIncome),
+          IntCellValue(totalExpense),
+          IntCellValue(totalProfit),
+        ]);
+      }
+
+      // Remove the default 'Sheet1' if it exists
+      if (excel.sheets.containsKey('Sheet1')) {
+        excel.delete('Sheet1');
+      }
 
       var fileBytes = excel.save();
       if (fileBytes != null) {
+        // To make it "automatic" as much as possible on mobile without extra permissions,
+        // we save to a temporary file and then share it. 
+        // For a true "Download" folder experience on Android, we would need 
+        // a more complex approach with permission_handler.
         final directory = await getTemporaryDirectory();
-        final path = "${directory.path}/Salon_Report_${DateTime.now().millisecondsSinceEpoch}.xlsx";
+        final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx";
+        final path = "${directory.path}/$fileName";
         File(path)
           ..createSync(recursive: true)
           ..writeAsBytesSync(fileBytes);
         
-        await Share.shareXFiles([XFile(path)], text: 'Report Salon');
+        await Share.shareXFiles(
+          [XFile(path, name: fileName)], 
+          text: 'Report Indah Sari Salon',
+          subject: fileName,
+        );
       }
     } catch (e) {
       debugPrint("Error exporting excel: $e");
@@ -267,9 +402,13 @@ class _ReportPageState extends State<ReportPage> {
                   if (idx >= 0 && idx < dailyStats.length) {
                     if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
                     final date = dailyStats[idx].date;
+                    final isYearly = _selectedFilter == 'Tahunan';
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
-                      child: Text(DateFormat('dd MMM').format(date), style: TextStyle(fontSize: 11, color: Colors.grey.shade600)),
+                      child: Text(
+                        isYearly ? DateFormat('MMM').format(date) : DateFormat('dd MMM').format(date), 
+                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600)
+                      ),
                     );
                   }
                   return const SizedBox();
@@ -365,7 +504,7 @@ class _ReportPageState extends State<ReportPage> {
               children: [
                 Center(
                   child: Text(
-                    "Report",
+                    "Report".tr,
                     style: TextStyle(
                       color: primaryColor,
                       fontSize: 22,
@@ -375,38 +514,7 @@ class _ReportPageState extends State<ReportPage> {
                 ),
                 const SizedBox(height: 24),
 
-                GestureDetector(
-                  onTap: () => _pickDateRange(context),
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9).withOpacity(0.5),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Icon(Icons.chevron_left, color: primaryColor, size: 20),
-                        Row(
-                          children: [
-                            Icon(Icons.calendar_today_outlined, size: 14, color: primaryColor),
-                            const SizedBox(width: 8),
-                            Text(
-                              formatDateRange(_dateRange),
-                              style: TextStyle(
-                                color: primaryColor,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                                letterSpacing: 1.0,
-                              ),
-                            ),
-                          ],
-                        ),
-                        Icon(Icons.chevron_right, color: primaryColor, size: 20),
-                      ],
-                    ),
-                  ),
-                ),
+                _buildFilterSlider(),
                 const SizedBox(height: 16),
                 
                 SizedBox(
@@ -414,7 +522,7 @@ class _ReportPageState extends State<ReportPage> {
                   child: ElevatedButton.icon(
                     onPressed: _showAddExpenseDialog,
                     icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                    label: const Text("TAMBAH PENGELUARAN", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    label: Text("ADD EXPENSE".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: primaryColor,
                       padding: const EdgeInsets.symmetric(vertical: 14),
@@ -453,7 +561,7 @@ class _ReportPageState extends State<ReportPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text("Total Income", style: TextStyle(color: mutedText, fontSize: 13)),
+                                      Text("Total Income".tr, style: TextStyle(color: mutedText, fontSize: 13)),
                                       const SizedBox(height: 8),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
@@ -492,7 +600,7 @@ class _ReportPageState extends State<ReportPage> {
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     mainAxisAlignment: MainAxisAlignment.center,
                                     children: [
-                                      Text("Due Payments", style: TextStyle(color: mutedText, fontSize: 13)),
+                                      Text("Expenses".tr, style: TextStyle(color: mutedText, fontSize: 13)),
                                       const SizedBox(height: 8),
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
@@ -514,8 +622,8 @@ class _ReportPageState extends State<ReportPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text("Sales Report", style: TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-                      const Text("More >", style: TextStyle(fontSize: 14, color: Colors.redAccent)),
+                      Text("Sales Report".tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                      Text("More >".tr, style: const TextStyle(fontSize: 14, color: Colors.redAccent)),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -530,17 +638,17 @@ class _ReportPageState extends State<ReportPage> {
                     children: [
                       Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      Text("Pemasukan", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text("Income".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
                       const SizedBox(width: 16),
                       
                       Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      Text("Pengeluaran", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text("Expenses".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
                       const SizedBox(width: 16),
                       
                       Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.amber.shade300, borderRadius: BorderRadius.circular(3))),
                       const SizedBox(width: 6),
-                      Text("Profit", style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text("Profit".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -551,8 +659,8 @@ class _ReportPageState extends State<ReportPage> {
                     child: ElevatedButton.icon(
                       onPressed: _exportToExcel,
                       icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
-                      label: const Text(
-                        "DOWNLOAD REPORT EXCEL",
+                      label: Text(
+                        "DOWNLOAD REPORT EXCEL".tr,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,

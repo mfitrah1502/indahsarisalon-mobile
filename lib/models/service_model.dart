@@ -7,6 +7,10 @@ class ServiceModel {
   final String category;
   final int duration;
   final int price;
+  final String? imageUrl;
+  final bool isPromo;
+  final int? promoId;
+  final bool isActive;
 
   ServiceModel({
     required this.tdId,
@@ -17,5 +21,9 @@ class ServiceModel {
     required this.category,
     required this.duration,
     required this.price,
+    this.imageUrl,
+    this.isPromo = false,
+    this.promoId,
+    this.isActive = true,
   });
 }

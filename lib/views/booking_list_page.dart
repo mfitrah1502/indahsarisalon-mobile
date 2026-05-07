@@ -8,6 +8,7 @@ import 'select_services_page.dart';
 import 'booking_details_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
+import '../utils/translations.dart';
 
 class BookingListPage extends StatefulWidget {
   const BookingListPage({super.key});
@@ -67,9 +68,9 @@ class _BookingListPageState extends State<BookingListPage> {
 
       String groupKey;
       if (itemDate == today) {
-        groupKey = "Hari Ini";
+        groupKey = "Today".tr;
       } else if (itemDate == yesterday) {
-        groupKey = "Kemarin";
+        groupKey = "Yesterday".tr;
       } else {
         groupKey = DateFormat('EEEE, d MMMM yyyy', 'id').format(itemDate);
       }
@@ -105,14 +106,14 @@ class _BookingListPageState extends State<BookingListPage> {
       context: context,
       builder: (_) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text("Hapus Semua Booking?", style: TextStyle(fontWeight: FontWeight.bold)),
-        content: const Text("Tindakan ini akan menghapus permanen seluruh daftar booking dari database. Lanjutkan?"),
+        title: Text("Delete All Bookings?".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+        content: Text("This action will permanently delete all bookings from the database. Continue?".tr),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr)),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Ya, Hapus", style: TextStyle(color: Colors.white)),
+            child: Text("Yes, Delete".tr, style: const TextStyle(color: Colors.white)),
           ),
         ],
       ),
@@ -180,7 +181,7 @@ class _BookingListPageState extends State<BookingListPage> {
                   Expanded(
                     child: Center(
                       child: Text(
-                        "Daftar Booking", 
+                        "Booking List".tr, 
                         style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)
                       ),
                     ),
@@ -217,9 +218,9 @@ class _BookingListPageState extends State<BookingListPage> {
                 child: TextField(
                   controller: _searchController,
                   onChanged: _filterBookings,
-                  decoration: const InputDecoration(
-                    icon: Icon(Icons.search, color: Color(0xFF64748B)),
-                    hintText: 'Cari by Nama atau Stylist...',
+                  decoration: InputDecoration(
+                    icon: const Icon(Icons.search, color: Color(0xFF64748B)),
+                    hintText: 'Search by Name or Stylist...'.tr,
                     border: InputBorder.none,
                   ),
                 ),
@@ -239,7 +240,7 @@ class _BookingListPageState extends State<BookingListPage> {
                         children: [
                           const SizedBox(height: 4),
                           Text(
-                            "SCHEDULE OVERVIEW",
+                            "SCHEDULE OVERVIEW".tr,
                             style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText),
                           ),
                           const SizedBox(height: 4),
@@ -247,10 +248,10 @@ class _BookingListPageState extends State<BookingListPage> {
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
                               Text(
-                                "Your Appointments",
+                                "Your Appointments".tr,
                                 style: TextStyle(color: primaryColor, fontSize: 26, fontWeight: FontWeight.w900),
                               ),
-                              Text("${_filteredBookings.length} total", style: TextStyle(color: mutedText, fontSize: 13)),
+                              Text("${_filteredBookings.length}${" total".tr}", style: TextStyle(color: mutedText, fontSize: 13)),
                             ],
                           ),
                           const SizedBox(height: 20),
@@ -263,9 +264,9 @@ class _BookingListPageState extends State<BookingListPage> {
                                   children: [
                                     Icon(Icons.calendar_today_outlined, size: 56, color: const Color(0xFFCBD5E1)),
                                     const SizedBox(height: 16),
-                                    Text("Belum ada booking.", style: TextStyle(color: mutedText, fontSize: 16)),
+                                    Text("No bookings yet.".tr, style: TextStyle(color: mutedText, fontSize: 16)),
                                     const SizedBox(height: 8),
-                                    Text("Tekan tombol + untuk buat booking baru.", style: TextStyle(color: mutedText, fontSize: 13)),
+                                    Text("Press the + button to create a new booking.".tr, style: TextStyle(color: mutedText, fontSize: 13)),
                                   ],
                                 ),
                               ),
@@ -303,7 +304,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                   ...entry.value.map((booking) {
                                     final status = booking.status;
                                     final services = booking.services;
-                                    final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2} lainnya" : "");
+                                    final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2}${" others".tr}" : "");
 
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 16.0),
@@ -345,7 +346,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(
-                                                          booking.customerName != '-' ? booking.customerName : "Pelanggan",
+                                                          booking.customerName != '-' ? booking.customerName : "Customer".tr,
                                                           style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
@@ -359,7 +360,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                         ),
                                                         const SizedBox(height: 2),
                                                         Text(
-                                                          "dengan ${booking.stylist}",
+                                                          "${"with ".tr}${booking.stylist}",
                                                           style: TextStyle(fontSize: 12, color: mutedText),
                                                         ),
                                                       ],

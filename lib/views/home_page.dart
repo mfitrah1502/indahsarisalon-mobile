@@ -1,5 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:http/http.dart' as http;
+import 'package:whatsapp_share/whatsapp_share.dart';
+import 'dart:io';
 import '../controllers/home_controller.dart';
 import '../models/promo_model.dart';
 import 'notifications_page.dart';
@@ -12,6 +19,7 @@ import 'edit_profile_page.dart';
 import 'customer_list_page.dart';
 import '../app_session.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../utils/translations.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -89,9 +97,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   String formatIncrease(num percentage) {
-    if (percentage > 0) return "+${percentage.toStringAsFixed(1)}% vs yesterday";
-    if (percentage < 0) return "${percentage.toStringAsFixed(1)}% vs yesterday";
-    return "Same as yesterday";
+    if (percentage > 0) return "+${percentage.toStringAsFixed(1)}${" vs yesterday".tr}";
+    if (percentage < 0) return "${percentage.toStringAsFixed(1)}${" vs yesterday".tr}";
+    return "Same as yesterday".tr;
   }
 
   void _navigateToReport() {
@@ -119,40 +127,45 @@ class _HomePageState extends State<HomePage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        // Profile Avatar
-                        GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(builder: (_) => const EditProfilePage()),
-                            );
-                          },
-                          child: Container(
-                            width: 48,
-                            height: 48,
-                            decoration: const BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: Color(0xFFE2E8F0),
-                            ),
-                            child: const Icon(
-                              Icons.person,
-                              color: Color(0xFF94A3B8),
-                              size: 28,
+                    Expanded(
+                      child: Row(
+                        children: [
+                          // Profile Avatar
+                          GestureDetector(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                              );
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              decoration: const BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: Color(0xFFE2E8F0),
+                              ),
+                              child: const Icon(
+                                Icons.person,
+                                color: Color(0xFF94A3B8),
+                                size: 28,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 16),
-                        Text(
-                          "Hello, ${AppSession.userName}!",
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Text(
+                              "${"Hello,".tr} ${AppSession.userName}!",
+                              style: TextStyle(
+                                color: primaryColor,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     Row(
                       children: [
@@ -213,7 +226,7 @@ class _HomePageState extends State<HomePage> {
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          "Search bookings, customers...",
+                          "Search bookings, customers...".tr,
                           style: TextStyle(
                             color: mutedText,
                             fontSize: 15,
@@ -232,12 +245,12 @@ class _HomePageState extends State<HomePage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
-                        "PENAWARAN SPESIAL",
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
+                      Text(
+                        "SPECIAL OFFERS".tr,
+                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
                       ),
                       Text(
-                        "Lihat Semua",
+                        "See All".tr,
                         style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
                       ),
                     ],
@@ -311,7 +324,7 @@ class _HomePageState extends State<HomePage> {
 
                 // Title Section
                 Text(
-                  "TODAY, $todayFormatted",
+                  "${"TODAY, ".tr}$todayFormatted",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -321,7 +334,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Daily Overview",
+                  "Daily Overview".tr,
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -339,7 +352,7 @@ class _HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: _navigateToReport,
                     child: _buildStatCard(
-                      title: "TOTAL BOOKINGS TODAY",
+                      title: "TOTAL BOOKINGS TODAY".tr,
                       value: "$todayBookings",
                       increase: formatIncrease(bookingsIncrease),
                       iconData: Icons.calendar_today_rounded,
@@ -351,7 +364,7 @@ class _HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: _navigateToReport,
                     child: _buildStatCard(
-                      title: "TODAY'S REVENUE",
+                      title: "TODAY'S REVENUE".tr,
                       value: formatCurrency(todayRevenue),
                       increase: formatIncrease(revenueIncrease),
                       iconData: Icons.payments_outlined,
@@ -363,7 +376,7 @@ class _HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: _navigateToReport,
                     child: _buildStatCard(
-                      title: "NUMBER OF CUSTOMERS",
+                      title: "NUMBER OF CUSTOMERS".tr,
                       value: "$todayCustomers",
                       increase: formatIncrease(customersIncrease),
                       iconData: Icons.people_outline_rounded,
@@ -452,13 +465,13 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                        child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Text("Promo".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Dapatkan layanan ini hanya dengan harga:",
+                    "Get this service only for:".tr,
                     style: TextStyle(color: mutedText, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
@@ -469,7 +482,7 @@ class _HomePageState extends State<HomePage> {
                   if (promo.description != null && promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      "Termasuk Treatment:",
+                      "Included Treatments:".tr,
                       style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
@@ -486,19 +499,20 @@ class _HomePageState extends State<HomePage> {
                       Icon(Icons.access_time, size: 16, color: mutedText),
                       const SizedBox(width: 8),
                       Text(
-                        "Berlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}",
+                        "${"Valid until: ".tr}${DateFormat('dd MMM yyyy').format(promo.endAt)}",
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                     ],
                   ),
                   const SizedBox(height: 32),
+                  const SizedBox(height: 16),
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366), // WhatsApp Green
+                        backgroundColor: const Color(0xFF25D366),
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 16),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
                       onPressed: () async {
@@ -510,27 +524,26 @@ class _HomePageState extends State<HomePage> {
                         );
 
                         if (selectedCustomer != null && selectedCustomer is Map<String, dynamic>) {
-                          String phone = selectedCustomer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
-                          
-                          if (phone.isNotEmpty) {
-                            // Convert standard 08... to 62... for WhatsApp
-                            if (phone.startsWith('0')) {
-                              phone = '62${phone.substring(1)}';
-                            } else if (!phone.startsWith('62')) {
-                              phone = '62$phone';
-                            }
-
-                            final message = "Halo ${selectedCustomer['name']}! Cek promo menarik ini di Indah Sari Salon: ${promo.title} hanya dengan ${formatCurrency(promo.price)}! Berlaku sampai ${DateFormat('dd MMM yyyy').format(promo.endAt)}. Yuk booking sekarang!";
-                            final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-                            
-                            if (await canLaunchUrl(Uri.parse(url))) {
-                              await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
-                            }
-                          }
+                          _shareToWhatsApp(selectedCustomer, promo);
                         }
                       },
-                      icon: const Icon(Icons.share),
-                      label: const Text("Bagikan ke WhatsApp", style: TextStyle(fontWeight: FontWeight.bold)),
+                      icon: const Icon(Icons.person),
+                      label: Text("Kirim ke Satu Pelanggan".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  SizedBox(
+                    width: double.infinity,
+                    child: OutlinedButton.icon(
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: const Color(0xFF25D366),
+                        side: const BorderSide(color: Color(0xFF25D366)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                      ),
+                      onPressed: () => _broadcastPromo(promo),
+                      icon: const Icon(Icons.groups),
+                      label: Text("Broadcast ke Semua Pelanggan".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -540,6 +553,112 @@ class _HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void _shareToWhatsApp(Map<String, dynamic> customer, PromoModel promo) async {
+    String phone = customer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
+    if (phone.isEmpty) return;
+
+    if (phone.startsWith('0')) {
+      phone = '62${phone.substring(1)}';
+    } else if (!phone.startsWith('62')) {
+      phone = '62$phone';
+    }
+
+    final message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nYuk booking sekarang lewat aplikasi atau balas chat ini!";
+    
+    // Auto-Copy to Clipboard
+    await Clipboard.setData(ClipboardData(text: message));
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Pesan otomatis disalin! Silakan 'Paste' di WhatsApp."),
+          duration: Duration(seconds: 2),
+        ),
+      );
+    }
+
+    if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
+      String? path;
+      try {
+        final response = await http.get(Uri.parse(promo.imageUrl!));
+        final bytes = response.bodyBytes;
+        final temp = await getTemporaryDirectory();
+        path = '${temp.path}/promo_image.jpg';
+        File(path).writeAsBytesSync(bytes);
+
+        await WhatsappShare.shareFile(
+          text: message,
+          phone: phone,
+          filePath: [path],
+        );
+        return;
+      } catch (e) {
+        debugPrint("Error sharing with whatsapp_share: $e");
+        if (path != null) {
+          await Share.shareXFiles(
+            [XFile(path, name: '${promo.title}.jpg')],
+            text: message,
+          );
+        }
+        return;
+      }
+    }
+
+    // Fallback to text-only WhatsApp direct link
+    final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
+    if (await canLaunchUrl(Uri.parse(url))) {
+      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    }
+  }
+
+  Future<void> _broadcastPromo(PromoModel promo) async {
+    // Show confirmation
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text("Konfirmasi Broadcast"),
+        content: const Text("Aplikasi akan membuka WhatsApp satu per satu. Untuk Broadcast, hanya teks yang dikirim (tanpa file gambar langsung) agar proses lebih cepat. Lanjutkan?"),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
+          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Ya, Mulai")),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    setState(() => isLoading = true);
+    try {
+      final supabase = Supabase.instance.client;
+      final customers = await supabase.from('users').select('name, phone').eq('role', 'pelanggan');
+      
+      if (customers == null || (customers as List).isEmpty) {
+        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tidak ada pelanggan ditemukan")));
+        return;
+      }
+
+      for (var customer in (customers as List)) {
+        if (customer['phone'] != null && customer['phone'].toString().isNotEmpty) {
+          // For broadcast, we use the text link for speed
+          String phone = customer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
+          if (phone.startsWith('0')) phone = '62${phone.substring(1)}';
+          else if (!phone.startsWith('62')) phone = '62$phone';
+
+          final message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nLihat Gambar: ${promo.imageUrl}\n\nYuk booking sekarang!";
+          
+          final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
+          if (await canLaunchUrl(Uri.parse(url))) {
+            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          }
+          await Future.delayed(const Duration(seconds: 2));
+        }
+      }
+    } catch (e) {
+      debugPrint("Broadcast error: $e");
+    } finally {
+      if (mounted) setState(() => isLoading = false);
+    }
   }
 
   Widget _buildStatCard({

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../app_session.dart';
+import '../utils/translations.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -77,7 +78,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Profil berhasil diperbarui!")),
+          SnackBar(content: Text("Profile updated successfully!".tr)),
         );
         Navigator.pop(context, true); // Return true to indicate update
       }
@@ -85,7 +86,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       debugPrint("Error updating profile: $e");
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Gagal memperbarui profil")),
+          SnackBar(content: Text("Failed to update profile".tr)),
         );
         setState(() => _saving = false);
       }
@@ -112,7 +113,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    "Edit Profile",
+                    "Edit Profile".tr,
                     style: TextStyle(
                       color: primaryColor,
                       fontSize: 18,
@@ -183,15 +184,15 @@ class _EditProfilePageState extends State<EditProfilePage> {
                     const SizedBox(height: 32),
                     
                     // Forms
-                    _buildInputField("FULL NAME", _fullNameController, Icons.person_outline),
+                    _buildInputField("FULL NAME".tr, _fullNameController, Icons.person_outline),
                     const SizedBox(height: 20),
-                    _buildInputField("USERNAME", _usernameController, Icons.alternate_email),
+                    _buildInputField("USERNAME".tr, _usernameController, Icons.alternate_email),
                     const SizedBox(height: 20),
-                    _buildInputField("EMAIL ADDRESS", _emailController, Icons.email_outlined),
+                    _buildInputField("EMAIL ADDRESS".tr, _emailController, Icons.email_outlined),
                     const SizedBox(height: 20),
-                    _buildInputField("PHONE NUMBER", _phoneController, Icons.phone_outlined),
+                    _buildInputField("PHONE NUMBER".tr, _phoneController, Icons.phone_outlined),
                     const SizedBox(height: 20),
-                    _buildInputField("HOME ADDRESS", _addressController, Icons.location_on_outlined, maxLines: 2),
+                    _buildInputField("HOME ADDRESS".tr, _addressController, Icons.location_on_outlined, maxLines: 2),
                     
                     const SizedBox(height: 48),
                     
@@ -211,8 +212,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         onPressed: _saving ? null : _updateProfile,
                         child: _saving 
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text(
-                          "Save Changes",
+                          : Text(
+                          "Save Changes".tr,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
@@ -234,8 +235,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         onPressed: () {
                           Navigator.pop(context);
                         },
-                        child: const Text(
-                          "DISCARD CHANGES",
+                        child: Text(
+                          "DISCARD CHANGES".tr,
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.bold,

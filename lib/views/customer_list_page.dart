@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../controllers/user_controller.dart';
 import 'package:intl/intl.dart';
+import '../utils/translations.dart';
 
 class CustomerListPage extends StatefulWidget {
   final bool isSelectionMode;
@@ -275,14 +276,14 @@ class _CustomerListPageState extends State<CustomerListPage> {
       context: context,
       builder: (context) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Text("Hapus Pelanggan?"),
-        content: Text("Apakah Anda yakin ingin menghapus ${_selectedKeys.length} pelanggan terpilih? Semua data booking terkait juga akan dihapus."),
+        title: Text("Delete Customer?".tr),
+        content: Text("${"Are you sure you want to delete ".tr}${_selectedKeys.length}${" selected customers? All related booking data will also be deleted.".tr}"),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Batal", style: TextStyle(color: mutedText))),
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr, style: TextStyle(color: mutedText))),
           ElevatedButton(
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () => Navigator.pop(context, true),
-            child: const Text("Hapus"),
+            child: Text("Delete".tr),
           ),
         ],
       ),
@@ -300,7 +301,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
       await _userController.deleteCustomers(customersToDelete);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Data pelanggan berhasil dibersihkan")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Customer data cleared successfully".tr)));
         setState(() {
           _isSelectionActive = false;
           _selectedKeys.clear();
@@ -310,7 +311,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     } catch (e) {
       debugPrint("Error deleting customers: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Gagal menghapus beberapa data pelangan.")));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete some customer data.".tr)));
         setState(() => _loading = false);
       }
     }
@@ -344,8 +345,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   Expanded(
                     child: Text(
                       _isSelectionActive 
-                        ? "${_selectedKeys.length} Terpilih" 
-                        : (widget.isSelectionMode ? "Pilih Pelanggan" : "Daftar Pelanggan"),
+                        ? "${_selectedKeys.length}${" Selected".tr}" 
+                        : (widget.isSelectionMode ? "Select Customer".tr : "Customer List".tr),
                       style: TextStyle(
                         color: primaryColor,
                         fontSize: 18,
@@ -361,7 +362,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         )
                       : TextButton(
                           onPressed: () => setState(() => _isSelectionActive = true),
-                          child: Text("Pilih", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                          child: Text("Select".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
                         ),
                 ],
               ),
@@ -383,9 +384,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
                       child: TextField(
                         controller: _searchController,
                         onChanged: (v) => _filter(),
-                        decoration: const InputDecoration(
+                        decoration: InputDecoration(
                           icon: Icon(Icons.search, color: Color(0xFF64748B)),
-                          hintText: 'Cari nama atau nomor HP...',
+                          hintText: 'Search name or phone number...'.tr,
                           border: InputBorder.none,
                         ),
                       ),
@@ -456,7 +457,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   : _filteredCustomers.isEmpty
                       ? Center(
                           child: Text(
-                            "Belum ada data pelanggan",
+                            "No customer data yet".tr,
                             style: TextStyle(color: mutedText, fontSize: 16),
                           ),
                         )

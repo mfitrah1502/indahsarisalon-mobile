@@ -1,5 +1,7 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:flutter/foundation.dart';
 import '../models/service_model.dart';
+import '../models/promo_model.dart';
 
 class ServiceController {
   final _supabase = Supabase.instance.client;
@@ -10,10 +12,46 @@ class ServiceController {
         .select('id, name')
         .order('name');
 
-    final svcData = await _supabase
-        .from('treatment_details')
-        .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, categories(id, name))')
-        .order('id');
+    List<dynamic> svcData;
+    try {
+      // Try fetching everything
+      svcData = await _supabase
+          .from('treatment_details')
+          .select('id, name, duration, price, treatment_id, is_active, image_url, treatments(id, name, category_id, is_promo, categories(id, name))')
+          .order('id');
+    } catch (e) {
+      try {
+        // Fallback: remove is_active
+        svcData = await _supabase
+            .from('treatment_details')
+            .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, categories(id, name))')
+            .order('id');
+      } catch (e2) {
+        try {
+          // Fallback: remove image_url too
+          svcData = await _supabase
+              .from('treatment_details')
+              .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, is_promo, categories(id, name))')
+              .order('id');
+        } catch (e3) {
+          debugPrint("Critical error fetching services: $e3");
+          svcData = [];
+        }
+      }
+    }
+
+    // Fetch promos safely
+    List<dynamic> promosData;
+    try {
+      promosData = await _supabase.from('promos').select('id, title, is_active, start_at, end_at, image_url');
+    } catch (e) {
+      try {
+        promosData = await _supabase.from('promos').select('id, title, is_active, start_at, end_at');
+      } catch (e2) {
+        promosData = [];
+      }
+    }
+    final Map<String, dynamic> promoMap = {for (var p in promosData) p['title']: p};
 
     final cats = ['All', ...List<Map<String, dynamic>>.from(catData).map((c) => c['name'] as String)];
 
@@ -22,10 +60,18 @@ class ServiceController {
       final category = treatment?['categories'] as Map<String, dynamic>?;
       final treatmentName = treatment?['name'] ?? '';
       final detailName = td['name'] ?? '';
+      final isPromo = treatment?['is_promo'] == true;
       final displayName = (treatmentName == detailName || detailName.isEmpty)
           ? treatmentName
           : "$treatmentName - $detailName";
-          
+      
+      final promoInfo = isPromo ? promoMap[treatmentName] : null;
+      
+      bool activeStatus = td['is_active'] ?? true;
+      if (isPromo) {
+        activeStatus = promoInfo?['is_active'] ?? true;
+      }
+
       return ServiceModel(
         tdId: td['id'],
         treatmentId: td['treatment_id'],
@@ -35,6 +81,10 @@ class ServiceController {
         category: category?['name'] ?? '',
         duration: (td['duration'] as num?)?.toInt() ?? 0,
         price: (td['price'] as num?)?.toInt() ?? 0,
+        imageUrl: td['image_url'], // Added image_url
+        isPromo: isPromo,
+        promoId: promoInfo?['id'],
+        isActive: activeStatus,
       );
     }).toList();
 
@@ -44,11 +94,79 @@ class ServiceController {
     };
   }
 
+  Future<String?> uploadImage(Uint8List bytes, String fileName, String folder) async {
+    try {
+      final path = '$folder/$fileName';
+      debugPrint("Uploading to storage: treatments/$path");
+      await _supabase.storage.from('treatments').uploadBinary(
+        path, 
+        bytes,
+        fileOptions: const FileOptions(cacheControl: '3600', upsert: false),
+      );
+      final String publicUrl = _supabase.storage.from('treatments').getPublicUrl(path);
+      debugPrint("Upload success: $publicUrl");
+      return publicUrl;
+    } catch (e) {
+      debugPrint("Error uploading image to Supabase Storage: $e");
+      // If error is 'Bucket not found', we inform through the exception
+      return Future.error("Upload failed: $e");
+    }
+  }
+
+  Future<Map<String, dynamic>?> fetchPromoDetails(int promoId) async {
+    final data = await _supabase.from('promos').select().eq('id', promoId).maybeSingle();
+    return data;
+  }
+
+  Future<void> updatePromoStatus({
+    required int promoId,
+    required bool isActive,
+    required DateTime startAt,
+    required DateTime endAt,
+    String? imageUrl,
+  }) async {
+    final Map<String, dynamic> data = {
+      'is_active': isActive,
+      'start_at': startAt.toIso8601String(),
+      'end_at': endAt.toIso8601String(),
+    };
+    if (imageUrl != null) data['image_url'] = imageUrl;
+    
+    await _supabase.from('promos').update(data).eq('id', promoId);
+  }
+
+  Future<void> savePromo(PromoModel promo) async {
+    final data = {
+      'title': promo.title,
+      'description': promo.description,
+      'price': promo.price,
+      'image_url': promo.imageUrl,
+      'start_at': promo.startAt.toIso8601String(),
+      'end_at': promo.endAt.toIso8601String(),
+      'is_active': promo.isActive,
+    };
+    
+    if (promo.id != null) {
+      await _supabase.from('promos').update(data).eq('id', promo.id!);
+    } else {
+      await _supabase.from('promos').insert(data);
+    }
+  }
+
   Future<void> deleteService(int tdId) async {
-    await _supabase
-        .from('treatment_details')
-        .delete()
-        .eq('id', tdId);
+    // ... soft delete logic ...
+    try {
+      await _supabase
+          .from('treatment_details')
+          .update({'is_active': false})
+          .eq('id', tdId);
+    } catch (e) {
+      debugPrint("Soft delete failed, attempting hard delete: $e");
+      await _supabase
+          .from('treatment_details')
+          .delete()
+          .eq('id', tdId);
+    }
   }
 
   Future<void> saveService({
@@ -59,6 +177,7 @@ class ServiceController {
     required String category,
     required int price,
     required int duration,
+    String? imageUrl,
   }) async {
     // Get or create category
     final catResult = await _supabase.from('categories').select('id').eq('name', category).maybeSingle();
@@ -72,11 +191,23 @@ class ServiceController {
 
     if (isEdit && existingService != null) {
       // Update treatment detail
-      await _supabase.from('treatment_details').update({
+      final Map<String, dynamic> updateData = {
         'name': detailName.isEmpty ? treatmentName : detailName,
         'price': price,
         'duration': duration,
-      }).eq('id', existingService.tdId);
+      };
+      
+      try {
+        if (imageUrl != null) updateData['image_url'] = imageUrl;
+        await _supabase.from('treatment_details').update(updateData).eq('id', existingService.tdId);
+      } catch (e) {
+        if (e.toString().contains("image_url")) {
+          updateData.remove('image_url');
+          await _supabase.from('treatment_details').update(updateData).eq('id', existingService.tdId);
+        } else {
+          rethrow;
+        }
+      }
 
       // Also update the treatment name if changed
       await _supabase.from('treatments').update({
@@ -91,20 +222,40 @@ class ServiceController {
       if (treatmentResult != null) {
         treatmentId = treatmentResult['id'];
       } else {
-        final newTreatment = await _supabase.from('treatments').insert({
+        final Map<String, dynamic> treatData = {
           'name': treatmentName,
           'category_id': catId,
-        }).select('id').single();
-        treatmentId = newTreatment['id'];
+        };
+        try {
+          if (imageUrl != null) treatData['image'] = imageUrl; // Some schemas use 'image'
+          final newTreatment = await _supabase.from('treatments').insert(treatData).select('id').single();
+          treatmentId = newTreatment['id'];
+        } catch (e) {
+          treatData.remove('image');
+          final newTreatment = await _supabase.from('treatments').insert(treatData).select('id').single();
+          treatmentId = newTreatment['id'];
+        }
       }
 
       // Create new treatment detail
-      await _supabase.from('treatment_details').insert({
+      final Map<String, dynamic> detailData = {
         'treatment_id': treatmentId,
         'name': detailName.isEmpty ? treatmentName : detailName,
         'price': price,
         'duration': duration,
-      });
+      };
+      
+      try {
+        if (imageUrl != null) detailData['image_url'] = imageUrl;
+        await _supabase.from('treatment_details').insert(detailData);
+      } catch (e) {
+        if (e.toString().contains("image_url")) {
+          detailData.remove('image_url');
+          await _supabase.from('treatment_details').insert(detailData);
+        } else {
+          rethrow;
+        }
+      }
     }
   }
 }
