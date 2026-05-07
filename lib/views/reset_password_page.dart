@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bcrypt/bcrypt.dart';
 import 'auth_page.dart';
 
 class ResetPasswordPage extends StatefulWidget {
-  const ResetPasswordPage({super.key});
+  final String email;
+  const ResetPasswordPage({super.key, required this.email});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -260,9 +262,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
 
                       setState(() => _isLoading = true);
                       try {
-                        await Supabase.instance.client.auth.updateUser(
-                          UserAttributes(password: passwordController.text),
-                        );
+                        final hashedPassword = BCrypt.hashpw(passwordController.text, BCrypt.gensalt());
+                        await Supabase.instance.client
+                            .from('users')
+                            .update({'password': hashedPassword})
+                            .eq('email', widget.email);
+                            
+                        try {
+                          await Supabase.instance.client.auth.updateUser(
+                            UserAttributes(password: passwordController.text),
+                          );
+                          await Supabase.instance.client.auth.signOut();
+                        } catch (_) {}
+
                         if (mounted) {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(content: Text('Password successfully updated!')),

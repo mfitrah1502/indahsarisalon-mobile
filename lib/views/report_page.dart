@@ -13,6 +13,7 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'settings_page.dart';
 import '../utils/translations.dart';
+import '../utils/pdf_report_helper.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -254,123 +255,30 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Future<void> _exportToExcel() async {
+  Future<void> _exportToPdf() async {
     try {
-      var excel = Excel.createExcel();
-      
-      // 1. Sheet Pemasukan
-      Sheet sheetPemasukan = excel['Pemasukan'];
-      excel.setDefaultSheet('Pemasukan');
-      sheetPemasukan.appendRow([
-        TextCellValue('Tanggal'),
-        TextCellValue('Invoice ID'),
-        TextCellValue('Nama Pelanggan'),
-        TextCellValue('Layanan/Produk'),
-        TextCellValue('Kategori'),
-        TextCellValue('Harga'),
-      ]);
-
-      for (var inc in incomeDetails) {
-        sheetPemasukan.appendRow([
-          TextCellValue(DateFormat('yyyy-MM-dd').format(inc.date)),
-          TextCellValue(inc.invoiceId),
-          TextCellValue(inc.customerName),
-          TextCellValue(inc.services),
-          TextCellValue(inc.category),
-          IntCellValue(inc.price),
-        ]);
-      }
-      // Total Pemasukan
-      sheetPemasukan.appendRow([
-        TextCellValue('TOTAL'),
-        TextCellValue(''),
-        TextCellValue(''),
-        TextCellValue(''),
-        TextCellValue(''),
-        IntCellValue(totalIncome),
-      ]);
-
-      // 2. Sheet Pengeluaran
-      Sheet sheetPengeluaran = excel['Pengeluaran'];
-      sheetPengeluaran.appendRow([
-        TextCellValue('Tanggal'),
-        TextCellValue('Nama Pengeluaran'),
-        TextCellValue('Kategori'),
-        TextCellValue('Jumlah'),
-      ]);
-
-      for (var exp in expenseDetails) {
-        sheetPengeluaran.appendRow([
-          TextCellValue(DateFormat('yyyy-MM-dd').format(exp.date)),
-          TextCellValue(exp.name),
-          TextCellValue(exp.category),
-          IntCellValue(exp.amount),
-        ]);
-      }
-      // Total Pengeluaran
-      sheetPengeluaran.appendRow([
-        TextCellValue('TOTAL'),
-        TextCellValue(''),
-        TextCellValue(''),
-        IntCellValue(totalExpense),
-      ]);
-
-      // 3. Sheet Profit
-      Sheet sheetProfit = excel['Profit'];
-      sheetProfit.appendRow([
-        TextCellValue('Bulan'),
-        TextCellValue('Total Pemasukan'),
-        TextCellValue('Total Pengeluaran'),
-        TextCellValue('Profit Bersih'),
-      ]);
-
-      // If dailyStats are grouped by month (Yearly filter) or just current range
-      if (_selectedFilter == 'Yearly') {
-        for (var s in dailyStats) {
-          sheetProfit.appendRow([
-            TextCellValue(DateFormat('MMMM yyyy').format(s.date)),
-            IntCellValue(s.income),
-            IntCellValue(s.expense),
-            IntCellValue(s.profit),
-          ]);
-        }
-      } else {
-        sheetProfit.appendRow([
-          TextCellValue(formatDateRange(_dateRange)),
-          IntCellValue(totalIncome),
-          IntCellValue(totalExpense),
-          IntCellValue(totalProfit),
-        ]);
-      }
-
-      // Remove the default 'Sheet1' if it exists
-      if (excel.sheets.containsKey('Sheet1')) {
-        excel.delete('Sheet1');
-      }
-
-      var fileBytes = excel.save();
-      if (fileBytes != null) {
-        // To make it "automatic" as much as possible on mobile without extra permissions,
-        // we save to a temporary file and then share it. 
-        // For a true "Download" folder experience on Android, we would need 
-        // a more complex approach with permission_handler.
-        final directory = await getTemporaryDirectory();
-        final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.xlsx";
-        final path = "${directory.path}/$fileName";
-        File(path)
-          ..createSync(recursive: true)
-          ..writeAsBytesSync(fileBytes);
-        
-        await Share.shareXFiles(
-          [XFile(path, name: fileName)], 
-          text: 'Report Indah Sari Salon',
-          subject: fileName,
-        );
-      }
-    } catch (e) {
-      debugPrint("Error exporting excel: $e");
+      final summary = ReportSummary(
+        totalIncome: totalIncome,
+        totalExpense: totalExpense,
+        totalProfit: totalProfit,
+        dailyStats: dailyStats,
+        incomeDetails: incomeDetails,
+        expenseDetails: expenseDetails,
+      );
+      final path = await PdfReportHelper.generatePdf(
+        summary: summary,
+        dateRange: _dateRange,
+      );
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal mengunduh report: $e")));
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text("Berhasil disimpan ke: $path"),
+        backgroundColor: Colors.green,
+        duration: const Duration(seconds: 4),
+      ));
+    } catch (e) {
+      debugPrint("Error exporting pdf: $e");
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal mengunduh report PDF: $e")));
     }
   }
 
@@ -657,10 +565,10 @@ class _ReportPageState extends State<ReportPage> {
                     width: double.infinity,
                     height: 56,
                     child: ElevatedButton.icon(
-                      onPressed: _exportToExcel,
+                      onPressed: _exportToPdf,
                       icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
                       label: Text(
-                        "DOWNLOAD REPORT EXCEL".tr,
+                        "DOWNLOAD REPORT PDF",
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 13,

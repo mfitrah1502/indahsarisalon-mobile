@@ -172,9 +172,36 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                                   setState(() => _isLoading = true);
                                   try {
-                                    await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                                    final user = await Supabase.instance.client
+                                        .from('users')
+                                        .select('id')
+                                        .eq('email', email)
+                                        .maybeSingle();
+
+                                    if (user == null) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Email tidak terdaftar')),
+                                      );
+                                      setState(() => _isLoading = false);
+                                      return;
+                                    }
+
+                                    await Supabase.instance.client.auth.signInWithOtp(email: email);
                                     if (mounted) {
                                       _showOTPDialog(context);
+                                    }
+                                  } on AuthException catch (e) {
+                                    if (mounted) {
+                                      String message = e.message;
+                                      if (e.statusCode == '429' || e.message.contains('rate limit')) {
+                                        message = 'Too many requests. Please wait a while before requesting another OTP.';
+                                      }
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(message),
+                                          backgroundColor: Colors.red.shade400,
+                                        ),
+                                      );
                                     }
                                   } catch (e) {
                                     if (mounted) {
@@ -392,13 +419,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               await Supabase.instance.client.auth.verifyOTP(
                                 email: emailController.text.trim(),
                                 token: otp,
-                                type: OtpType.recovery,
+                                type: OtpType.magiclink,
                               );
                               if (mounted) {
                                 Navigator.pop(ctx);
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const ResetPasswordPage()),
+                                  MaterialPageRoute(builder: (context) => ResetPasswordPage(email: emailController.text.trim())),
                                 );
                               }
                             } catch (e) {
@@ -452,7 +479,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     GestureDetector(
                       onTap: () async {
                         try {
-                          await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
+                          await Supabase.instance.client.auth.signInWithOtp(email: emailController.text.trim());
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('OTP sent successfully!')),

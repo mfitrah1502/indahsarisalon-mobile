@@ -132,24 +132,35 @@ class _HomePageState extends State<HomePage> {
                         children: [
                           // Profile Avatar
                           GestureDetector(
-                            onTap: () {
-                              Navigator.push(
+                            onTap: () async {
+                              final result = await Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (_) => const EditProfilePage()),
                               );
+                              if (result == true && mounted) {
+                                setState(() {});
+                              }
                             },
                             child: Container(
                               width: 48,
                               height: 48,
-                              decoration: const BoxDecoration(
+                              decoration: BoxDecoration(
                                 shape: BoxShape.circle,
-                                color: Color(0xFFE2E8F0),
+                                color: const Color(0xFFE2E8F0),
+                                image: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                                    ? DecorationImage(
+                                        image: NetworkImage(AppSession.userAvatar!),
+                                        fit: BoxFit.cover,
+                                      )
+                                    : null,
                               ),
-                              child: const Icon(
-                                Icons.person,
-                                color: Color(0xFF94A3B8),
-                                size: 28,
-                              ),
+                              child: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                                  ? null
+                                  : const Icon(
+                                      Icons.person,
+                                      color: Color(0xFF94A3B8),
+                                      size: 28,
+                                    ),
                             ),
                           ),
                           const SizedBox(width: 16),

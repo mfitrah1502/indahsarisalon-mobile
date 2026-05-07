@@ -141,21 +141,21 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         _buildFieldLabel("FULL NAME"),
-                        _buildTextField(_nameCtrl, "Jane Doe", validator: (v) {
+                        _buildTextField(_nameCtrl, "Ajeng Elsa", validator: (v) {
                           if (v == null || v.isEmpty) return "Full Name is required";
                           return null;
                         }),
                         const SizedBox(height: 20),
                         
                         _buildFieldLabel("PHONE NUMBER"),
-                        _buildTextField(_phoneCtrl, "+1 (555) 000-0000", keyboardType: TextInputType.phone, validator: (v) {
+                        _buildTextField(_phoneCtrl, "08123456789", keyboardType: TextInputType.phone, validator: (v) {
                           if (v == null || v.isEmpty) return "Phone Number is required";
                           return null;
                         }),
                         const SizedBox(height: 20),
                         
                         _buildFieldLabel("EMAIL"),
-                        _buildTextField(_emailCtrl, "jane@example.com", keyboardType: TextInputType.emailAddress, validator: (v) {
+                        _buildTextField(_emailCtrl, "elsa@example.com", keyboardType: TextInputType.emailAddress, validator: (v) {
                           if (v == null || v.isEmpty) return "Email is required";
                           if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return "Enter a valid email";
                           return null;
@@ -163,7 +163,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         const SizedBox(height: 20),
                         
                         _buildFieldLabel("ADDRESS"),
-                        _buildTextField(_addressCtrl, "123 Salon Way, Beauty City", validator: (v) {
+                        _buildTextField(_addressCtrl, "Jalan Ledjen Supriyadi", validator: (v) {
                           if (v == null || v.isEmpty) return "Address is required";
                           return null;
                         }),
@@ -173,7 +173,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         const SizedBox(height: 24),
                         
                         _buildFieldLabel("USERNAME"),
-                        _buildTextField(_usernameCtrl, "janedoe88", validator: (v) {
+                        _buildTextField(_usernameCtrl, "elsa66", validator: (v) {
                           if (v == null || v.isEmpty) return "Username is required";
                           return null;
                         }),

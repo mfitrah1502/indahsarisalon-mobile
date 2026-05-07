@@ -1,5 +1,7 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 import '../app_session.dart';
 import '../utils/translations.dart';
 
@@ -21,6 +23,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _phoneController = TextEditingController();
   final TextEditingController _addressController = TextEditingController();
+
+  File? _selectedImage;
+  String? _avatarUrl;
+  bool _uploadingImage = false;
 
   bool _loading = true;
   bool _saving = false;
@@ -49,6 +55,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _emailController.text = data['email'] ?? '';
           _phoneController.text = data['phone'] ?? '';
           _addressController.text = data['address'] ?? '';
+          _avatarUrl = data['avatar'];
           _loading = false;
         });
       }
@@ -70,11 +77,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         'email': _emailController.text,
         'phone': _phoneController.text,
         'address': _addressController.text,
+        if (_avatarUrl != null) 'avatar': _avatarUrl,
       }).eq('id', userId);
 
       // Update AppSession
       AppSession.userName = _fullNameController.text;
       AppSession.userEmail = _emailController.text;
+      if (_avatarUrl != null) AppSession.userAvatar = _avatarUrl;
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -89,6 +98,63 @@ class _EditProfilePageState extends State<EditProfilePage> {
           SnackBar(content: Text("Failed to update profile".tr)),
         );
         setState(() => _saving = false);
+      }
+    }
+  }
+
+  Future<void> _pickImage() async {
+    try {
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+      
+      if (image != null) {
+        setState(() {
+          _selectedImage = File(image.path);
+        });
+        await _uploadImage();
+      }
+    } catch (e) {
+      debugPrint("Error picking image: $e");
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to pick image".tr)),
+        );
+      }
+    }
+  }
+
+  Future<void> _uploadImage() async {
+    if (_selectedImage == null) return;
+    
+    setState(() => _uploadingImage = true);
+    
+    try {
+      final userId = AppSession.userId;
+      if (userId == null) return;
+
+      final fileExt = _selectedImage!.path.split('.').last;
+      final fileName = '$userId-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+      await Supabase.instance.client.storage
+          .from('avatars')
+          .upload(fileName, _selectedImage!);
+
+      final publicUrl = Supabase.instance.client.storage
+          .from('avatars')
+          .getPublicUrl(fileName);
+
+      setState(() {
+        _avatarUrl = publicUrl;
+        _uploadingImage = false;
+      });
+      
+    } catch (e) {
+      debugPrint("Error uploading image: $e");
+      if (mounted) {
+        setState(() => _uploadingImage = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Failed to upload image".tr)),
+        );
       }
     }
   }
@@ -140,8 +206,12 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           decoration: BoxDecoration(
                             color: Colors.white,
                             borderRadius: BorderRadius.circular(20),
-                            image: const DecorationImage(
-                              image: NetworkImage("https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"), // using stock avatar image
+                            image: DecorationImage(
+                              image: _selectedImage != null
+                                  ? FileImage(_selectedImage!) as ImageProvider
+                                  : (_avatarUrl != null && _avatarUrl!.isNotEmpty)
+                                      ? NetworkImage(_avatarUrl!)
+                                      : const NetworkImage("https://images.unsplash.com/photo-1544005313-94ddf0286df2?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"), // using stock avatar image
                               fit: BoxFit.cover,
                             ),
                           ),
@@ -149,14 +219,23 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         Positioned(
                           bottom: -4,
                           right: -4,
-                          child: Container(
-                            padding: const EdgeInsets.all(8),
-                            decoration: BoxDecoration(
-                              color: primaryColor,
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: scaffoldBg, width: 3),
+                          child: GestureDetector(
+                            onTap: _pickImage,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: primaryColor,
+                                borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: scaffoldBg, width: 3),
+                              ),
+                              child: _uploadingImage 
+                                ? const SizedBox(
+                                    width: 14, 
+                                    height: 14, 
+                                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                                  )
+                                : const Icon(Icons.camera_alt, color: Colors.white, size: 14),
                             ),
-                            child: const Icon(Icons.camera_alt, color: Colors.white, size: 14),
                           ),
                         ),
                       ],

@@ -101,12 +101,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
                               color: const Color(0xFFE2E8F0),
-                              image: const DecorationImage(
-                                image: NetworkImage('https://cdn-icons-png.flaticon.com/512/3135/3135715.png'),
+                              image: DecorationImage(
+                                image: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                                    ? NetworkImage(AppSession.userAvatar!)
+                                    : const NetworkImage('https://cdn-icons-png.flaticon.com/512/3135/3135715.png') as ImageProvider,
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            child: const Icon(Icons.person, color: Colors.white, size: 40),
+                            child: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty) ? null : const Icon(Icons.person, color: Colors.white, size: 40),
                           ),
                           const SizedBox(height: 16),
                           Text(

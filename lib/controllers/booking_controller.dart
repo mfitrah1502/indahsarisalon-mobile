@@ -158,7 +158,7 @@ class BookingController {
       'reservation_datetime': reservationDatetime,
       'total_price': totalPrice,
       'status': 'pending',
-      'payment_status': 'unpaid',
+      'payment_status': 'paid',
       'customer_name': customerName,
       'customer_phone': customerPhone,
       'customer_email': customerEmail,
