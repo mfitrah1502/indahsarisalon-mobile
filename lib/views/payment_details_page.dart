@@ -50,9 +50,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   bool _processing = false;
 
   final List<Map<String, dynamic>> _paymentMethods = [
-    {"title": "Transfer Bank", "subtitle": "Konfirmasi manual", "icon": Icons.account_balance_outlined},
-    {"title": "E-Wallet", "subtitle": "GoPay, OVO, Dana", "icon": Icons.account_balance_wallet_outlined},
-    {"title": "Cash di Salon", "subtitle": "Bayar setelah layanan", "icon": Icons.money},
+    {"title": "Tunai", "subtitle": "Bayar langsung di kasir", "icon": Icons.money},
+    {"title": "QRIS", "subtitle": "Scan barcode pembayaran", "icon": Icons.qr_code_scanner},
+    {"title": "Transfer", "subtitle": "Transfer Bank / E-Wallet", "icon": Icons.account_balance_outlined},
   ];
 
   Future<void> _confirmBooking() async {
@@ -66,6 +66,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         throw Exception('Sesi tidak ditemukan. Silakan login ulang.');
       }
       
+      final String paymentMethod = _paymentMethods[_selectedPaymentIndex]["title"];
+      
       final bookingId = await _bookingController.confirmBooking(
         userId: userId,
         stylistId: widget.stylistId,
@@ -75,12 +77,15 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         customerPhone: widget.customerPhone,
         customerEmail: widget.customerEmail,
         selectedServices: widget.selectedServices,
+        paymentMethod: paymentMethod,
       );
 
       if (!mounted) return;
 
-      // Handle Midtrans for Bank Transfer (Index 0) and E-Wallet (Index 1)
-      if (_selectedPaymentIndex == 0 || _selectedPaymentIndex == 1) {
+      // Handle Online Payment (QRIS or Transfer) if needed, 
+      // but the user wants to print receipt later, so we just confirm for now.
+      // If we use Midtrans for QRIS/Transfer:
+      if (paymentMethod == 'QRIS' || paymentMethod == 'Transfer') {
         try {
           final redirectUrl = await MidtransHelper.createTransaction(
             orderId: "BOOKING-$bookingId-${DateTime.now().millisecondsSinceEpoch}",
@@ -98,23 +103,15 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           }
         } catch (e) {
           debugPrint("Midtrans Error: $e");
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Gagal membuka halaman pembayaran Midtrans: $e"), backgroundColor: Colors.orange),
-            );
-          }
         }
-
-        if (!mounted) return;
         
-        // Redirect to Booking List Page after launching Midtrans
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const BookingListPage()),
           (route) => false,
         );
       } else {
-        // For Bank Transfer or Cash, show the Success Dialog
+        // For Tunai, show Success Dialog
         showDialog(
           context: context,
           barrierDismissible: false,

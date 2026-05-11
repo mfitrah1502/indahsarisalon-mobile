@@ -7,7 +7,7 @@ class BookingListController {
   Future<List<BookingListModel>> fetchBookings() async {
     final data = await _supabase
         .from('bookings')
-        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
+        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
         .order('created_at', ascending: false);
 
     final List<BookingListModel> enriched = [];
@@ -15,7 +15,7 @@ class BookingListController {
       final bookingId = row['id'];
       final details = await _supabase
           .from('booking_details')
-          .select('treatment_detail_id, treatment_details(name, treatment_id, treatments(name))')
+          .select('treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
           .eq('booking_id', bookingId);
 
       List<String> serviceNames = [];
@@ -63,7 +63,11 @@ class BookingListController {
         customerName: row['customer_name'] ?? '-',
         customerPhone: finalPhone,
         customerEmail: finalEmail,
-        rawData: row, // Pass the original row for backwards compatibility
+        paymentMethod: row['payment_method'] ?? 'Tunai',
+        rawData: {
+          ...row,
+          'full_details': details, // Include individual prices
+        },
       ));
     }
 

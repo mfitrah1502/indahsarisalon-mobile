@@ -8,6 +8,7 @@ import 'manage_services_page.dart';
 import 'report_page.dart';
 import '../app_session.dart';
 import '../utils/translations.dart';
+import 'receipt_page.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -111,6 +112,121 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       ),
     );
     if (confirm == true) await _updateStatus('dibatalkan'); // Cancel status
+  }
+
+  Future<void> _showReceipt() async {
+    final TextEditingController amountController = TextEditingController();
+    
+    // Get stored payment method
+    final String storedMethod = widget.booking['payment_method'] ?? 'Tunai';
+    
+    // Default amount paid = total price
+    final totalPrice = (widget.booking['total_price'] as num?)?.toDouble() ?? 0;
+    amountController.text = totalPrice.toInt().toString();
+
+    Map<String, dynamic>? result;
+
+    if (storedMethod == 'Tunai') {
+      // For Cash, we still need to know how much they paid to calculate change
+      result = await showDialog<Map<String, dynamic>>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Pembayaran Tunai', style: TextStyle(fontWeight: FontWeight.bold)),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Masukkan jumlah uang yang diterima:'),
+              const SizedBox(height: 12),
+              TextField(
+                controller: amountController,
+                keyboardType: TextInputType.number,
+                autofocus: true,
+                decoration: const InputDecoration(
+                  prefixText: 'Rp ',
+                  border: OutlineInputBorder(),
+                  labelText: 'Jumlah Bayar',
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context), child: const Text('Batal')),
+            ElevatedButton(
+              onPressed: () {
+                final double amt = double.tryParse(amountController.text) ?? totalPrice;
+                Navigator.pop(context, {'amount': amt, 'method': storedMethod});
+              },
+              child: const Text('Tampilkan Struk'),
+            ),
+          ],
+        ),
+      );
+    } else {
+      // For QRIS/Transfer, we assume they paid exactly the total price
+      result = {'amount': totalPrice, 'method': storedMethod};
+    }
+
+    if (result != null && mounted) {
+      final double amountPaid = result['amount'];
+      final String paymentMethod = result['method'];
+
+      // Get individual prices from rawData['full_details']
+      List<dynamic> fullDetails = widget.booking['rawData']?['full_details'] ?? widget.booking['full_details'] ?? [];
+      final List<Map<String, dynamic>> services = [];
+      
+      // If fullDetails is empty, try to fetch it dynamically from Supabase
+      if (fullDetails.isEmpty) {
+        try {
+          final supabase = Supabase.instance.client;
+          fullDetails = await supabase
+              .from('booking_details')
+              .select('treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
+              .eq('booking_id', widget.booking['id']);
+        } catch (e) {
+          debugPrint("Error fetching details dynamically: $e");
+        }
+      }
+
+      if (fullDetails.isNotEmpty) {
+        for (final d in fullDetails) {
+          final td = d['treatment_details'] as Map<String, dynamic>?;
+          final t = td?['treatments'] as Map<String, dynamic>?;
+          final tName = t?['name'] ?? '';
+          final dName = td?['name'] ?? '';
+          final price = (td?['price'] as num?)?.toDouble() ?? 0;
+          
+          String displayName = (tName == dName || dName.isEmpty) ? tName : "$tName - $dName";
+          services.add({'name': displayName, 'price': price});
+        }
+      } else {
+        // Fallback to simple services list
+        final servicesRaw = (widget.booking['services'] as List<dynamic>? ?? []);
+        for (var s in servicesRaw) {
+          services.add({'name': s.toString(), 'price': servicesRaw.length == 1 ? totalPrice : 0});
+        }
+      }
+
+      // Final check: if we have only one service and its price is 0, but we have a totalPrice
+      if (services.length == 1 && (services[0]['price'] == 0 || services[0]['price'] == null) && totalPrice > 0) {
+        services[0]['price'] = totalPrice;
+      }
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => ReceiptPage(
+            transactionId: '#IS2-${widget.booking['id']}',
+            transactionDate: DateTime.tryParse(widget.booking['datetime'] ?? '') ?? DateTime.now(),
+            services: services,
+            paymentMethod: paymentMethod,
+            amountPaid: amountPaid,
+            discountAmount: 0,
+            discountPercentage: 0,
+            totalOverride: totalPrice,
+          ),
+        ),
+      );
+    }
   }
 
   @override
@@ -257,11 +373,16 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("TOTAL".tr, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                                Text("TOTAL / METODE".tr, style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                 const SizedBox(height: 8),
                                 Text(
                                   _currency.format(totalPrice),
                                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w900, color: primaryColor),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  widget.booking['payment_method'] ?? 'Tunai',
+                                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: mutedText),
                                 ),
                               ],
                             ),
@@ -386,6 +507,22 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           style: TextStyle(color: _statusColor(_status), fontWeight: FontWeight.bold),
                         ),
                       ),
+                      if (_status.toLowerCase() != 'dibatalkan') ...[
+                        const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: OutlinedButton.icon(
+                            style: OutlinedButton.styleFrom(
+                              side: BorderSide(color: primaryColor),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            onPressed: _showReceipt,
+                            icon: Icon(Icons.receipt_long, color: primaryColor),
+                            label: Text("Lihat Struk", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor)),
+                          ),
+                        ),
+                      ],
                     ],
 
                     const SizedBox(height: 48),

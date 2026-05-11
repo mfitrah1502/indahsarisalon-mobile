@@ -11,6 +11,8 @@ class BookingListModel {
   final String customerEmail;
   final Map<String, dynamic> rawData;
   
+  final String paymentMethod;
+  
   BookingListModel({
     required this.id,
     required this.createdAt,
@@ -23,6 +25,7 @@ class BookingListModel {
     required this.customerPhone,
     required this.customerEmail,
     required this.rawData,
+    required this.paymentMethod,
   });
 
   Map<String, dynamic> toMap() {
@@ -37,6 +40,7 @@ class BookingListModel {
       'customer_name': customerName,
       'customer_phone': customerPhone,
       'customer_email': customerEmail,
+      'payment_method': paymentMethod,
       ...rawData,
     };
   }

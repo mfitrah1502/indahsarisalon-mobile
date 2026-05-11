@@ -137,6 +137,7 @@ class BookingController {
     required String customerPhone,
     required String customerEmail,
     required List<Map<String, dynamic>> selectedServices,
+    required String paymentMethod,
   }) async {
     final supabase = Supabase.instance.client;
 
@@ -158,10 +159,11 @@ class BookingController {
       'reservation_datetime': reservationDatetime,
       'total_price': totalPrice,
       'status': 'pending',
-      'payment_status': 'paid',
+      'payment_status': paymentMethod == 'Tunai' ? 'unpaid' : 'paid',
       'customer_name': customerName,
       'customer_phone': customerPhone,
       'customer_email': customerEmail,
+      'payment_method': paymentMethod,
     }).select('id').single();
 
     final bookingId = bookingInsert['id'];
