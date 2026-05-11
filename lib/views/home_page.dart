@@ -523,40 +523,14 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF25D366),
+                        backgroundColor: const Color(0xFF128C7E), // Darker WhatsApp Green
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       ),
-                      onPressed: () async {
-                        final selectedCustomer = await Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CustomerListPage(isSelectionMode: true),
-                          ),
-                        );
-
-                        if (selectedCustomer != null && selectedCustomer is Map<String, dynamic>) {
-                          _shareToWhatsApp(selectedCustomer, promo);
-                        }
-                      },
-                      icon: const Icon(Icons.person),
-                      label: Text("Kirim ke Satu Pelanggan".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  SizedBox(
-                    width: double.infinity,
-                    child: OutlinedButton.icon(
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: const Color(0xFF25D366),
-                        side: const BorderSide(color: Color(0xFF25D366)),
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      ),
-                      onPressed: () => _broadcastPromo(promo),
-                      icon: const Icon(Icons.groups),
-                      label: Text("Broadcast ke Semua Pelanggan".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      onPressed: () => _broadcastToWhatsAppGroup(promo),
+                      icon: const Icon(Icons.forum_rounded),
+                      label: Text("Broadcast ke Grup WhatsApp".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -568,127 +542,51 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _shareToWhatsApp(Map<String, dynamic> customer, PromoModel promo) async {
-    String phone = customer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
-    if (phone.isEmpty) return;
 
-    if (phone.startsWith('0')) {
-      phone = '62${phone.substring(1)}';
-    } else if (!phone.startsWith('62')) {
-      phone = '62$phone';
-    }
 
-    String message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\n";
-    
-    if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
-      message += "Lihat Gambar: ${promo.imageUrl}\n\n";
-    }
-    message += "Yuk booking sekarang lewat aplikasi atau balas chat ini!";
-    
-    // Auto-Copy to Clipboard
-    await Clipboard.setData(ClipboardData(text: message));
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Pesan otomatis disalin! Silakan 'Paste' di WhatsApp."),
-          duration: Duration(seconds: 2),
-        ),
-      );
-    }
+  void _broadcastToWhatsAppGroup(PromoModel promo) async {
+    String message = "Halo semuanya! 🌸\n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nYuk booking sekarang lewat aplikasi atau hubungi kami langsung!";
 
-    if (Platform.isAndroid || Platform.isIOS) {
+    try {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Menyiapkan broadcast promo..."),
+            duration: Duration(seconds: 1),
+          ),
+        );
+      }
+
       if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
-        String? path;
-        try {
-          final response = await http.get(Uri.parse(promo.imageUrl!));
-          final bytes = response.bodyBytes;
-          final temp = await getTemporaryDirectory();
-          path = '${temp.path}/promo_image.jpg';
-          File(path).writeAsBytesSync(bytes);
+        // Download image to share directly with text
+        final response = await http.get(Uri.parse(promo.imageUrl!));
+        final bytes = response.bodyBytes;
+        final temp = await getTemporaryDirectory();
+        final path = '${temp.path}/promo_broadcast_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final file = File(path);
+        await file.writeAsBytes(bytes);
 
-          await WhatsappShare.shareFile(
-            text: message,
-            phone: phone,
-            filePath: [path],
-          );
-          return;
-        } catch (e) {
-          debugPrint("Error sharing with whatsapp_share: $e");
-          // Fallback to url_launcher if whatsapp_share fails
-        }
-      }
-    }
-
-    // Fallback to text-only WhatsApp direct link
-    final nativeUrl = "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}";
-    final webUrl = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-    
-    try {
-      if (await canLaunchUrl(Uri.parse(nativeUrl))) {
-        await launchUrl(Uri.parse(nativeUrl), mode: LaunchMode.externalApplication);
+        // Share file with caption (this avoids "Paste" in WhatsApp)
+        await Share.shareXFiles(
+          [XFile(path)],
+          text: message,
+        );
       } else {
-        await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+        // Share text only if no image
+        await Share.share(message);
       }
     } catch (e) {
-      debugPrint("Could not launch WhatsApp: $e");
-      await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
-    }
-  }
-
-  Future<void> _broadcastPromo(PromoModel promo) async {
-    // Show confirmation
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text("Konfirmasi Broadcast"),
-        content: const Text("Aplikasi akan membuka WhatsApp satu per satu. Untuk Broadcast, hanya teks yang dikirim (tanpa file gambar langsung) agar proses lebih cepat. Lanjutkan?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx, false), child: const Text("Batal")),
-          TextButton(onPressed: () => Navigator.pop(ctx, true), child: const Text("Ya, Mulai")),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() => isLoading = true);
-    try {
-      final supabase = Supabase.instance.client;
-      final customers = await supabase.from('users').select('name, phone').eq('role', 'pelanggan');
-      
-      if (customers == null || (customers as List).isEmpty) {
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Tidak ada pelanggan ditemukan")));
-        return;
+      debugPrint("Error broadcasting: $e");
+      // Fallback to clipboard if sharing fails
+      await Clipboard.setData(ClipboardData(text: message));
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text("Gagal sharing langsung. Pesan disalin ke clipboard."),
+            backgroundColor: Colors.orange,
+          ),
+        );
       }
-
-      for (var customer in (customers as List)) {
-        if (customer['phone'] != null && customer['phone'].toString().isNotEmpty) {
-          // For broadcast, we use the text link for speed
-          String phone = customer['phone']?.toString().replaceAll(RegExp(r'\D'), '') ?? '';
-          if (phone.startsWith('0')) phone = '62${phone.substring(1)}';
-          else if (!phone.startsWith('62')) phone = '62$phone';
-
-          final message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nLihat Gambar: ${promo.imageUrl}\n\nYuk booking sekarang!";
-          
-          final nativeUrl = "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}";
-          final webUrl = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-          
-          try {
-            if (await canLaunchUrl(Uri.parse(nativeUrl))) {
-              await launchUrl(Uri.parse(nativeUrl), mode: LaunchMode.externalApplication);
-            } else {
-              await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
-            }
-          } catch (e) {
-            await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
-          }
-          await Future.delayed(const Duration(seconds: 2));
-        }
-      }
-    } catch (e) {
-      debugPrint("Broadcast error: $e");
-    } finally {
-      if (mounted) setState(() => isLoading = false);
     }
   }
 
