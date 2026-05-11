@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../models/report_model.dart';
 import '../controllers/report_controller.dart';
 import 'package:intl/intl.dart';
@@ -425,107 +426,111 @@ class _ReportPageState extends State<ReportPage> {
                 _buildFilterSlider(),
                 const SizedBox(height: 16),
                 
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: _showAddExpenseDialog,
-                    icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                    label: Text("ADD EXPENSE".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: primaryColor,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                if (AppSession.userRole == 'owner') ...[
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _showAddExpenseDialog,
+                      icon: const Icon(Icons.add, color: Colors.white, size: 20),
+                      label: Text("ADD EXPENSE".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: primaryColor,
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
+                ],
 
                 if (isLoading)
                   const Center(child: CircularProgressIndicator())
                 else ...[
                   // The new stat cards
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 85,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 4,
-                                decoration: const BoxDecoration(
-                                  color: Colors.blueAccent,
-                                  borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text("Total Income".tr, style: TextStyle(color: mutedText, fontSize: 13)),
-                                      const SizedBox(height: 8),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(formatCurrency(totalIncome), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-                                      ),
-                                    ],
+                  if (AppSession.userRole == 'owner') ...[
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Container(
+                            height: 85,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.blueAccent,
+                                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
                                   ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: Container(
-                          height: 85,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 4,
-                                decoration: const BoxDecoration(
-                                  color: Colors.redAccent,
-                                  borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
-                                ),
-                              ),
-                              Expanded(
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Text("Expenses".tr, style: TextStyle(color: mutedText, fontSize: 13)),
-                                      const SizedBox(height: 8),
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(formatCurrency(totalExpense), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-                                      ),
-                                    ],
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text("Total Income".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                                        const SizedBox(height: 8),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(formatCurrency(totalIncome), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Container(
+                            height: 85,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF1F5F9),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 4,
+                                  decoration: const BoxDecoration(
+                                    color: Colors.redAccent,
+                                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                                  ),
+                                ),
+                                Expanded(
+                                  child: Padding(
+                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Text("Expenses".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                                        const SizedBox(height: 8),
+                                        FittedBox(
+                                          fit: BoxFit.scaleDown,
+                                          alignment: Alignment.centerLeft,
+                                          child: Text(formatCurrency(totalExpense), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 32),
+                  ],
 
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -561,30 +566,31 @@ class _ReportPageState extends State<ReportPage> {
                   ),
                   const SizedBox(height: 32),
 
-                  SizedBox(
-                    width: double.infinity,
-                    height: 56,
-                    child: ElevatedButton.icon(
-                      onPressed: _exportToPdf,
-                      icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
-                      label: Text(
-                        "DOWNLOAD REPORT PDF",
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.0,
+                  if (AppSession.userRole == 'owner')
+                    SizedBox(
+                      width: double.infinity,
+                      height: 56,
+                      child: ElevatedButton.icon(
+                        onPressed: _exportToPdf,
+                        icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
+                        label: Text(
+                          "DOWNLOAD REPORT PDF",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                            letterSpacing: 1.0,
+                          ),
                         ),
-                      ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          elevation: 0,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                         ),
                       ),
                     ),
-                  ),
                 ],
                 const SizedBox(height: 100),
               ],

@@ -371,18 +371,20 @@ class _HomePageState extends State<HomePage> {
                       trendIcon: bookingsIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
                     ),
                   ),
-                  const SizedBox(height: 16),
-                  GestureDetector(
-                    onTap: _navigateToReport,
-                    child: _buildStatCard(
-                      title: "TODAY'S REVENUE".tr,
-                      value: formatCurrency(todayRevenue),
-                      increase: formatIncrease(revenueIncrease),
-                      iconData: Icons.payments_outlined,
-                      increaseColor: revenueIncrease >= 0 ? primaryColor : Colors.red,
-                      trendIcon: revenueIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
+                  if (AppSession.userRole == 'owner') ...[
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _navigateToReport,
+                      child: _buildStatCard(
+                        title: "TODAY'S REVENUE".tr,
+                        value: formatCurrency(todayRevenue),
+                        increase: formatIncrease(revenueIncrease),
+                        iconData: Icons.payments_outlined,
+                        increaseColor: revenueIncrease >= 0 ? primaryColor : Colors.red,
+                        trendIcon: revenueIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
+                      ),
                     ),
-                  ),
+                  ],
                   const SizedBox(height: 16),
                   GestureDetector(
                     onTap: _navigateToReport,

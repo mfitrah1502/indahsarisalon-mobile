@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
@@ -625,55 +626,59 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     const SizedBox(height: 16),
 
                     // Add Service Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                          elevation: 2,
-                        ),
-                        onPressed: () => _showServiceDialog(),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.add, color: Colors.white, size: 20),
-                            SizedBox(width: 8),
-                            Text("Add New Service".tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
-                          ],
+                    if (AppSession.userRole == 'owner') ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                            elevation: 2,
+                          ),
+                          onPressed: () => _showServiceDialog(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.add, color: Colors.white, size: 20),
+                              SizedBox(width: 8),
+                              Text("Add New Service".tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 12),
+                      const SizedBox(height: 12),
+                    ],
 
                     // Add Promo Button
-                    SizedBox(
-                      width: double.infinity,
-                      child: OutlinedButton(
-                        style: OutlinedButton.styleFrom(
-                          side: BorderSide(color: primaryColor),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                          padding: const EdgeInsets.symmetric(vertical: 14),
-                        ),
-                        onPressed: () async {
-                          final updated = await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const AddPromoPage()),
-                          );
-                          if (updated == true && mounted) _fetchAll();
-                        },
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(Icons.local_offer_outlined, color: primaryColor, size: 20),
-                            const SizedBox(width: 8),
-                            Text("Add Promo".tr, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
-                          ],
+                    if (AppSession.userRole == 'owner') ...[
+                      SizedBox(
+                        width: double.infinity,
+                        child: OutlinedButton(
+                          style: OutlinedButton.styleFrom(
+                            side: BorderSide(color: primaryColor),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            padding: const EdgeInsets.symmetric(vertical: 14),
+                          ),
+                          onPressed: () async {
+                            final updated = await Navigator.push(
+                              context,
+                              MaterialPageRoute(builder: (_) => const AddPromoPage()),
+                            );
+                            if (updated == true && mounted) _fetchAll();
+                          },
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(Icons.local_offer_outlined, color: primaryColor, size: 20),
+                              const SizedBox(width: 8),
+                              Text("Add Promo".tr, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
+                            ],
+                          ),
                         ),
                       ),
-                    ),
-                    const SizedBox(height: 20),
+                      const SizedBox(height: 20),
+                    ],
 
                     // Count
                     Text(
@@ -754,27 +759,28 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             ],
                                           ),
                                         ),
-                                        Column(
-                                          children: [
-                                            GestureDetector(
-                                              onTap: () => _showServiceDialog(service: svc),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6),
-                                                decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
-                                                child: Icon(Icons.edit_outlined, color: primaryColor, size: 16),
+                                        if (AppSession.userRole == 'owner')
+                                          Column(
+                                            children: [
+                                              GestureDetector(
+                                                onTap: () => _showServiceDialog(service: svc),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
+                                                  child: Icon(Icons.edit_outlined, color: primaryColor, size: 16),
+                                                ),
                                               ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            GestureDetector(
-                                              onTap: () => _deleteService(svc),
-                                              child: Container(
-                                                padding: const EdgeInsets.all(6),
-                                                decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(6)),
-                                                child: const Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 16),
+                                              const SizedBox(height: 8),
+                                              GestureDetector(
+                                                onTap: () => _deleteService(svc),
+                                                child: Container(
+                                                  padding: const EdgeInsets.all(6),
+                                                  decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(6)),
+                                                  child: const Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 16),
+                                                ),
                                               ),
-                                            ),
-                                          ],
-                                        ),
+                                            ],
+                                          ),
                                       ],
                                     ),
                                   );

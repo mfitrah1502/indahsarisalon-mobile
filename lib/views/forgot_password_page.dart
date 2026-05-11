@@ -21,7 +21,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final emailController = TextEditingController();
   bool _isLoading = false;
 
-  final List<TextEditingController> _otpControllers = List.generate(6, (index) => TextEditingController());
+  final List<TextEditingController> _otpControllers = List.generate(8, (index) => TextEditingController());
   bool _isVerifying = false;
 
   @override
@@ -186,7 +186,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       return;
                                     }
 
-                                    await Supabase.instance.client.auth.signInWithOtp(email: email);
+                                    await Supabase.instance.client.auth.resetPasswordForEmail(email);
                                     if (mounted) {
                                       _showOTPDialog(context);
                                     }
@@ -299,8 +299,45 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       context: context,
       barrierDismissible: false,
       builder: (ctx) {
+        bool isResending = false;
         return StatefulBuilder(
           builder: (context, setStateDialog) {
+            Future<void> verify() async {
+              final otp = _otpControllers.map((c) => c.text).join();
+              if (otp.length != 8) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('Please enter a valid 8-digit OTP')),
+                );
+                return;
+              }
+
+              setStateDialog(() => _isVerifying = true);
+              try {
+                await Supabase.instance.client.auth.verifyOTP(
+                  email: emailController.text.trim(),
+                  token: otp,
+                  type: OtpType.recovery,
+                );
+                if (mounted) {
+                  Navigator.pop(ctx);
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (context) => ResetPasswordPage(email: emailController.text.trim())),
+                  );
+                }
+              } catch (e) {
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Invalid OTP or error: ${e.toString()}')),
+                  );
+                }
+              } finally {
+                if (mounted) {
+                  setStateDialog(() => _isVerifying = false);
+                }
+              }
+            }
+
             return Dialog(
               backgroundColor: Colors.transparent,
               insetPadding: const EdgeInsets.symmetric(horizontal: 32),
@@ -334,7 +371,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Please enter the 6-digit code sent to your email or phone number.",
+                  "Please enter the 8-digit code sent to:",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
@@ -342,15 +379,24 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     height: 1.5,
                   ),
                 ),
+                Text(
+                  emailController.text,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                  ),
+                ),
                 const SizedBox(height: 32),
 
                 // OTP Inputs
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(6, (index) {
+                  children: List.generate(8, (index) {
                     return SizedBox(
-                      width: 42,
-                      height: 54,
+                      width: 32,
+                      height: 48,
                       child: TextField(
                         controller: _otpControllers[index],
                         textAlign: TextAlign.center,
@@ -360,8 +406,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           LengthLimitingTextInputFormatter(1),
                         ],
                         onChanged: (value) {
-                          if (value.isNotEmpty && index < 5) {
-                            FocusScope.of(ctx).nextFocus();
+                          if (value.isNotEmpty) {
+                            if (index < 7) {
+                              FocusScope.of(ctx).nextFocus();
+                            } else {
+                              // Auto-verify on last digit
+                              FocusScope.of(ctx).unfocus();
+                              verify();
+                            }
                           } else if (value.isEmpty && index > 0) {
                             FocusScope.of(ctx).previousFocus();
                           }
@@ -403,43 +455,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       elevation: 4,
                       shadowColor: primaryColor.withOpacity(0.3),
                     ),
-                    onPressed: _isVerifying
-                        ? null
-                        : () async {
-                            final otp = _otpControllers.map((c) => c.text).join();
-                            if (otp.length != 6) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text('Please enter a valid 6-digit OTP')),
-                              );
-                              return;
-                            }
-
-                            setStateDialog(() => _isVerifying = true);
-                            try {
-                              await Supabase.instance.client.auth.verifyOTP(
-                                email: emailController.text.trim(),
-                                token: otp,
-                                type: OtpType.magiclink,
-                              );
-                              if (mounted) {
-                                Navigator.pop(ctx);
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(builder: (context) => ResetPasswordPage(email: emailController.text.trim())),
-                                );
-                              }
-                            } catch (e) {
-                              if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  SnackBar(content: Text('Invalid OTP or error: ${e.toString()}')),
-                                );
-                              }
-                            } finally {
-                              if (mounted) {
-                                setStateDialog(() => _isVerifying = false);
-                              }
-                            }
-                          },
+                    onPressed: _isVerifying ? null : verify,
                     child: _isVerifying
                         ? const SizedBox(
                             width: 24,
@@ -477,9 +493,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                       style: TextStyle(color: mutedText, fontSize: 13),
                     ),
                     GestureDetector(
-                      onTap: () async {
+                      onTap: isResending ? null : () async {
+                        setStateDialog(() => isResending = true);
                         try {
-                          await Supabase.instance.client.auth.signInWithOtp(email: emailController.text.trim());
+                          await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
                           if (mounted) {
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(content: Text('OTP sent successfully!')),
@@ -491,12 +508,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               SnackBar(content: Text('Failed to resend OTP: ${e.toString()}')),
                             );
                           }
+                        } finally {
+                          setStateDialog(() => isResending = false);
                         }
                       },
                       child: Text(
-                        "Resend Code",
+                        isResending ? "Resending..." : "Resend Code",
                         style: TextStyle(
-                          color: primaryColor,
+                          color: isResending ? mutedText : primaryColor,
                           fontWeight: FontWeight.bold,
                           fontSize: 13,
                         ),

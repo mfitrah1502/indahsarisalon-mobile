@@ -52,13 +52,6 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Row(
                 children: [
-                  GestureDetector(
-                    onTap: () {
-                      Navigator.pop(context);
-                    },
-                    child: Icon(Icons.arrow_back, color: mainTextColor, size: 28),
-                  ),
-                  const SizedBox(width: 16),
                   Text(
                     "Settings".tr,
                     style: TextStyle(
@@ -167,18 +160,19 @@ class _SettingsPageState extends State<SettingsPage> {
                               if (updated == true && mounted) setState(() {});
                             },
                           ),
-                          _buildSettingTile(
-                            icon: Icons.groups_outlined,
-                            title: "Manage Team".tr,
-                            mainTextColor: mainTextColor,
-                            iconBoxBg: iconBoxBg,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const ManageTeamPage()),
-                              );
-                            },
-                          ),
+                          if (AppSession.userRole == 'owner')
+                            _buildSettingTile(
+                              icon: Icons.groups_outlined,
+                              title: "Manage Team".tr,
+                              mainTextColor: mainTextColor,
+                              iconBoxBg: iconBoxBg,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const ManageTeamPage()),
+                                );
+                              },
+                            ),
                           _buildSettingTile(
                             icon: Icons.lock_outline,
                             title: "Change Password".tr,
@@ -191,18 +185,19 @@ class _SettingsPageState extends State<SettingsPage> {
                               );
                             },
                           ),
-                          _buildSettingTile(
-                            icon: Icons.person_add_alt,
-                            title: "Add Another Account".tr,
-                            mainTextColor: mainTextColor,
-                            iconBoxBg: iconBoxBg,
-                            onTap: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(builder: (context) => const CreateAccountPage()),
-                              );
-                            },
-                          ),
+                          if (AppSession.userRole == 'owner')
+                            _buildSettingTile(
+                              icon: Icons.person_add_alt,
+                              title: "Add Another Account".tr,
+                              mainTextColor: mainTextColor,
+                              iconBoxBg: iconBoxBg,
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const CreateAccountPage()),
+                                );
+                              },
+                            ),
                         ],
                       ),
                     ),

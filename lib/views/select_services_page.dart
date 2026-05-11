@@ -628,6 +628,26 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 child: Row(
                                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                   children: [
+                                    // Service Image
+                                    Container(
+                                      width: 50,
+                                      height: 50,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE2E8F0),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: service.imageUrl != null
+                                            ? Image.network(
+                                                service.imageUrl!,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) => Icon(Icons.image_outlined, color: mutedText, size: 20),
+                                              )
+                                            : Icon(Icons.image_outlined, color: mutedText, size: 20),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
                                     Expanded(
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,

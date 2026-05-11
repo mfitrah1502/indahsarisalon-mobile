@@ -14,30 +14,13 @@ class ServiceController {
 
     List<dynamic> svcData;
     try {
-      // Try fetching everything
       svcData = await _supabase
           .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, is_active, image_url, treatments(id, name, category_id, is_promo, categories(id, name))')
+          .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, is_active, image, categories(id, name))')
           .order('id');
     } catch (e) {
-      try {
-        // Fallback: remove is_active
-        svcData = await _supabase
-            .from('treatment_details')
-            .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, categories(id, name))')
-            .order('id');
-      } catch (e2) {
-        try {
-          // Fallback: remove image_url too
-          svcData = await _supabase
-              .from('treatment_details')
-              .select('id, name, duration, price, treatment_id, treatments(id, name, category_id, is_promo, categories(id, name))')
-              .order('id');
-        } catch (e3) {
-          debugPrint("Critical error fetching services: $e3");
-          svcData = [];
-        }
-      }
+      debugPrint("Error fetching services: $e");
+      svcData = [];
     }
 
     // Fetch promos safely
@@ -67,7 +50,7 @@ class ServiceController {
       
       final promoInfo = isPromo ? promoMap[treatmentName] : null;
       
-      bool activeStatus = td['is_active'] ?? true;
+      bool activeStatus = treatment?['is_active'] ?? true;
       if (isPromo) {
         activeStatus = promoInfo?['is_active'] ?? true;
       }
@@ -81,7 +64,7 @@ class ServiceController {
         category: category?['name'] ?? '',
         duration: (td['duration'] as num?)?.toInt() ?? 0,
         price: (td['price'] as num?)?.toInt() ?? 0,
-        imageUrl: td['image_url'], // Added image_url
+        imageUrl: td['image_url'] ?? treatment?['image'], // Prefer detail image, fallback to parent
         isPromo: isPromo,
         promoId: promoInfo?['id'],
         isActive: activeStatus,
@@ -196,20 +179,11 @@ class ServiceController {
         'price': price,
         'duration': duration,
       };
+      if (imageUrl != null) updateData['image_url'] = imageUrl;
       
-      try {
-        if (imageUrl != null) updateData['image_url'] = imageUrl;
-        await _supabase.from('treatment_details').update(updateData).eq('id', existingService.tdId);
-      } catch (e) {
-        if (e.toString().contains("image_url")) {
-          updateData.remove('image_url');
-          await _supabase.from('treatment_details').update(updateData).eq('id', existingService.tdId);
-        } else {
-          rethrow;
-        }
-      }
+      await _supabase.from('treatment_details').update(updateData).eq('id', existingService.tdId);
 
-      // Also update the treatment name if changed
+      // Update treatment name if changed
       await _supabase.from('treatments').update({
         'name': treatmentName,
         'category_id': catId,
@@ -244,18 +218,9 @@ class ServiceController {
         'price': price,
         'duration': duration,
       };
+      if (imageUrl != null) detailData['image_url'] = imageUrl;
       
-      try {
-        if (imageUrl != null) detailData['image_url'] = imageUrl;
-        await _supabase.from('treatment_details').insert(detailData);
-      } catch (e) {
-        if (e.toString().contains("image_url")) {
-          detailData.remove('image_url');
-          await _supabase.from('treatment_details').insert(detailData);
-        } else {
-          rethrow;
-        }
-      }
+      await _supabase.from('treatment_details').insert(detailData);
     }
   }
 }

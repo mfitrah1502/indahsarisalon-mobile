@@ -26,7 +26,7 @@ class ReportController {
         try {
           final detailsData = await _supabase
               .from('booking_details')
-              .select('booking_id, treatment_details(name, treatments(name, category))')
+              .select('booking_id, treatment_details(name, treatments(name, categories(name)))')
               .inFilter('booking_id', bookingIds);
           
           for (var d in detailsData) {
@@ -100,7 +100,8 @@ class ReportController {
       if (bDetails.isNotEmpty) {
         final td = bDetails[0]['treatment_details'] as Map?;
         final t = td?['treatments'] as Map?;
-        category = (t?['category'] as String?) ?? 'Service';
+        final c = t?['categories'] as Map?;
+        category = (c?['name'] as String?) ?? 'Service';
       }
 
       incomeDetails.add(IncomeDetail(
