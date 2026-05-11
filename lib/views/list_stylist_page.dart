@@ -223,6 +223,16 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                             color: primaryColor,
                                           ),
                                         ),
+                                        const SizedBox(height: 2),
+                                        if (stylist.position != null && stylist.position!.isNotEmpty)
+                                          Text(
+                                            "${stylist.position} ${stylist.division != null && stylist.division!.isNotEmpty ? '• ${stylist.division}' : ''}",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: buttonColor.withOpacity(0.8),
+                                            ),
+                                          ),
                                         const SizedBox(height: 4),
                                         Text(
                                           stylist.email.isNotEmpty ? stylist.email : '-',
@@ -350,8 +360,23 @@ class _ListStylistPageState extends State<ListStylistPage> {
   void _showAddStylistModal({UserModel? stylist}) {
     final isEdit = stylist != null;
     final nameController = TextEditingController(text: isEdit ? stylist.name : '');
+    final nicknameController = TextEditingController(text: isEdit ? stylist.nickname : '');
+    final birthPlaceController = TextEditingController(text: isEdit ? stylist.birthPlace : '');
     final emailController = TextEditingController(text: isEdit ? stylist.email : '');
+    final phoneController = TextEditingController(text: isEdit ? stylist.phone : '');
+    final addressController = TextEditingController(text: isEdit ? stylist.address : '');
+    final positionController = TextEditingController(text: isEdit ? stylist.position : '');
+    final divisionController = TextEditingController(text: isEdit ? stylist.division : '');
+    final emergencyContactController = TextEditingController(text: isEdit ? stylist.emergencyContact : '');
+    final bankAccountNameController = TextEditingController(text: isEdit ? stylist.bankAccountName : '');
+    final bankAccountNumberController = TextEditingController(text: isEdit ? stylist.bankAccountNumber : '');
+    final lastEducationController = TextEditingController(text: isEdit ? stylist.lastEducation : '');
     
+    DateTime? selectedBirthDate = stylist?.birthDate;
+    DateTime? selectedJoinDate = stylist?.joinDate;
+    String? selectedGender = stylist?.gender;
+    String? selectedEmploymentStatus = stylist?.employmentStatus;
+
     File? selectedImage;
     String? avatarUrl = stylist?.avatar;
     bool isUploading = false;
@@ -399,6 +424,36 @@ class _ListStylistPageState extends State<ListStylistPage> {
               }
             }
 
+            Future<void> selectDate(BuildContext context, bool isBirthDate) async {
+              final DateTime? picked = await showDatePicker(
+                context: context,
+                initialDate: (isBirthDate ? selectedBirthDate : selectedJoinDate) ?? DateTime.now(),
+                firstDate: DateTime(1950),
+                lastDate: DateTime(2100),
+                builder: (context, child) {
+                  return Theme(
+                    data: Theme.of(context).copyWith(
+                      colorScheme: ColorScheme.light(
+                        primary: primaryColor,
+                        onPrimary: Colors.white,
+                        onSurface: primaryColor,
+                      ),
+                    ),
+                    child: child!,
+                  );
+                },
+              );
+              if (picked != null) {
+                setModalState(() {
+                  if (isBirthDate) {
+                    selectedBirthDate = picked;
+                  } else {
+                    selectedJoinDate = picked;
+                  }
+                });
+              }
+            }
+
             return Container(
               height: MediaQuery.of(context).size.height * 0.9,
               decoration: BoxDecoration(
@@ -422,7 +477,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           child: Icon(Icons.close, color: primaryColor, size: 24),
                         ),
                         Text(
-                          isEdit ? "Update Stylist" : "Add Stylist",
+                          isEdit ? "Update Karyawan" : "Add Karyawan",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -438,14 +493,31 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   
                               final dataPayload = {
                                 "name": nameController.text.trim(),
+                                "nickname": nicknameController.text.trim(),
+                                "birth_place": birthPlaceController.text.trim(),
+                                "birth_date": selectedBirthDate?.toIso8601String(),
+                                "gender": selectedGender,
+                                "address": addressController.text.trim(),
+                                "phone": phoneController.text.trim(),
                                 "email": emailValue,
-                                "kategori": 'stylist',
+                                "position": positionController.text.trim(),
+                                "division": divisionController.text.trim(),
+                                "join_date": selectedJoinDate?.toIso8601String(),
+                                "employment_status": selectedEmploymentStatus,
+                                "emergency_contact": emergencyContactController.text.trim(),
+                                "bank_account_name": bankAccountNameController.text.trim(),
+                                "bank_account_number": bankAccountNumberController.text.trim(),
+                                "last_education": lastEducationController.text.trim(),
+                                "kategori": widget.role.toLowerCase(),
                                 "type": 'karyawan',
                                 "role": 'karyawan',
                                 "status": "aktif",
-                                "username": nameController.text.trim().replaceAll(' ', '').toLowerCase() + DateTime.now().millisecondsSinceEpoch.toString().substring(8),
-                                "password": "password",
                               };
+
+                              if (!isEdit) {
+                                dataPayload["username"] = nameController.text.trim().replaceAll(' ', '').toLowerCase() + DateTime.now().millisecondsSinceEpoch.toString().substring(8);
+                                dataPayload["password"] = "password";
+                              }
                               
                               if (avatarUrl != null) {
                                 dataPayload["avatar"] = avatarUrl!;
@@ -527,7 +599,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            "UPLOAD STYLIST PHOTO",
+                            "UPLOAD PHOTO",
                             style: TextStyle(
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
@@ -538,15 +610,156 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           const SizedBox(height: 32),
                           
                           // Form Details
-                          _buildTextFieldLabel("FULL NAME"),
+                          _buildTextFieldLabel("NAMA LENGKAP"),
                           _buildTextField("e.g. Julianne Smith", nameController),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("NAMA PANGGILAN"),
+                          _buildTextField("e.g. Julie", nicknameController),
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("TEMPAT LAHIR"),
+                                    _buildTextField("e.g. Jakarta", birthPlaceController),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("TANGGAL LAHIR"),
+                                    _buildDatePickerField(
+                                      selectedBirthDate == null 
+                                        ? "Select Date" 
+                                        : "${selectedBirthDate!.day}/${selectedBirthDate!.month}/${selectedBirthDate!.year}",
+                                      () => selectDate(context, true),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("JENIS KELAMIN"),
+                          Row(
+                            children: [
+                              _buildChoiceChip("Laki-laki", selectedGender == "Laki-laki", (val) {
+                                setModalState(() => selectedGender = "Laki-laki");
+                              }),
+                              const SizedBox(width: 12),
+                              _buildChoiceChip("Perempuan", selectedGender == "Perempuan", (val) {
+                                setModalState(() => selectedGender = "Perempuan");
+                              }),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("ALAMAT"),
+                          _buildTextField("e.g. Jl. Melati No. 12", addressController),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("NOMOR HP AKTIF"),
+                          _buildTextField("e.g. 08123456789", phoneController, TextInputType.phone),
                           const SizedBox(height: 20),
                           
                           _buildTextFieldLabel("EMAIL ADDRESS"),
-                          _buildTextField("julianne@salon.com", emailController),
+                          _buildTextField("julianne@salon.com", emailController, TextInputType.emailAddress),
                           const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("JABATAN"),
+                                    _buildTextField("e.g. Senior Stylist", positionController),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("DIVISI"),
+                                    _buildTextField("e.g. Hair", divisionController),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("TANGGAL MASUK"),
+                                    _buildDatePickerField(
+                                      selectedJoinDate == null 
+                                        ? "Select Date" 
+                                        : "${selectedJoinDate!.day}/${selectedJoinDate!.month}/${selectedJoinDate!.year}",
+                                      () => selectDate(context, false),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("STATUS KERJA"),
+                                    _buildDropdownField(
+                                      selectedEmploymentStatus ?? "Select Status",
+                                      ["TRAINING", "TETAP"],
+                                      (val) {
+                                        setModalState(() => selectedEmploymentStatus = val);
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("KONTAK DARURAT (NAMA & NO HP)"),
+                          _buildTextField("e.g. Budi (08123456789)", emergencyContactController),
+                          const SizedBox(height: 20),
+
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("NAMA REKENING"),
+                                    _buildTextField("e.g. Julianne Smith", bankAccountNameController),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  children: [
+                                    _buildTextFieldLabel("NOMOR REKENING"),
+                                    _buildTextField("e.g. 1234567890", bankAccountNumberController, TextInputType.number),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 20),
+
+                          _buildTextFieldLabel("PENDIDIKAN TERAKHIR"),
+                          _buildTextField("e.g. SMK Kecantikan", lastEducationController),
                           
-                          const SizedBox(height: 24),
+                          const SizedBox(height: 48),
                         ],
                       ),
                     ),
@@ -578,7 +791,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
     );
   }
 
-  Widget _buildTextField(String hint, [TextEditingController? controller]) {
+  Widget _buildTextField(String hint, [TextEditingController? controller, TextInputType? keyboardType]) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -587,6 +800,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
       ),
       child: TextField(
         controller: controller,
+        keyboardType: keyboardType,
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
@@ -595,6 +809,66 @@ class _ListStylistPageState extends State<ListStylistPage> {
           ),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(vertical: 16),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDatePickerField(String text, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        decoration: BoxDecoration(
+          color: const Color(0xFFE2E8F0).withOpacity(0.6),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: text == "Select Date" ? const Color(0xFF64748B).withOpacity(0.6) : Colors.black87,
+            fontSize: 15,
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildChoiceChip(String label, bool isSelected, Function(bool) onSelected) {
+    return ChoiceChip(
+      label: Text(label),
+      selected: isSelected,
+      onSelected: onSelected,
+      selectedColor: primaryColor.withOpacity(0.2),
+      labelStyle: TextStyle(
+        color: isSelected ? primaryColor : mutedText,
+        fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+      ),
+      backgroundColor: const Color(0xFFE2E8F0).withOpacity(0.6),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide.none),
+    );
+  }
+
+  Widget _buildDropdownField(String value, List<String> items, Function(String?) onChanged) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFE2E8F0).withOpacity(0.6),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: items.contains(value) ? value : null,
+          hint: Text(value, style: TextStyle(color: const Color(0xFF64748B).withOpacity(0.6), fontSize: 15)),
+          isExpanded: true,
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(item),
+            );
+          }).toList(),
+          onChanged: onChanged,
         ),
       ),
     );

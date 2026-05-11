@@ -10,7 +10,7 @@ class UserController {
     // Get active users
     final userData = await _supabase
         .from('users')
-        .select('id, username, name, type, role, status, email, password, avatar, phone')
+        .select()
         .eq('type', 'karyawan')
         .neq('role', 'pelanggan')
         .eq('status', 'aktif');
