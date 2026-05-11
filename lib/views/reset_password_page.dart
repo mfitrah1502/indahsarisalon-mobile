@@ -5,7 +5,8 @@ import 'auth_page.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
-  const ResetPasswordPage({super.key, required this.email});
+  final String username;
+  const ResetPasswordPage({super.key, required this.email, required this.username});
 
   @override
   State<ResetPasswordPage> createState() => _ResetPasswordPageState();
@@ -266,7 +267,8 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         await Supabase.instance.client
                             .from('users')
                             .update({'password': hashedPassword})
-                            .eq('email', widget.email);
+                            .eq('email', widget.email)
+                            .eq('username', widget.username);
                             
                         try {
                           await Supabase.instance.client.auth.updateUser(

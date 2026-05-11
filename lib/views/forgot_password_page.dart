@@ -19,6 +19,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
   final Color mutedText = const Color(0xFF64748B);
 
   final emailController = TextEditingController();
+  final usernameController = TextEditingController();
   bool _isLoading = false;
 
   final List<TextEditingController> _otpControllers = List.generate(8, (index) => TextEditingController());
@@ -112,7 +113,41 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const Text(
-                        "EMAIL ADDRESS OR PHONE",
+                        "USERNAME",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF4B5563),
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      TextField(
+                        controller: usernameController,
+                        decoration: InputDecoration(
+                          prefixIcon: Icon(Icons.person_outline, size: 20, color: mutedText),
+                          hintText: "your_username",
+                          hintStyle: TextStyle(
+                            color: mutedText.withOpacity(0.6),
+                            fontSize: 15,
+                          ),
+                          filled: true,
+                          fillColor: inputBg.withOpacity(0.5),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 18,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 24),
+
+                      const Text(
+                        "EMAIL ADDRESS",
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
@@ -163,6 +198,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               ? null
                               : () async {
                                   final email = emailController.text.trim();
+                                  final username = usernameController.text.trim();
+
+                                  if (username.isEmpty) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Please enter your username')),
+                                    );
+                                    return;
+                                  }
                                   if (email.isEmpty) {
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       const SnackBar(content: Text('Please enter your email')),
@@ -174,13 +217,21 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   try {
                                     final user = await Supabase.instance.client
                                         .from('users')
-                                        .select('id')
-                                        .eq('email', email)
+                                        .select('id, email')
+                                        .eq('username', username)
                                         .maybeSingle();
 
                                     if (user == null) {
                                       ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Email tidak terdaftar')),
+                                        const SnackBar(content: Text('Username tidak ditemukan')),
+                                      );
+                                      setState(() => _isLoading = false);
+                                      return;
+                                    }
+
+                                    if (user['email'] != email) {
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        const SnackBar(content: Text('Email tidak sesuai dengan username tersebut')),
                                       );
                                       setState(() => _isLoading = false);
                                       return;
@@ -322,7 +373,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   Navigator.pop(ctx);
                   Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (context) => ResetPasswordPage(email: emailController.text.trim())),
+                    MaterialPageRoute(builder: (context) => ResetPasswordPage(
+                      email: emailController.text.trim(),
+                      username: usernameController.text.trim(),
+                    )),
                   );
                 }
               } catch (e) {

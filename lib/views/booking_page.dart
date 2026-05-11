@@ -57,11 +57,31 @@ class _BookingPageState extends State<BookingPage> {
   int _finalTotalPrice = 0;
   bool _isColourCircleApplied = false;
 
+  int _effectiveDuration = 0;
+
   @override
   void initState() {
     super.initState();
     _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) => Map<String, dynamic>.from(e)));
     _finalTotalPrice = widget.totalPrice;
+    _effectiveDuration = widget.totalDuration;
+    
+    // Rule: Coloring & Pelurusan minimal 4 jam (240 menit)
+    bool isLongService = false;
+    final longKeywords = ['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'];
+    for (var s in widget.selectedServices) {
+      final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
+      final dName = (s['detail_name'] ?? '').toString().toLowerCase();
+      final cat = (s['category'] ?? '').toString().toLowerCase();
+      if (longKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        isLongService = true;
+        break;
+      }
+    }
+    if (isLongService && _effectiveDuration < 240) {
+      _effectiveDuration = 240;
+    }
+
     _fetchAvailableTimes();
   }
 
@@ -101,12 +121,38 @@ class _BookingPageState extends State<BookingPage> {
       final slots = await _bookingController.getAvailableTimeSlots(
         date: selectedDate,
         stylistId: widget.stylistId,
-        totalDuration: widget.totalDuration,
+        totalDuration: _effectiveDuration,
       );
+
+      // Rule: Chemical services max booking 16:00
+      // Keywords: pewarnaan, permanent blow, blue fire, relaxing, smoothing, coloring, pelurusan
+      final chemicalKeywords = ['pewarnaan', 'color', 'warna', 'permanent blow', 'blue fire', 'relaxing', 'smoothing', 'pelurusan', 'rebonding'];
+      bool isChemical = false;
+      for (var s in widget.selectedServices) {
+        final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
+        final dName = (s['detail_name'] ?? '').toString().toLowerCase();
+        final cat = (s['category'] ?? '').toString().toLowerCase();
+        if (chemicalKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+          isChemical = true;
+          break;
+        }
+      }
+
+      List<String> filteredSlots = slots;
+      if (isChemical) {
+        filteredSlots = slots.where((t) {
+          final hour = int.parse(t.split(':')[0]);
+          final minute = int.parse(t.split(':')[1]);
+          // Max booking is 16:00 (cannot start after 16:00)
+          if (hour > 16) return false;
+          if (hour == 16 && minute > 0) return false;
+          return true;
+        }).toList();
+      }
 
       if (mounted) {
         setState(() {
-          _times = slots;
+          _times = filteredSlots;
           _loadingTimes = false;
         });
       }
@@ -204,7 +250,7 @@ class _BookingPageState extends State<BookingPage> {
                             children: [
                               Text("DURASI", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                               const SizedBox(height: 2),
-                              Text("${widget.totalDuration} Menit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
+                              Text("$_effectiveDuration Menit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
                             ],
                           )
                         ],
@@ -319,14 +365,19 @@ class _BookingPageState extends State<BookingPage> {
 
                     // Select Time
                     Text(
-                      "Pilih Jam",
+                      "Pilih Waktu Kunjungan",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: primaryColor,
                       ),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 8),
+                    Text(
+                      "Pilih waktu yang paling sesuai untuk kamu",
+                      style: TextStyle(fontSize: 13, color: mutedText),
+                    ),
+                    const SizedBox(height: 24),
                     
                     if (_loadingTimes)
                       const Center(child: Padding(
@@ -355,35 +406,12 @@ class _BookingPageState extends State<BookingPage> {
                         ),
                       )
                     else
-                      Wrap(
-                        spacing: 12,
-                        runSpacing: 12,
-                        children: _times.asMap().entries.map((entry) {
-                          final index = entry.key;
-                          final time = entry.value;
-                          final isSelected = index == _selectedTimeIndex;
-                          return GestureDetector(
-                            onTap: () => setState(() => _selectedTimeIndex = index),
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                              decoration: BoxDecoration(
-                                color: isSelected ? primaryColor : Colors.white,
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              child: Text(
-                                time,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                  color: isSelected ? Colors.white : mutedText,
-                                ),
-                              ),
-                            ),
-                          );
-                        }).toList(),
+                      Column(
+                        children: [
+                          _buildTimeSection("Pagi", Icons.wb_sunny_outlined, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) < 12).toList()),
+                          _buildTimeSection("Siang", Icons.wb_sunny, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 12 && int.parse(e.value.split(':')[0]) < 15).toList()),
+                          _buildTimeSection("Sore", Icons.wb_twilight, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 15).toList()),
+                        ],
                       ),
 
                     const SizedBox(height: 48),
@@ -467,6 +495,67 @@ class _BookingPageState extends State<BookingPage> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildTimeSection(String title, IconData icon, List<MapEntry<int, String>> slots) {
+    if (slots.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 20, color: primaryColor),
+            const SizedBox(width: 8),
+            Text(
+              title,
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.bold,
+                color: primaryColor,
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        Wrap(
+          spacing: 10,
+          runSpacing: 10,
+          children: slots.map((entry) {
+            final index = entry.key;
+            final time = entry.value;
+            final isSelected = index == _selectedTimeIndex;
+            return GestureDetector(
+              onTap: () => setState(() => _selectedTimeIndex = index),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                decoration: BoxDecoration(
+                  color: isSelected ? primaryColor : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
+                    width: 1.5,
+                  ),
+                  boxShadow: isSelected
+                      ? [BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
+                      : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
+                ),
+                child: Text(
+                  time,
+                  style: TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    color: isSelected ? Colors.white : const Color(0xFF475569),
+                  ),
+                ),
+              ),
+            );
+          }).toList(),
+        ),
+        const SizedBox(height: 24),
+      ],
     );
   }
 
