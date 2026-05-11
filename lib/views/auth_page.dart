@@ -20,6 +20,7 @@ class _AuthPageState extends State<AuthPage> {
   final password = TextEditingController();
 
   bool rememberMe = false;
+  bool _obscurePassword = true;
 
   final AuthController _authController = AuthController();
 
@@ -202,12 +203,24 @@ class _AuthPageState extends State<AuthPage> {
                       const SizedBox(height: 8),
                       TextField(
                         controller: password,
-                        obscureText: true,
+                        obscureText: _obscurePassword,
                         decoration: InputDecoration(
                           hintText: "••••••••",
                           hintStyle: const TextStyle(
                             color: Color(0xFF9CA3AF),
                             letterSpacing: 6,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                              color: const Color(0xFF9CA3AF),
+                              size: 20,
+                            ),
+                            onPressed: () {
+                              setState(() {
+                                _obscurePassword = !_obscurePassword;
+                              });
+                            },
                           ),
                           filled: true,
                           fillColor: inputBg,
