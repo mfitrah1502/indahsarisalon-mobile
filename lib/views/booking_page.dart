@@ -14,6 +14,7 @@ class BookingPage extends StatefulWidget {
   final DateTime selectedDate;
   final int stylistId;
   final String stylistName;
+  final String? stylistAvatar;
   final int totalDuration;
   final List<Map<String, dynamic>> selectedServices;
   final int totalPrice;
@@ -23,6 +24,7 @@ class BookingPage extends StatefulWidget {
     required this.selectedDate,
     required this.stylistId,
     required this.stylistName,
+    this.stylistAvatar,
     required this.totalDuration,
     required this.selectedServices,
     required this.totalPrice,
@@ -172,8 +174,19 @@ class _BookingPageState extends State<BookingPage> {
                         children: [
                           Container(
                             width: 44, height: 44,
-                            decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFFE4F0FA)),
-                            child: Icon(Icons.person, color: primaryColor, size: 24),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(12), 
+                              color: const Color(0xFFE4F0FA),
+                              image: widget.stylistAvatar != null && widget.stylistAvatar!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(widget.stylistAvatar!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                            ),
+                            child: widget.stylistAvatar == null || widget.stylistAvatar!.isEmpty
+                                ? Icon(Icons.person, color: primaryColor, size: 24)
+                                : null,
                           ),
                           const SizedBox(width: 16),
                           Expanded(

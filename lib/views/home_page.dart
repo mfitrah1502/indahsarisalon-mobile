@@ -576,7 +576,12 @@ class _HomePageState extends State<HomePage> {
       phone = '62$phone';
     }
 
-    final message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nYuk booking sekarang lewat aplikasi atau balas chat ini!";
+    String message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\n";
+    
+    if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
+      message += "Lihat Gambar: ${promo.imageUrl}\n\n";
+    }
+    message += "Yuk booking sekarang lewat aplikasi atau balas chat ini!";
     
     // Auto-Copy to Clipboard
     await Clipboard.setData(ClipboardData(text: message));
@@ -589,37 +594,42 @@ class _HomePageState extends State<HomePage> {
       );
     }
 
-    if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
-      String? path;
-      try {
-        final response = await http.get(Uri.parse(promo.imageUrl!));
-        final bytes = response.bodyBytes;
-        final temp = await getTemporaryDirectory();
-        path = '${temp.path}/promo_image.jpg';
-        File(path).writeAsBytesSync(bytes);
+    if (Platform.isAndroid || Platform.isIOS) {
+      if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
+        String? path;
+        try {
+          final response = await http.get(Uri.parse(promo.imageUrl!));
+          final bytes = response.bodyBytes;
+          final temp = await getTemporaryDirectory();
+          path = '${temp.path}/promo_image.jpg';
+          File(path).writeAsBytesSync(bytes);
 
-        await WhatsappShare.shareFile(
-          text: message,
-          phone: phone,
-          filePath: [path],
-        );
-        return;
-      } catch (e) {
-        debugPrint("Error sharing with whatsapp_share: $e");
-        if (path != null) {
-          await Share.shareXFiles(
-            [XFile(path, name: '${promo.title}.jpg')],
+          await WhatsappShare.shareFile(
             text: message,
+            phone: phone,
+            filePath: [path],
           );
+          return;
+        } catch (e) {
+          debugPrint("Error sharing with whatsapp_share: $e");
+          // Fallback to url_launcher if whatsapp_share fails
         }
-        return;
       }
     }
 
     // Fallback to text-only WhatsApp direct link
-    final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-    if (await canLaunchUrl(Uri.parse(url))) {
-      await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+    final nativeUrl = "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}";
+    final webUrl = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
+    
+    try {
+      if (await canLaunchUrl(Uri.parse(nativeUrl))) {
+        await launchUrl(Uri.parse(nativeUrl), mode: LaunchMode.externalApplication);
+      } else {
+        await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+      }
+    } catch (e) {
+      debugPrint("Could not launch WhatsApp: $e");
+      await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
     }
   }
 
@@ -658,9 +668,17 @@ class _HomePageState extends State<HomePage> {
 
           final message = "Halo ${customer['name']}! \n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nLihat Gambar: ${promo.imageUrl}\n\nYuk booking sekarang!";
           
-          final url = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
-          if (await canLaunchUrl(Uri.parse(url))) {
-            await launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+          final nativeUrl = "whatsapp://send?phone=$phone&text=${Uri.encodeComponent(message)}";
+          final webUrl = "https://wa.me/$phone?text=${Uri.encodeComponent(message)}";
+          
+          try {
+            if (await canLaunchUrl(Uri.parse(nativeUrl))) {
+              await launchUrl(Uri.parse(nativeUrl), mode: LaunchMode.externalApplication);
+            } else {
+              await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
+            }
+          } catch (e) {
+            await launchUrl(Uri.parse(webUrl), mode: LaunchMode.externalApplication);
           }
           await Future.delayed(const Duration(seconds: 2));
         }

@@ -6,6 +6,7 @@ import 'booking_list_page.dart';
 import 'manage_team_page.dart';
 import 'manage_services_page.dart';
 import 'edit_profile_page.dart';
+import 'change_password_page.dart';
 import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
@@ -183,7 +184,12 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: "Change Password".tr,
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
-                            onTap: () {},
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                              );
+                            },
                           ),
                           _buildSettingTile(
                             icon: Icons.person_add_alt,

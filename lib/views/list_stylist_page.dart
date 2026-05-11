@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../models/user_model.dart';
 import '../controllers/user_controller.dart';
 import 'home_page.dart';
@@ -348,6 +351,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
     final isEdit = stylist != null;
     final nameController = TextEditingController(text: isEdit ? stylist.name : '');
     final emailController = TextEditingController(text: isEdit ? stylist.email : '');
+    
+    File? selectedImage;
+    String? avatarUrl = stylist?.avatar;
+    bool isUploading = false;
 
     showModalBottomSheet(
       context: context,
@@ -356,6 +363,42 @@ class _ListStylistPageState extends State<ListStylistPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
+            
+            Future<void> pickAndUploadImage() async {
+              try {
+                final picker = ImagePicker();
+                final image = await picker.pickImage(source: ImageSource.gallery);
+                if (image == null) return;
+
+                setModalState(() {
+                  selectedImage = File(image.path);
+                  isUploading = true;
+                });
+
+                final fileExt = image.path.split('.').last;
+                final fileName = 'stylist-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+
+                await Supabase.instance.client.storage
+                    .from('avatars')
+                    .upload(fileName, selectedImage!);
+
+                final publicUrl = Supabase.instance.client.storage
+                    .from('avatars')
+                    .getPublicUrl(fileName);
+
+                setModalState(() {
+                  avatarUrl = publicUrl;
+                  isUploading = false;
+                });
+              } catch (e) {
+                setModalState(() => isUploading = false);
+                debugPrint("Error uploading image: $e");
+                if (mounted) {
+                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal upload foto: $e")));
+                }
+              }
+            }
+
             return Container(
               height: MediaQuery.of(context).size.height * 0.9,
               decoration: BoxDecoration(
@@ -404,6 +447,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 "password": "password",
                               };
                               
+                              if (avatarUrl != null) {
+                                dataPayload["avatar"] = avatarUrl!;
+                              }
+                              
                               try {
                                 await _userController.saveStylist(dataPayload, id: stylist?.id);
                                 _fetchStylists();
@@ -434,39 +481,49 @@ class _ListStylistPageState extends State<ListStylistPage> {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           // Photo Area
-                          Stack(
-                            alignment: Alignment.bottomRight,
-                            children: [
-                                    Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFE2E8F0),
-                                      borderRadius: BorderRadius.circular(16),
-                                      image: (isEdit && stylist.avatar != null && stylist.avatar!.isNotEmpty)
-                                          ? DecorationImage(
-                                              image: NetworkImage(stylist.avatar!),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : null,
-                                    ),
-                                    child: (!isEdit || stylist.avatar == null || stylist.avatar!.isEmpty)
-                                        ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 48)
-                                        : null,
-                                  ),
-                              Transform.translate(
-                                offset: const Offset(8, 8),
-                                child: Container(
-                                  padding: const EdgeInsets.all(6),
+                          GestureDetector(
+                            onTap: pickAndUploadImage,
+                            child: Stack(
+                              alignment: Alignment.bottomRight,
+                              children: [
+                                Container(
+                                  width: 100,
+                                  height: 100,
                                   decoration: BoxDecoration(
-                                    color: primaryColor,
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: scaffoldBg, width: 2),
+                                    color: const Color(0xFFE2E8F0),
+                                    borderRadius: BorderRadius.circular(16),
+                                    image: selectedImage != null
+                                        ? DecorationImage(
+                                            image: FileImage(selectedImage!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : (avatarUrl != null && avatarUrl!.isNotEmpty)
+                                            ? DecorationImage(
+                                                image: NetworkImage(avatarUrl!),
+                                                fit: BoxFit.cover,
+                                              )
+                                            : null,
                                   ),
-                                  child: const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 16),
+                                  child: (selectedImage == null && (avatarUrl == null || avatarUrl!.isEmpty))
+                                      ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 48)
+                                      : null,
                                 ),
-                              )
-                            ],
+                                Transform.translate(
+                                  offset: const Offset(8, 8),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(6),
+                                    decoration: BoxDecoration(
+                                      color: primaryColor,
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(color: scaffoldBg, width: 2),
+                                    ),
+                                    child: isUploading 
+                                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                                        : const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 16),
+                                  ),
+                                )
+                              ],
+                            ),
                           ),
                           const SizedBox(height: 16),
                           Text(

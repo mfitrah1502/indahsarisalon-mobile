@@ -459,8 +459,16 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                                   ? Border.all(color: primaryColor, width: 2) 
                                                   : null,
                                               color: const Color(0xFFE2E8F0),
+                                              image: stylist.avatar != null && stylist.avatar!.isNotEmpty
+                                                  ? DecorationImage(
+                                                      image: NetworkImage(stylist.avatar!),
+                                                      fit: BoxFit.cover,
+                                                    )
+                                                  : null,
                                             ),
-                                            child: const Icon(Icons.person, color: Color(0xFF94A3B8), size: 30),
+                                            child: stylist.avatar == null || stylist.avatar!.isEmpty
+                                                ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 30)
+                                                : null,
                                           ),
                                           if (isSelected)
                                             Positioned(
@@ -479,12 +487,19 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         ],
                                       ),
                                       const SizedBox(height: 8),
-                                      Text(
-                                        stylist.name,
-                                        style: TextStyle(
-                                          fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                          color: isSelected ? primaryColor : mutedText,
-                                          fontSize: 12,
+                                      SizedBox(
+                                        width: 70,
+                                        child: Text(
+                                          stylist.name,
+                                          textAlign: TextAlign.center,
+                                          maxLines: 2,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: TextStyle(
+                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                            color: isSelected ? primaryColor : mutedText,
+                                            fontSize: 11,
+                                            height: 1.2,
+                                          ),
                                         ),
                                       )
                                     ],
@@ -768,6 +783,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         selectedDate: _dates[_selectedDateIndex]["rawDate"] as DateTime,
                                         stylistId: selectedStylist.id,
                                         stylistName: selectedStylist.name,
+                                        stylistAvatar: selectedStylist.avatar,
                                         totalDuration: _totalMins,
                                         selectedServices: selected.map((s) {
                                           final svc = s['service'] as ServiceModel;
