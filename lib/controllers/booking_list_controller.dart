@@ -15,7 +15,7 @@ class BookingListController {
       final bookingId = row['id'];
       final details = await _supabase
           .from('booking_details')
-          .select('treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
+          .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
           .eq('booking_id', bookingId);
 
       List<String> serviceNames = [];

@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import '../models/service_model.dart';
 import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
@@ -351,7 +352,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
                             child: dialogImage != null
-                                ? Image.file(File(dialogImage!.path), fit: BoxFit.cover)
+                                ? (kIsWeb
+                                    ? Image.network(dialogImage!.path, fit: BoxFit.cover)
+                                    : Image.file(File(dialogImage!.path), fit: BoxFit.cover))
                                 : (isEdit && service.imageUrl != null)
                                     ? Image.network(service.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.add_a_photo, size: 30))
                                     : Column(

@@ -279,11 +279,13 @@ class _AddPromoPageState extends State<AddPromoPage> {
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
                           child: _imageFile != null 
-                            ? Image.file(
-                                File(_imageFile!.path),
-                                fit: BoxFit.cover,
-                                errorBuilder: (ctx, _, __) => const Icon(Icons.error),
-                              )
+                            ? (kIsWeb 
+                                ? Image.network(_imageFile!.path, fit: BoxFit.cover)
+                                : Image.file(
+                                    File(_imageFile!.path),
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (ctx, _, __) => const Icon(Icons.error),
+                                  ))
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [

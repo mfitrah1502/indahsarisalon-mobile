@@ -180,7 +180,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           final supabase = Supabase.instance.client;
           fullDetails = await supabase
               .from('booking_details')
-              .select('treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
+              .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
               .eq('booking_id', widget.booking['id']);
         } catch (e) {
           debugPrint("Error fetching details dynamically: $e");
@@ -193,7 +193,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           final t = td?['treatments'] as Map<String, dynamic>?;
           final tName = t?['name'] ?? '';
           final dName = td?['name'] ?? '';
-          final price = (td?['price'] as num?)?.toDouble() ?? 0;
+          // Priority: price from booking_details, then fallback to current treatment price
+          final price = (d['price'] as num?)?.toDouble() ?? (td?['price'] as num?)?.toDouble() ?? 0;
           
           String displayName = (tName == dName || dName.isEmpty) ? tName : "$tName - $dName";
           services.add({'name': displayName, 'price': price});
