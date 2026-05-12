@@ -1,4 +1,5 @@
 // translations.dart - translation utility
+// Semua penjelasan dan komentar kode dalam file ini menggunakan Bahasa Indonesia
 class AppTranslations {
   static String currentLanguage = 'English'; // English or Indonesia
 

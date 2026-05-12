@@ -317,94 +317,51 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                           const SizedBox(height: 32),
 
-                          // Forms
-                          _buildInputField(
-                            "FULL NAME".tr,
-                            _fullNameController,
-                            Icons.person_outline,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildInputField(
-                            "NAMA PANGGILAN".tr,
-                            _nicknameController,
-                            Icons.face_outlined,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildInputField(
-                            "USERNAME".tr,
-                            _usernameController,
-                            Icons.alternate_email,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildInputField(
-                            "EMAIL ADDRESS".tr,
-                            _emailController,
-                            Icons.email_outlined,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildInputField(
-                            "PHONE NUMBER".tr,
-                            _phoneController,
-                            Icons.phone_outlined,
-                          ),
-                          const SizedBox(height: 20),
-
-                          Row(
-                            children: [
-                              Expanded(
-                                child: _buildInputField(
-                                  "TEMPAT LAHIR".tr,
-                                  _birthPlaceController,
-                                  Icons.location_city,
+                          // Forms - menampilkan field sesuai peran pengguna
+                          if (AppSession.userRole?.toLowerCase() == 'owner') ...[
+                            _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
+                            const SizedBox(height: 20),
+                            _buildInputField('USERNAME'.tr, _usernameController, Icons.alternate_email),
+                            const SizedBox(height: 20),
+                            _buildInputField('EMAIL ADDRESS'.tr, _emailController, Icons.email_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('PHONE NUMBER'.tr, _phoneController, Icons.phone_outlined),
+                          ] else ...[
+                            // Field lengkap untuk admin atau peran lainnya
+                            _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
+                            const SizedBox(height: 20),
+                            _buildInputField('NAMA PANGGILAN'.tr, _nicknameController, Icons.face_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('USERNAME'.tr, _usernameController, Icons.alternate_email),
+                            const SizedBox(height: 20),
+                            _buildInputField('EMAIL ADDRESS'.tr, _emailController, Icons.email_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('PHONE NUMBER'.tr, _phoneController, Icons.phone_outlined),
+                            const SizedBox(height: 20),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildInputField('TEMPAT LAHIR'.tr, _birthPlaceController, Icons.location_city),
                                 ),
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: _buildDatePickerField(
-                                  "TANGGAL LAHIR".tr,
-                                  _selectedBirthDate,
+                                const SizedBox(width: 16),
+                                Expanded(
+                                  child: _buildDatePickerField('TANGGAL LAHIR'.tr, _selectedBirthDate),
                                 ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          _buildGenderField(),
-                          const SizedBox(height: 20),
-
-                          _buildInputField(
-                            "HOME ADDRESS".tr,
-                            _addressController,
-                            Icons.location_on_outlined,
-                            maxLines: 2,
-                          ),
-                          const SizedBox(height: 20),
-
-                          _buildInputField(
-                            "KONTAK DARURAT".tr,
-                            _emergencyContactController,
-                            Icons.contact_emergency_outlined,
-                          ),
-                          const SizedBox(height: 20),
-
-                          _buildInputField(
-                            "NAMA REKENING".tr,
-                            _bankAccountNameController,
-                            Icons.account_balance_wallet_outlined,
-                          ),
-                          const SizedBox(height: 20),
-                          _buildInputField(
-                            "NOMOR REKENING".tr,
-                            _bankAccountNumberController,
-                            Icons.numbers_outlined,
-                          ),
-                          const SizedBox(height: 20),
-
-                          _buildInputField(
-                            "PENDIDIKAN TERAKHIR".tr,
-                            _lastEducationController,
-                            Icons.school_outlined,
-                          ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+                            _buildGenderField(),
+                            const SizedBox(height: 20),
+                            _buildInputField('HOME ADDRESS'.tr, _addressController, Icons.location_on_outlined, maxLines: 2),
+                            const SizedBox(height: 20),
+                            _buildInputField('KONTAK DARURAT'.tr, _emergencyContactController, Icons.contact_emergency_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('NAMA REKENING'.tr, _bankAccountNameController, Icons.account_balance_wallet_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('NOMOR REKENING'.tr, _bankAccountNumberController, Icons.numbers_outlined),
+                            const SizedBox(height: 20),
+                            _buildInputField('PENDIDIKAN TERAKHIR'.tr, _lastEducationController, Icons.school_outlined),
+                          ],
 
                           const SizedBox(height: 48),
 
