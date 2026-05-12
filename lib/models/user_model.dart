@@ -25,6 +25,13 @@ class UserModel {
   final String? bankAccountNumber;
   final String? lastEducation;
 
+  // Membership & Loyalty
+  final String? membershipTier;
+  final num? totalSpend;
+  final DateTime? lastTransactionAt;
+  final bool isColourCircle;
+  final DateTime? colourCircleExpiredAt;
+
   UserModel({
     required this.id,
     required this.username,
@@ -49,6 +56,11 @@ class UserModel {
     this.bankAccountName,
     this.bankAccountNumber,
     this.lastEducation,
+    this.membershipTier = 'None',
+    this.totalSpend = 0,
+    this.lastTransactionAt,
+    this.isColourCircle = false,
+    this.colourCircleExpiredAt,
   });
 
   factory UserModel.fromJson(Map<String, dynamic> json) {
@@ -76,6 +88,11 @@ class UserModel {
       bankAccountName: json['bank_account_name'] as String?,
       bankAccountNumber: json['bank_account_number'] as String?,
       lastEducation: json['last_education'] as String?,
+      membershipTier: json['membership_tier'] as String? ?? 'None',
+      totalSpend: json['total_spend'] as num? ?? 0,
+      lastTransactionAt: json['last_transaction_at'] != null ? DateTime.parse(json['last_transaction_at'] as String) : null,
+      isColourCircle: json['is_colour_circle'] as bool? ?? false,
+      colourCircleExpiredAt: json['colour_circle_expired_at'] != null ? DateTime.parse(json['colour_circle_expired_at'] as String) : null,
     );
   }
 }

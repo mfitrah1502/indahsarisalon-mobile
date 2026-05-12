@@ -3,6 +3,7 @@ import '../models/promo_model.dart';
 import '../controllers/home_controller.dart';
 import 'package:intl/intl.dart';
 import '../utils/translations.dart';
+import '../app_session.dart';
 
 class PromoListPage extends StatefulWidget {
   const PromoListPage({super.key});
@@ -29,7 +30,10 @@ class _PromoListPageState extends State<PromoListPage> {
 
   Future<void> _fetchPromos() async {
     try {
-      final promos = await _homeController.fetchPromos();
+      final promos = await _homeController.fetchPromos(
+        userTier: AppSession.userTier,
+        userRole: AppSession.userRole,
+      );
       if (mounted) {
         setState(() {
           _promos = promos;

@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_page.dart';
 import 'booking_page.dart';
 import 'booking_list_page.dart';
@@ -15,6 +16,8 @@ import '../utils/translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'report_page.dart';
 import '../utils/popup_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../utils/loyalty_constants.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -26,10 +29,32 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   bool isDarkMode = false; // Default to light mode
   int _selectedIndex = 4; // Settings is active
+  String _currentTier = 'None';
 
   @override
   void initState() {
     super.initState();
+    _fetchMembership();
+  }
+
+  Future<void> _fetchMembership() async {
+    if (AppSession.userId != null) {
+      try {
+        final res = await Supabase.instance.client
+            .from('users')
+            .select('membership_tier')
+            .eq('id', AppSession.userId!)
+            .single();
+        if (mounted) {
+          setState(() {
+            _currentTier = res['membership_tier'] ?? 'None';
+            AppSession.userTier = _currentTier;
+          });
+        }
+      } catch (e) {
+        debugPrint('Error fetching membership: $e');
+      }
+    }
   }
 
   @override
@@ -125,6 +150,89 @@ class _SettingsPageState extends State<SettingsPage> {
                     ),
                     
                     const SizedBox(height: 32),
+
+                    // MEMBERSHIP SECTION
+                    Text(
+                      "MEMBERSHIP",
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1.2,
+                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Container(
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: _currentTier != 'None'
+                            ? mainTextColor.withOpacity(0.1)
+                            : (isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: _currentTier != 'None'
+                              ? mainTextColor.withOpacity(0.3)
+                              : (isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _currentTier != 'None' ? Icons.stars : Icons.stars_outlined,
+                            color: _currentTier != 'None' ? mainTextColor : mutedText,
+                            size: 28,
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: _currentTier != 'None'
+                                ? Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "$_currentTier Member",
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor, fontSize: 16),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Kamu adalah member eksklusif kami.",
+                                        style: TextStyle(color: mutedText, fontSize: 12),
+                                      ),
+                                    ],
+                                  )
+                                : Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Belum ada membership",
+                                        style: TextStyle(fontWeight: FontWeight.bold, color: mutedText, fontSize: 15),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        "Lakukan transaksi untuk mendapatkan tier.",
+                                        style: TextStyle(color: mutedText, fontSize: 12),
+                                      ),
+                                    ],
+                                  ),
+                          ),
+                          if (_currentTier != 'None')
+                            ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              ),
+                              onPressed: () async {
+                                final uri = Uri.parse(LoyaltyConstants.groupLinkForTier(_currentTier));
+                                if (await canLaunchUrl(uri)) {
+                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                }
+                              },
+                              child: const Text("Grup WA", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                            ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
 
                     // ACCOUNT PREFERENCES
                     Text(

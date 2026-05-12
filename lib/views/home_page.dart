@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
+import '../controllers/loyalty_controller.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:path_provider/path_provider.dart';
@@ -22,6 +23,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../utils/translations.dart';
 import 'promo_list_page.dart';
 import '../utils/popup_helper.dart';
+import '../utils/loyalty_constants.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -60,6 +62,17 @@ class _HomePageState extends State<HomePage> {
     _fetchPromos();
     _checkUnreadNotifications();
     _setupRealtime();
+    _checkLoyaltyRetention();
+  }
+
+  Future<void> _checkLoyaltyRetention() async {
+    if (AppSession.userId != null) {
+      try {
+        await LoyaltyController.checkRetention(AppSession.userId!);
+      } catch (e) {
+        debugPrint("Error checking loyalty retention: $e");
+      }
+    }
   }
 
   @override
@@ -101,7 +114,10 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> _fetchPromos() async {
     try {
-      final promos = await _homeController.fetchPromos();
+      final promos = await _homeController.fetchPromos(
+        userTier: AppSession.userTier,
+        userRole: AppSession.userRole,
+      );
       if (mounted) {
         setState(() {
           _promos = promos;
@@ -650,15 +666,35 @@ class _HomePageState extends State<HomePage> {
 
 
   void _broadcastToWhatsAppGroup(PromoModel promo) async {
-    String message = "Halo semuanya! 🌸\n\nAda promo menarik di *Indah Sari Salon*: \n\n*${promo.title}* \nHanya *${formatCurrency(promo.price)}*!\n\nTreatment: ${promo.description ?? '-'}\nBerlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\nYuk booking sekarang lewat aplikasi atau hubungi kami langsung!";
+    String groupLink = LoyaltyConstants.communityGroupLink;
+    String targetLabel = "Komunitas Indah Sari";
+
+    if (promo.targetAudience == 'silver') {
+      groupLink = LoyaltyConstants.silverGroupLink;
+      targetLabel = "Member Silver";
+    } else if (promo.targetAudience == 'gold') {
+      groupLink = LoyaltyConstants.goldGroupLink;
+      targetLabel = "Member Gold";
+    } else if (promo.targetAudience == 'platinum') {
+      groupLink = LoyaltyConstants.platinumGroupLink;
+      targetLabel = "Member Platinum";
+    }
+
+    String message = "Halo semuanya! 🌸\n\n"
+        "Ada promo menarik khusus *${targetLabel}* di *Indah Sari Salon*: \n\n"
+        "*${promo.title}* \n"
+        "Hanya *${formatCurrency(promo.price)}*!\n\n"
+        "Treatment: ${promo.description ?? '-'}\n"
+        "Berlaku sampai: ${DateFormat('dd MMM yyyy').format(promo.endAt)}\n\n"
+        "Yuk join grup untuk info lebih lanjut: $groupLink\n\n"
+        "Booking sekarang lewat aplikasi atau hubungi kami langsung!";
 
     try {
       if (mounted) {
-        PopupHelper.showInfo(context, "Menyiapkan broadcast promo...");
+        PopupHelper.showInfo(context, "Menyiapkan broadcast untuk ${targetLabel}...");
       }
 
       if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
-        // Download image to share directly with text
         final response = await http.get(Uri.parse(promo.imageUrl!));
         final bytes = response.bodyBytes;
         final temp = await getTemporaryDirectory();
@@ -666,18 +702,33 @@ class _HomePageState extends State<HomePage> {
         final file = File(path);
         await file.writeAsBytes(bytes);
 
-        // Share file with caption (this avoids "Paste" in WhatsApp)
         await Share.shareXFiles(
           [XFile(path)],
           text: message,
         );
       } else {
-        // Share text only if no image
         await Share.share(message);
+      }
+
+      // After sharing, ask if they want to open the group directly
+      if (mounted) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text("Berhasil menyiapkan share. Buka grup ${targetLabel}?"),
+                action: SnackBarAction(
+                  label: "BUKA",
+                  onPressed: () => launchUrl(Uri.parse(groupLink), mode: LaunchMode.externalApplication),
+                ),
+                duration: const Duration(seconds: 5),
+              ),
+            );
+          }
+        });
       }
     } catch (e) {
       debugPrint("Error broadcasting: $e");
-      // Fallback to clipboard if sharing fails
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
         PopupHelper.showInfo(context, "Gagal sharing langsung. Pesan disalin ke clipboard.");

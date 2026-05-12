@@ -6,6 +6,7 @@ class AppSession {
   static String? userRole;
   static String? userEmail;
   static String? userAvatar;
+  static String? userTier; // Added for loyalty feature
 
   static void clear() {
     userId = null;
@@ -13,5 +14,6 @@ class AppSession {
     userRole = null;
     userEmail = null;
     userAvatar = null;
+    userTier = null;
   }
 }

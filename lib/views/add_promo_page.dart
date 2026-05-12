@@ -32,6 +32,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
 
   bool _loading = false;
   bool _isPromoActive = true;
+  String _targetAudience = 'general'; // general, community, silver, gold, platinum
   
   XFile? _imageFile;
   final ImagePicker _picker = ImagePicker();
@@ -127,7 +128,6 @@ class _AddPromoPageState extends State<AddPromoPage> {
           if (mounted) {
             PopupHelper.showError(context, "Gagal upload gambar: $uploadError. Pastikan bucket 'treatments' sudah ada.");
           }
-          // Continue saving without image if upload fails, or return if you want to force image
         }
       }
 
@@ -150,6 +150,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
         'start_at': start.toIso8601String(),
         'end_at': end.toIso8601String(),
         'is_active': _isPromoActive,
+        'target_audience': _targetAudience,
       };
       
       try {
@@ -342,6 +343,37 @@ class _AddPromoPageState extends State<AddPromoPage> {
                           ),
                         ),
                       ],
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    _fieldLabel("TARGET AUDIENS"),
+                    const SizedBox(height: 8),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                      ),
+                      child: DropdownButtonHideUnderline(
+                        child: DropdownButton<String>(
+                          value: _targetAudience,
+                          isExpanded: true,
+                          icon: Icon(Icons.groups_outlined, color: primaryColor),
+                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
+                          items: [
+                            DropdownMenuItem(value: 'general', child: Text("Semua (General)")),
+                            DropdownMenuItem(value: 'community', child: Text("Komunitas (Grup Awal)")),
+                            DropdownMenuItem(value: 'silver', child: Text("Silver Member")),
+                            DropdownMenuItem(value: 'gold', child: Text("Gold Member")),
+                            DropdownMenuItem(value: 'platinum', child: Text("Platinum Member")),
+                          ],
+                          onChanged: (val) {
+                            if (val != null) setState(() => _targetAudience = val);
+                          },
+                        ),
+                      ),
                     ),
 
                     const SizedBox(height: 32),

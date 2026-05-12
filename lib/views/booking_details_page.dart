@@ -14,6 +14,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:flutter/services.dart';
 import 'booking_page.dart';
+import '../controllers/loyalty_controller.dart';
+import '../utils/loyalty_constants.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -71,6 +73,21 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           .update({'status': newStatus})
           .eq('id', widget.booking['id']);
       
+      if (newStatus.toLowerCase() == 'berhasil') {
+        final amount = widget.booking['total_price'] ?? 0;
+        final result = await LoyaltyController.processBookingCompletion(
+          amount: amount as num,
+          userId: widget.booking['user_id'] as int?,
+          customerPhone: widget.booking['customer_phone'] as String?,
+          customerEmail: widget.booking['customer_email'] as String?,
+        );
+        if (result != null && result['upgraded'] == true) {
+          _showTierUpgradeDialog(result['new_tier'] as String);
+          return; // Don't pop immediately so they can see the dialog
+        }
+      }
+
+      
       try {
         final userId = AppSession.userId;
         if (userId != null) {
@@ -96,6 +113,67 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         PopupHelper.showError(context, "Gagal memperbarui: $e");
       }
     }
+  }
+
+  void _showTierUpgradeDialog(String tier) {
+    final String groupUrl = LoyaltyConstants.groupLinkForTier(tier);
+    final String customerName = widget.booking['customer_name'] ?? 'Customer';
+    
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: Row(
+          children: [
+            Icon(Icons.stars, color: primaryColor),
+            const SizedBox(width: 10),
+            Text('$tier Member! 🎉', style: const TextStyle(fontWeight: FontWeight.bold)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hai $customerName, kamu telah memasuki $tier Member! '
+              'Silakan bergabung ke grup $tier kami yang tersedia.',
+              style: const TextStyle(fontSize: 15, height: 1.5),
+            ),
+            const SizedBox(height: 16),
+            Text('Link Grup $tier:', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+            const SizedBox(height: 4),
+            Text(groupUrl, style: const TextStyle(color: Colors.blue, decoration: TextDecoration.underline, fontSize: 11)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              Navigator.pop(context, true);
+            },
+            child: Text('Nanti Saja'.tr, style: TextStyle(color: mutedText)),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF25D366),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+            ),
+            onPressed: () async {
+              final uri = Uri.parse(groupUrl);
+              if (await canLaunchUrl(uri)) {
+                await launchUrl(uri, mode: LaunchMode.externalApplication);
+              }
+              if (mounted) {
+                Navigator.pop(context);
+                Navigator.pop(context, true);
+              }
+            },
+            child: const Text('Gabung Grup', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<void> _cancelBooking() async {

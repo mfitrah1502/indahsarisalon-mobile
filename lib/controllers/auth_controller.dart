@@ -30,6 +30,7 @@ class AuthController {
           AppSession.userRole = user.role;
           AppSession.userEmail = user.email;
           AppSession.userAvatar = user.avatar;
+          AppSession.userTier = user.membershipTier;
           return true;
         }
       }

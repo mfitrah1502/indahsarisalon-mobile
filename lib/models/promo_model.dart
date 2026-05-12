@@ -7,6 +7,7 @@ class PromoModel {
   final DateTime startAt;
   final DateTime endAt;
   final bool isActive;
+  final String targetAudience; // general, community, silver, gold, platinum
 
   PromoModel({
     this.id,
@@ -17,6 +18,7 @@ class PromoModel {
     required this.startAt,
     required this.endAt,
     required this.isActive,
+    this.targetAudience = 'general',
   });
 
   factory PromoModel.fromJson(Map<String, dynamic> json) {
@@ -29,6 +31,7 @@ class PromoModel {
       startAt: DateTime.parse(json['start_at'] as String),
       endAt: DateTime.parse(json['end_at'] as String),
       isActive: json['is_active'] as bool? ?? true,
+      targetAudience: json['target_audience'] as String? ?? 'general',
     );
   }
 }

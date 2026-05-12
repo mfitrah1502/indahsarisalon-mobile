@@ -74,7 +74,7 @@ class UserController {
   Future<List<Map<String, dynamic>>> fetchCustomersWithSpend() async {
     final usersData = await _supabase
         .from('users')
-        .select('id, name, email, phone, is_colour_circle, colour_circle_expired_at')
+        .select('id, name, email, phone, is_colour_circle, colour_circle_expired_at, membership_tier, total_spend, last_transaction_at')
         .eq('role', 'pelanggan');
 
     final bookingsData = await _supabase
@@ -99,6 +99,8 @@ class UserController {
         'key': key,
         'is_colour_circle': user['is_colour_circle'] ?? false,
         'colour_circle_expired_at': user['colour_circle_expired_at'],
+        'membership_tier': user['membership_tier'] ?? 'None',
+        'last_transaction_at': user['last_transaction_at'],
       };
     }
 

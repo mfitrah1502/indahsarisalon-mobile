@@ -5,16 +5,31 @@ import '../models/dashboard_stats_model.dart';
 class HomeController {
   final _supabase = Supabase.instance.client;
 
-  Future<List<PromoModel>> fetchPromos() async {
+  Future<List<PromoModel>> fetchPromos({String? userTier, String? userRole}) async {
     try {
       final now = DateTime.now().toIso8601String();
-      final data = await _supabase
+      var query = _supabase
           .from('promos')
-          .select('id, title, description, price, image_url, start_at, end_at, is_active')
+          .select('id, title, description, price, image_url, start_at, end_at, is_active, target_audience')
           .eq('is_active', true)
           .lte('start_at', now)
-          .gte('end_at', now)
-          .order('created_at', ascending: false);
+          .gte('end_at', now);
+
+      // Filtering based on tier if provided
+      // If user is Admin/Owner, bypass filtering to see all promos
+      final bool isAdmin = userRole == 'owner' || userRole == 'admin'; 
+
+      if (!isAdmin) {
+        if (userTier != null && userTier != 'None') {
+          final tier = userTier.toLowerCase();
+          query = query.or('target_audience.eq.general,target_audience.eq.community,target_audience.eq.$tier');
+        } else {
+          // If no tier (Guest or None), show general and community promos
+          query = query.inFilter('target_audience', ['general', 'community']);
+        }
+      }
+
+      final data = await query.order('created_at', ascending: false);
       
       return (data as List).map((e) => PromoModel.fromJson(e)).toList();
     } catch (e) {
