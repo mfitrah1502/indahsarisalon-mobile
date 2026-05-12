@@ -41,7 +41,7 @@ class _ReportPageState extends State<ReportPage> {
   List<IncomeDetail> incomeDetails = [];
   List<ExpenseDetail> expenseDetails = [];
   bool isLoading = true;
-  
+
   final ReportController _reportController = ReportController();
 
   @override
@@ -84,7 +84,11 @@ class _ReportPageState extends State<ReportPage> {
   }
 
   String formatCurrency(num amount) {
-    return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount);
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(amount);
   }
 
   String formatDateRange(DateTimeRange? range) {
@@ -102,7 +106,7 @@ class _ReportPageState extends State<ReportPage> {
       _selectedFilter = filter;
       final now = DateTime.now();
       if (filter == 'Weekly') {
-        int currentDay = now.weekday; 
+        int currentDay = now.weekday;
         DateTime start = now.subtract(Duration(days: currentDay - 1));
         DateTime end = start.add(const Duration(days: 6));
         _dateRange = DateTimeRange(start: start, end: end);
@@ -145,7 +149,7 @@ class _ReportPageState extends State<ReportPage> {
                             color: Colors.black.withOpacity(0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
-                          )
+                          ),
                         ]
                       : [],
                 ),
@@ -154,7 +158,9 @@ class _ReportPageState extends State<ReportPage> {
                     filter.tr,
                     style: TextStyle(
                       color: isSelected ? primaryColor : mutedText,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                       fontSize: 13,
                     ),
                   ),
@@ -171,15 +177,20 @@ class _ReportPageState extends State<ReportPage> {
     final nameCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
     String category = 'gaji karyawan';
-    
+
     await showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-              title: const Text("Tambah Pengeluaran", style: TextStyle(fontWeight: FontWeight.bold)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              title: const Text(
+                "Tambah Pengeluaran",
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -188,7 +199,9 @@ class _ReportPageState extends State<ReportPage> {
                     decoration: InputDecoration(
                       labelText: "Nama Pengeluaran",
                       hintText: "Contoh: Listrik, Gaji Budi",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -196,11 +209,19 @@ class _ReportPageState extends State<ReportPage> {
                     value: category,
                     decoration: InputDecoration(
                       labelText: "Kategori",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                     items: const [
-                      DropdownMenuItem(value: "gaji karyawan", child: Text("Gaji Karyawan")),
-                      DropdownMenuItem(value: "maintenance", child: Text("Maintenance")),
+                      DropdownMenuItem(
+                        value: "gaji karyawan",
+                        child: Text("Gaji Karyawan"),
+                      ),
+                      DropdownMenuItem(
+                        value: "maintenance",
+                        child: Text("Maintenance"),
+                      ),
                       DropdownMenuItem(value: "others", child: Text("Others")),
                     ],
                     onChanged: (val) {
@@ -213,7 +234,9 @@ class _ReportPageState extends State<ReportPage> {
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
                       labelText: "Jumlah (Rp)",
-                      border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
                     ),
                   ),
                 ],
@@ -226,18 +249,27 @@ class _ReportPageState extends State<ReportPage> {
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
                     backgroundColor: primaryColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
                   ),
                   onPressed: () async {
                     final amount = int.tryParse(amountCtrl.text) ?? 0;
                     final name = nameCtrl.text.trim();
                     if (amount > 0 && name.isNotEmpty) {
                       try {
-                        await _reportController.addExpense(name: name, amount: amount, category: category);
+                        await _reportController.addExpense(
+                          name: name,
+                          amount: amount,
+                          category: category,
+                        );
                         if (!context.mounted) return;
                         Navigator.pop(context);
                         _fetchData();
-                        PopupHelper.showSuccess(context, "Pengeluaran berhasil ditambahkan");
+                        PopupHelper.showSuccess(
+                          context,
+                          "Pengeluaran berhasil ditambahkan",
+                        );
                       } catch (e) {
                         debugPrint("Error adding expense: $e");
                         if (!context.mounted) return;
@@ -247,13 +279,16 @@ class _ReportPageState extends State<ReportPage> {
                       PopupHelper.showError(context, "Harap isi semua field");
                     }
                   },
-                  child: const Text("Simpan", style: TextStyle(color: Colors.white)),
+                  child: const Text(
+                    "Simpan",
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
               ],
             );
-          }
+          },
         );
-      }
+      },
     );
   }
 
@@ -271,14 +306,13 @@ class _ReportPageState extends State<ReportPage> {
         summary: summary,
         dateRange: _dateRange,
       );
-      
+
       if (!context.mounted) return;
 
       // Open Share Sheet so user can Save to Files / WhatsApp / etc.
-      await Share.shareXFiles(
-        [XFile(path)],
-        subject: "Report Salon Indah Sari",
-      );
+      await Share.shareXFiles([
+        XFile(path),
+      ], subject: "Report Salon Indah Sari");
 
       PopupHelper.showInfo(context, "PDF Report ready to share/save".tr);
     } catch (e) {
@@ -290,7 +324,7 @@ class _ReportPageState extends State<ReportPage> {
 
   Widget _buildIncomeExpenseChart() {
     if (dailyStats.isEmpty) return const SizedBox();
-    
+
     double maxY = 0;
     for (var s in dailyStats) {
       if (s.income > maxY) maxY = s.income.toDouble();
@@ -298,7 +332,7 @@ class _ReportPageState extends State<ReportPage> {
       if (s.profit > maxY) maxY = s.profit.toDouble();
     }
     if (maxY == 0) maxY = 100000;
-    
+
     return SizedBox(
       height: 250,
       child: BarChart(
@@ -314,14 +348,21 @@ class _ReportPageState extends State<ReportPage> {
                 getTitlesWidget: (double value, TitleMeta meta) {
                   int idx = value.toInt();
                   if (idx >= 0 && idx < dailyStats.length) {
-                    if (dailyStats.length > 7 && idx % (dailyStats.length ~/ 5) != 0) return const SizedBox();
+                    if (dailyStats.length > 7 &&
+                        idx % (dailyStats.length ~/ 5) != 0)
+                      return const SizedBox();
                     final date = dailyStats[idx].date;
                     final isYearly = _selectedFilter == 'Tahunan';
                     return Padding(
                       padding: const EdgeInsets.only(top: 8.0),
                       child: Text(
-                        isYearly ? DateFormat('MMM').format(date) : DateFormat('dd MMM').format(date), 
-                        style: TextStyle(fontSize: 11, color: Colors.grey.shade600)
+                        isYearly
+                            ? DateFormat('MMM').format(date)
+                            : DateFormat('dd MMM').format(date),
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade600,
+                        ),
                       ),
                     );
                   }
@@ -347,13 +388,24 @@ class _ReportPageState extends State<ReportPage> {
                   if (value == 0) text = "0";
                   return Padding(
                     padding: const EdgeInsets.only(right: 8.0),
-                    child: Text(text, style: TextStyle(fontSize: 10, color: Colors.grey.shade600), textAlign: TextAlign.right),
+                    child: Text(
+                      text,
+                      style: TextStyle(
+                        fontSize: 10,
+                        color: Colors.grey.shade600,
+                      ),
+                      textAlign: TextAlign.right,
+                    ),
                   );
                 },
               ),
             ),
-            topTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: const AxisTitles(sideTitles: SideTitles(showTitles: false)),
+            topTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
+            rightTitles: const AxisTitles(
+              sideTitles: SideTitles(showTitles: false),
+            ),
           ),
           gridData: FlGridData(
             show: true,
@@ -383,19 +435,25 @@ class _ReportPageState extends State<ReportPage> {
                   toY: s.expense > 0 ? s.expense.toDouble() : 0,
                   color: Colors.redAccent,
                   width: 5,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(2),
+                  ),
                 ),
                 BarChartRodData(
                   toY: s.income > 0 ? s.income.toDouble() : 0,
                   color: Colors.blueAccent,
                   width: 5,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(2),
+                  ),
                 ),
                 BarChartRodData(
                   toY: s.profit > 0 ? s.profit.toDouble() : 0,
                   color: Colors.amber.shade300,
                   width: 5,
-                  borderRadius: const BorderRadius.vertical(top: Radius.circular(2)),
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(2),
+                  ),
                 ),
               ],
             );
@@ -412,36 +470,70 @@ class _ReportPageState extends State<ReportPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 20.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Center(
-                  child: Text(
-                    "Report".tr,
-                    style: TextStyle(
-                      color: primaryColor,
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                Row(
+                  children: [
+                    GestureDetector(
+                      onTap: () => Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(builder: (_) => const HomePage()),
+                        (r) => false,
+                      ),
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: primaryColor,
+                        size: 28,
+                      ),
                     ),
-                  ),
+                    Expanded(
+                      child: Center(
+                        child: Text(
+                          "Report".tr,
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 28), // balance for the back button
+                  ],
                 ),
                 const SizedBox(height: 24),
 
                 _buildFilterSlider(),
                 const SizedBox(height: 16),
-                
+
                 if (AppSession.userRole == 'owner') ...[
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       onPressed: _showAddExpenseDialog,
-                      icon: const Icon(Icons.add, color: Colors.white, size: 20),
-                      label: Text("ADD EXPENSE".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                      icon: const Icon(
+                        Icons.add,
+                        color: Colors.white,
+                        size: 20,
+                      ),
+                      label: Text(
+                        "ADD EXPENSE".tr,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: primaryColor,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
                     ),
                   ),
@@ -468,22 +560,42 @@ class _ReportPageState extends State<ReportPage> {
                                   width: 4,
                                   decoration: const BoxDecoration(
                                     color: Colors.blueAccent,
-                                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                                    borderRadius: BorderRadius.horizontal(
+                                      left: Radius.circular(4),
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12.0,
+                                      vertical: 12.0,
+                                    ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Text("Total Income".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                                        Text(
+                                          "Total Income".tr,
+                                          style: TextStyle(
+                                            color: mutedText,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                         const SizedBox(height: 8),
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerLeft,
-                                          child: Text(formatCurrency(totalIncome), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                          child: Text(
+                                            formatCurrency(totalIncome),
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.black,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -507,22 +619,42 @@ class _ReportPageState extends State<ReportPage> {
                                   width: 4,
                                   decoration: const BoxDecoration(
                                     color: Colors.redAccent,
-                                    borderRadius: BorderRadius.horizontal(left: Radius.circular(4)),
+                                    borderRadius: BorderRadius.horizontal(
+                                      left: Radius.circular(4),
+                                    ),
                                   ),
                                 ),
                                 Expanded(
                                   child: Padding(
-                                    padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 12.0),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 12.0,
+                                      vertical: 12.0,
+                                    ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
-                                        Text("Expenses".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                                        Text(
+                                          "Expenses".tr,
+                                          style: TextStyle(
+                                            color: mutedText,
+                                            fontSize: 13,
+                                          ),
+                                        ),
                                         const SizedBox(height: 8),
                                         FittedBox(
                                           fit: BoxFit.scaleDown,
                                           alignment: Alignment.centerLeft,
-                                          child: Text(formatCurrency(totalExpense), style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
+                                          child: Text(
+                                            formatCurrency(totalExpense),
+                                            style: const TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.w900,
+                                              color: Colors.black,
+                                            ),
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -540,33 +672,88 @@ class _ReportPageState extends State<ReportPage> {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text("Sales Report".tr, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w900, color: Colors.black)),
-                      Text("More >".tr, style: const TextStyle(fontSize: 14, color: Colors.redAccent)),
+                      Text(
+                        "Sales Report".tr,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Colors.black,
+                        ),
+                      ),
+                      Text(
+                        "More >".tr,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: Colors.redAccent,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 4),
-                  Text(formatDateRange(_dateRange), style: TextStyle(color: Colors.grey.shade500, fontSize: 14)),
+                  Text(
+                    formatDateRange(_dateRange),
+                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                  ),
                   const SizedBox(height: 32),
-                  
+
                   _buildIncomeExpenseChart(),
-                  
+
                   const SizedBox(height: 24),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.blueAccent, borderRadius: BorderRadius.circular(3))),
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.blueAccent,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
                       const SizedBox(width: 6),
-                      Text("Income".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text(
+                        "Income".tr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.redAccent, borderRadius: BorderRadius.circular(3))),
+
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.redAccent,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
                       const SizedBox(width: 6),
-                      Text("Expenses".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text(
+                        "Expenses".tr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
                       const SizedBox(width: 16),
-                      
-                      Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.amber.shade300, borderRadius: BorderRadius.circular(3))),
+
+                      Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: Colors.amber.shade300,
+                          borderRadius: BorderRadius.circular(3),
+                        ),
+                      ),
                       const SizedBox(width: 6),
-                      Text("Profit".tr, style: TextStyle(fontSize: 12, color: Colors.grey.shade700)),
+                      Text(
+                        "Profit".tr,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey.shade700,
+                        ),
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -577,7 +764,11 @@ class _ReportPageState extends State<ReportPage> {
                       height: 56,
                       child: ElevatedButton.icon(
                         onPressed: _exportToPdf,
-                        icon: const Icon(Icons.download_rounded, color: Colors.white, size: 20),
+                        icon: const Icon(
+                          Icons.download_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
                         label: Text(
                           "DOWNLOAD REPORT PDF",
                           style: TextStyle(
@@ -669,11 +860,7 @@ class _ReportPageState extends State<ReportPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? primaryColor : mutedText,
-            size: 26,
-          ),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
           Text(
             label,

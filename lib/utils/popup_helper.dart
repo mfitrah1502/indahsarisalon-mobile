@@ -11,7 +11,7 @@ class PopupHelper {
         title: "Success".tr,
         message: message,
         icon: Icons.check_circle_outline,
-        color: const Color(0xFF10B981),
+        color: const Color(0xFFD660A1),
         onConfirm: onConfirm,
       ),
     );

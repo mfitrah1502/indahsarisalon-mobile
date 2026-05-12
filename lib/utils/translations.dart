@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-
+// translations.dart - translation utility
 class AppTranslations {
   static String currentLanguage = 'English'; // English or Indonesia
 
@@ -13,7 +12,6 @@ class AppTranslations {
       'Edit': 'Ubah',
       'Delete': 'Hapus',
       'Close': 'Tutup',
-
       // Settings Page
       'Settings': 'Pengaturan',
       'ACCOUNT PREFERENCES': 'PREFERENSI AKUN',
@@ -27,14 +25,12 @@ class AppTranslations {
       'Select Language': 'Pilih Bahasa',
       'Logout': 'Keluar',
       'Are you sure you want to log out?': 'Apakah Anda yakin ingin keluar?',
-
-      // Navigation (not translated as per requirement)
+      // Navigation
       'HOME': 'HOME',
       'BOOKING': 'BOOKING',
       'SERVICES': 'SERVICES',
       'REPORT': 'REPORT',
       'SETTINGS': 'SETTINGS',
-
       // Home Page
       'Hello,': 'Halo,',
       'Search bookings, customers...': 'Cari pesanan, pelanggan...',
@@ -53,7 +49,6 @@ class AppTranslations {
       'Share to WhatsApp': 'Bagikan ke WhatsApp',
       'Promo': 'Promo',
       'Rp': 'Rp',
-
       // Booking List Page
       'Today': 'Hari Ini',
       'Yesterday': 'Kemarin',
@@ -77,7 +72,6 @@ class AppTranslations {
       'Cancelled': 'Dibatalkan',
       'Search bookings...': 'Cari pesanan...',
       'No bookings found.': 'Tidak ada pesanan yang ditemukan.',
-
       // Manage Services Page
       'Delete Service': 'Hapus Layanan',
       'Are you sure you want to delete': 'Yakin ingin menghapus',
@@ -102,7 +96,6 @@ class AppTranslations {
       ' services': ' layanan',
       'No services.': 'Tidak ada layanan.',
       ' min': ' mnt',
-
       // Select Services Page
       'Choose or adjust service price': 'Pilih atau sesuaikan harga layanan',
       'STANDARD PRICE': 'HARGA STANDAR',
@@ -121,7 +114,6 @@ class AppTranslations {
       ' services selected': ' layanan dipilih',
       'Select Stylist Above': 'Pilih Stylist di Atas',
       'Continue to Schedule': 'Lanjut ke Jadwal',
-      
       // Booking Details Page
       'Cancel Booking?': 'Batalkan Booking?',
       'Cancelled bookings cannot be restored.': 'Booking yang dibatalkan tidak dapat dikembalikan.',
@@ -136,8 +128,7 @@ class AppTranslations {
       'No phone number': 'Belum ada nomor HP',
       'Mark as Done': 'Tandai Selesai',
       'Cancel Booking': 'Batalkan Booking',
-      'This booking is already ': 'Booking ini sudah berstatus ',
-
+      'This booking is already ': 'Booking ini sudah ',
       // Edit Profile Page
       'Profile updated successfully!': 'Profil berhasil diperbarui!',
       'Failed to update profile': 'Gagal memperbarui profil',
@@ -148,7 +139,6 @@ class AppTranslations {
       'PHONE NUMBER': 'NOMOR TELEPON',
       'HOME ADDRESS': 'ALAMAT RUMAH',
       'DISCARD CHANGES': 'BATALKAN PERUBAHAN',
-
       // Customer List Page
       'Delete Customer?': 'Hapus Pelanggan?',
       'Are you sure you want to delete ': 'Apakah Anda yakin ingin menghapus ',
@@ -161,14 +151,12 @@ class AppTranslations {
       'Select': 'Pilih',
       'Search name or phone number...': 'Cari nama atau nomor HP...',
       'No customer data yet': 'Belum ada data pelanggan',
-
-      // Manage Services Page
+      // Manage Services Page (duplicate label kept for consistency)
       'Manage Services': 'Kelola Layanan',
       'Categories': 'Kategori',
       'Search services...': 'Cari layanan...',
       'No services found.': 'Layanan tidak ditemukan.',
       'Add Service': 'Tambah Layanan',
-
       // Report Page
       'Total Income': 'Total Pemasukan',
       'Expenses': 'Pengeluaran',
@@ -181,7 +169,49 @@ class AppTranslations {
       'DOWNLOAD REPORT EXCEL': 'DOWNLOAD LAPORAN EXCEL',
       'Income': 'Pemasukan',
       'Profit': 'Keuntungan',
-    }
+      // Additional notifications and messages
+      'Hi ': 'Hai ',
+      ', you have reached ': ', Anda telah mencapai ',
+      ' Member! Please join our ': ' Member! Silakan bergabung dengan grup ',
+      ' group available.': ' kami yang tersedia.',
+      ' Group Link:': ' Link Grup:',
+      'Later': 'Nanti',
+      'Join Group': 'Gabung Grup',
+      'Cancel Booking?': 'Batalkan Pesanan?',
+      'Cancelled bookings cannot be restored.': 'Pesanan yang dibatalkan tidak dapat dikembalikan.',
+      'Data layanan tidak lengkap untuk reschedule.': 'Data layanan tidak lengkap untuk reschedule.',
+      'ID Stylist tidak ditemukan.': 'ID Stylist tidak ditemukan.',
+      'Nomor telepon pelanggan tidak tersedia.': 'Nomor telepon pelanggan tidak tersedia.',
+      'Hello ': 'Halo ',
+      ', this is a reminder from *Indah Sari Salon*. 🌸\n\n': ', ini adalah pengingat dari *Indah Sari Salon*. 🌸\n\n',
+      'Your treatment is scheduled at *': 'Perawatan Anda dijadwalkan pukul *',
+      ' WIB*. Any changes to the schedule or attendance confirmation? \n\n': ' WIB*. Ada perubahan jadwal atau konfirmasi kehadiran? \n\n',
+      'Thank you!': 'Terima kasih!',
+      'Gagal membuka WhatsApp.': 'Gagal membuka WhatsApp.',
+      '*NEW BOOKING - INDAH SARI SALON*\n\n': '*PESANAN BARU - INDAH SARI SALON*\n\n',
+      '📍 *Stylist:* ': '📍 *Stylist:* ',
+      '👤 *Customer:* ': '👤 *Pelanggan:* ',
+      '📅 *Schedule:* ': '📅 *Jadwal:* ',
+      '💇 *Treatment:* ': '💇 *Perawatan:* ',
+      '_Please be ready before the booking time. Thank you!_': '_Harap bersiap sebelum waktu pesanan. Terima kasih!_',
+      'Pesan disalin ke clipboard.': 'Pesan disalin ke clipboard.',
+      'Pembayaran Tunai': 'Pembayaran Tunai',
+      'Masukkan jumlah uang yang diterima:': 'Masukkan jumlah uang yang diterima:',
+      'Jumlah Bayar': 'Jumlah Bayar',
+      'Batal': 'Batal',
+      'Tampilkan Struk': 'Tampilkan Struk',
+      'TIME': 'WAKTU',
+      'TOTAL / METODE': 'TOTAL / METODE',
+      'CUSTOMER INFORMATION': 'INFORMASI PELANGGAN',
+      'No phone number': 'Tidak ada nomor telepon',
+      'Reminder WA': 'Ingatkan WA',
+      'Broadcast': 'Broadcast',
+      'Reschedule': 'Reschedule',
+      'Mark as Done': 'Selesai',
+      'Cancel Booking': 'Batalkan Pesanan',
+      'This booking is already ': 'Pesanan ini sudah ',
+      'View Receipt': 'Lihat Struk',
+    },
   };
 
   static String tr(String text) {

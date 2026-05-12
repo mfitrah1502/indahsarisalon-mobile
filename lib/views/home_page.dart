@@ -170,6 +170,21 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  void _navigateToBooking() {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(builder: (context) => const BookingListPage()),
+      (route) => false,
+    );
+  }
+
+  void _navigateToCustomers() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const CustomerListPage()),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final todayFormatted = DateFormat('MMMM d').format(DateTime.now()).toUpperCase();
@@ -482,7 +497,7 @@ class _HomePageState extends State<HomePage> {
                 else ...[
                   // Stat Cards
                   GestureDetector(
-                    onTap: _navigateToReport,
+                    onTap: _navigateToBooking,
                     child: _buildStatCard(
                       title: "TOTAL BOOKINGS TODAY".tr,
                       value: "$todayBookings",
@@ -508,7 +523,7 @@ class _HomePageState extends State<HomePage> {
                   ],
                   const SizedBox(height: 16),
                   GestureDetector(
-                    onTap: _navigateToReport,
+                    onTap: _navigateToCustomers,
                     child: _buildStatCard(
                       title: "NUMBER OF CUSTOMERS".tr,
                       value: "$todayCustomers",

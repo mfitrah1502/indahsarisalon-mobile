@@ -15,7 +15,8 @@ class _PresencePageState extends State<PresencePage> {
   final Color mutedText = const Color(0xFF64748B);
 
   List<Map<String, dynamic>> _staffs = [];
-  Map<int, String> _absensiMap = {}; // Maps user_id to status ('hadir' or 'off') for the selected date
+  Map<int, String> _absensiMap =
+      {}; // Maps user_id to status ('hadir' or 'off') for the selected date
   bool _isLoading = true;
   String _searchQuery = "";
 
@@ -37,9 +38,10 @@ class _PresencePageState extends State<PresencePage> {
   Future<void> _fetchData() async {
     try {
       setState(() => _isLoading = true);
-      
+
       final selectedDate = _dates[_selectedDateIndex];
-      final dateStr = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2,'0')}-${selectedDate.day.toString().padLeft(2,'0')}";
+      final dateStr =
+          "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
 
       // Fetch all staffs
       final usersData = await Supabase.instance.client
@@ -49,7 +51,7 @@ class _PresencePageState extends State<PresencePage> {
           .neq('role', 'pelanggan')
           .eq('status', 'aktif') // Only active employees
           .order('name');
-          
+
       // Fetch absensi for the selected date
       final absensiData = await Supabase.instance.client
           .from('absensi')
@@ -60,7 +62,7 @@ class _PresencePageState extends State<PresencePage> {
       for (var row in absensiData) {
         newAbsensiMap[row['user_id'] as int] = row['status'] as String;
       }
-      
+
       if (mounted) {
         setState(() {
           _staffs = List<Map<String, dynamic>>.from(usersData);
@@ -79,7 +81,8 @@ class _PresencePageState extends State<PresencePage> {
   Future<void> _updateStatus(int userId, String newStatus) async {
     try {
       final selectedDate = _dates[_selectedDateIndex];
-      final dateStr = "${selectedDate.year}-${selectedDate.month.toString().padLeft(2,'0')}-${selectedDate.day.toString().padLeft(2,'0')}";
+      final dateStr =
+          "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
 
       // Update local optimistically
       if (mounted) {
@@ -99,17 +102,18 @@ class _PresencePageState extends State<PresencePage> {
       if (existing != null) {
         await Supabase.instance.client
             .from('absensi')
-            .update({'status': newStatus, 'updated_at': DateTime.now().toIso8601String()})
+            .update({
+              'status': newStatus,
+              'updated_at': DateTime.now().toIso8601String(),
+            })
             .eq('id', existing['id']);
       } else {
-        await Supabase.instance.client
-            .from('absensi')
-            .insert({
-              'user_id': userId,
-              'tanggal': dateStr,
-              'status': newStatus,
-              'created_at': DateTime.now().toIso8601String(),
-            });
+        await Supabase.instance.client.from('absensi').insert({
+          'user_id': userId,
+          'tanggal': dateStr,
+          'status': newStatus,
+          'created_at': DateTime.now().toIso8601String(),
+        });
       }
     } catch (e) {
       debugPrint("Error updating absensi: $e");
@@ -131,12 +135,19 @@ class _PresencePageState extends State<PresencePage> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: primaryColor,
+                      size: 28,
+                    ),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -162,7 +173,10 @@ class _PresencePageState extends State<PresencePage> {
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: const Color(0xFFE2E8F0).withOpacity(0.5),
                   borderRadius: BorderRadius.circular(12),
@@ -179,7 +193,7 @@ class _PresencePageState extends State<PresencePage> {
               ),
             ),
             const SizedBox(height: 24),
-            
+
             // Date Selector
             SizedBox(
               height: 80,
@@ -191,8 +205,16 @@ class _PresencePageState extends State<PresencePage> {
                 itemBuilder: (context, index) {
                   final isSelected = index == _selectedDateIndex;
                   final d = _dates[index];
-                  const dayNames = ['Mon','Tue','Wed','Thu','Fri','Sat','Sun'];
-                  
+                  const dayNames = [
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
+                  ];
+
                   return GestureDetector(
                     onTap: () {
                       if (_selectedDateIndex != index) {
@@ -206,7 +228,9 @@ class _PresencePageState extends State<PresencePage> {
                       decoration: BoxDecoration(
                         color: isSelected ? primaryColor : Colors.white,
                         borderRadius: BorderRadius.circular(16),
-                        border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                        border: isSelected
+                            ? null
+                            : Border.all(color: const Color(0xFFE2E8F0)),
                       ),
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -225,7 +249,9 @@ class _PresencePageState extends State<PresencePage> {
                             style: TextStyle(
                               fontSize: 20,
                               fontWeight: FontWeight.bold,
-                              color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                              color: isSelected
+                                  ? Colors.white
+                                  : const Color(0xFF1E293B),
                             ),
                           ),
                         ],
@@ -242,153 +268,197 @@ class _PresencePageState extends State<PresencePage> {
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
                   : filteredStaffs.isEmpty
-                      ? Center(child: Text("No staff found.", style: TextStyle(color: mutedText)))
-                      : ListView.separated(
-                          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-                          itemCount: filteredStaffs.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 16),
-                          itemBuilder: (context, index) {
-                            final staff = filteredStaffs[index];
-                            final status = _absensiMap[staff['id']] ?? 'hadir'; // Default hadir if no record
-                            final isAktif = status != 'off';
+                  ? Center(
+                      child: Text(
+                        "No staff found.",
+                        style: TextStyle(color: mutedText),
+                      ),
+                    )
+                  : ListView.separated(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 8.0,
+                      ),
+                      itemCount: filteredStaffs.length,
+                      separatorBuilder: (context, index) =>
+                          const SizedBox(height: 16),
+                      itemBuilder: (context, index) {
+                        final staff = filteredStaffs[index];
+                        final status =
+                            _absensiMap[staff['id']] ??
+                            'hadir'; // Default hadir if no record
+                        final isAktif = status != 'off';
 
-                            return Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(16),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
+                        return Container(
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(16),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.02),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
                               ),
-                              child: Row(
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              // Avatar
+                              Container(
+                                width: 56,
+                                height: 56,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: const Color(0xFFF1F5F9),
+                                  image:
+                                      staff['avatar'] != null &&
+                                          staff['avatar'].toString().isNotEmpty
+                                      ? DecorationImage(
+                                          image: NetworkImage(staff['avatar']),
+                                          fit: BoxFit.cover,
+                                        )
+                                      : null,
+                                ),
+                                child:
+                                    staff['avatar'] == null ||
+                                        staff['avatar'].toString().isEmpty
+                                    ? const Icon(
+                                        Icons.person,
+                                        color: Color(0xFF94A3B8),
+                                        size: 32,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 16),
+
+                              // Info
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      staff['name'] ?? '-',
+                                      style: TextStyle(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: primaryColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      staff['role'] ?? 'Stylist',
+                                      style: TextStyle(
+                                        color: mutedText,
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+
+                              // Action Buttons
+                              Column(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Avatar
-                                  Container(
-                                    width: 56, height: 56,
-                                    decoration: BoxDecoration(
-                                      borderRadius: BorderRadius.circular(12),
-                                      color: const Color(0xFFF1F5F9),
-                                      image: staff['avatar'] != null && staff['avatar'].toString().isNotEmpty
-                                          ? DecorationImage(
-                                              image: NetworkImage(staff['avatar']),
-                                              fit: BoxFit.cover,
-                                            )
-                                          : null,
-                                    ),
-                                    child: staff['avatar'] == null || staff['avatar'].toString().isEmpty
-                                        ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 32)
-                                        : null,
-                                  ),
-                                  const SizedBox(width: 16),
-                                  
-                                  // Info
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          staff['name'] ?? '-',
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 16,
-                                            color: primaryColor,
-                                          ),
-                                        ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          staff['role'] ?? 'Stylist',
-                                          style: TextStyle(
-                                            color: mutedText,
-                                            fontSize: 13,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  
-                                  // Action Buttons
-                                  Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      GestureDetector(
-                                        onTap: () => _updateStatus(staff['id'], 'hadir'),
-                                        child: Container(
-                                          width: 100,
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: isAktif ? primaryColor : const Color(0xFFF1F5F9),
-                                            borderRadius: BorderRadius.circular(20),
-                                            border: Border.all(
-                                              color: isAktif ? primaryColor : const Color(0xFFE2E8F0),
-                                            ),
-                                          ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.check_circle_outline,
-                                                size: 14,
-                                                color: isAktif ? Colors.white : primaryColor,
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                "Presence",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: isAktif ? Colors.white : primaryColor,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _updateStatus(staff['id'], 'hadir'),
+                                    child: Container(
+                                      width: 100,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: isAktif
+                                            ? primaryColor
+                                            : const Color(0xFFF1F5F9),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: isAktif
+                                              ? primaryColor
+                                              : const Color(0xFFE2E8F0),
                                         ),
                                       ),
-                                      const SizedBox(height: 8),
-                                      GestureDetector(
-                                        onTap: () => _updateStatus(staff['id'], 'off'),
-                                        child: Container(
-                                          width: 100,
-                                          padding: const EdgeInsets.symmetric(vertical: 8),
-                                          decoration: BoxDecoration(
-                                            color: !isAktif ? const Color(0xFFFEE2E2) : const Color(0xFFF8FAFC),
-                                            borderRadius: BorderRadius.circular(20),
-                                            border: Border.all(
-                                              color: !isAktif ? const Color(0xFFFCA5A5) : const Color(0xFFE2E8F0),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.check_circle_outline,
+                                            size: 14,
+                                            color: isAktif
+                                                ? Colors.white
+                                                : primaryColor,
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "Presence",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: isAktif
+                                                  ? Colors.white
+                                                  : primaryColor,
                                             ),
                                           ),
-                                          child: Row(
-                                            mainAxisAlignment: MainAxisAlignment.center,
-                                            children: [
-                                              Icon(
-                                                Icons.cancel_outlined,
-                                                size: 14,
-                                                color: !isAktif ? const Color(0xFFDC2626) : const Color(0xFFEF4444),
-                                              ),
-                                              const SizedBox(width: 4),
-                                              Text(
-                                                "Off Work",
-                                                style: TextStyle(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: !isAktif ? const Color(0xFFDC2626) : const Color(0xFFEF4444),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                                  const SizedBox(height: 8),
+                                  GestureDetector(
+                                    onTap: () =>
+                                        _updateStatus(staff['id'], 'off'),
+                                    child: Container(
+                                      width: 100,
+                                      padding: const EdgeInsets.symmetric(
+                                        vertical: 8,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: !isAktif
+                                            ? const Color(0xFFFEE2E2)
+                                            : const Color(0xFFF8FAFC),
+                                        borderRadius: BorderRadius.circular(20),
+                                        border: Border.all(
+                                          color: !isAktif
+                                              ? const Color(0xFFFCA5A5)
+                                              : const Color(0xFFE2E8F0),
                                         ),
                                       ),
-                                    ],
-                                  )
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.center,
+                                        children: [
+                                          Icon(
+                                            Icons.cancel_outlined,
+                                            size: 14,
+                                            color: !isAktif
+                                                ? const Color(0xFFDC2626)
+                                                : const Color(0xFFEF4444),
+                                          ),
+                                          const SizedBox(width: 4),
+                                          Text(
+                                            "Off Work",
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: !isAktif
+                                                  ? const Color(0xFFDC2626)
+                                                  : const Color(0xFFEF4444),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
                                 ],
                               ),
-                            );
-                          },
-                        ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
             ),
           ],
         ),

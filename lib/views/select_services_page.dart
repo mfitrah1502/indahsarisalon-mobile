@@ -25,16 +25,20 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF4F7F9);
   final Color mutedText = const Color(0xFF64748B);
-  final _currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final _currencyFormat = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   int _selectedIndex = 1;
   String _selectedCategory = 'All';
   String _searchQuery = '';
-  
+
   bool _loadingCategories = true;
   bool _loadingServices = true;
   List<String> _categories = ['All'];
-  
+
   List<Map<String, dynamic>> _allServices = [];
   final ServiceController _serviceController = ServiceController();
 
@@ -60,11 +64,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     final now = DateTime.now();
     _dates = List.generate(7, (i) {
       final d = now.add(Duration(days: i));
-      const dayNames = ['MON','TUE','WED','THU','FRI','SAT','SUN'];
+      const dayNames = ['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'];
       return {
         "day": dayNames[d.weekday - 1],
         "date": d.day.toString(),
-        "fullDate": "${d.year}-${d.month.toString().padLeft(2,'0')}-${d.day.toString().padLeft(2,'0')}",
+        "fullDate":
+            "${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}",
         "rawDate": d,
       };
     });
@@ -74,8 +79,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     setState(() => _loadingStylists = true);
     try {
       final selectedDate = _dates[_selectedDateIndex]["rawDate"] as DateTime;
-      final availableStylists = await _userController.fetchAvailableStylists(selectedDate);
-      
+      final availableStylists = await _userController.fetchAvailableStylists(
+        selectedDate,
+      );
+
       if (mounted) {
         setState(() {
           _stylists = availableStylists;
@@ -99,11 +106,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       final servicesData = data['services'] as List<ServiceModel>;
 
       final services = servicesData.map((s) {
-        return {
-          'service': s,
-          'selected': false,
-          'adjusted_price': null,
-        };
+        return {'service': s, 'selected': false, 'adjusted_price': null};
       }).toList();
 
       setState(() {
@@ -114,20 +117,26 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       });
     } catch (e) {
       debugPrint('Error fetching services: $e');
-      if (mounted) setState(() { _loadingCategories = false; _loadingServices = false; });
+      if (mounted)
+        setState(() {
+          _loadingCategories = false;
+          _loadingServices = false;
+        });
     }
   }
 
   List<Map<String, dynamic>> get _filteredServices {
     return _allServices.where((item) {
       final ServiceModel s = item['service'];
-      
+
       // Filter out inactive services (Soft Deleted)
       if (!s.isActive) return false;
 
-      final matchesCat = _selectedCategory == 'All' ||
+      final matchesCat =
+          _selectedCategory == 'All' ||
           s.category.toLowerCase() == _selectedCategory.toLowerCase();
-      final matchesSearch = s.treatmentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
+      final matchesSearch =
+          s.treatmentName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           s.detailName.toLowerCase().contains(_searchQuery.toLowerCase()) ||
           s.category.toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCat && matchesSearch;
@@ -155,7 +164,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     );
     num? chosenPrice = item['adjusted_price'] ?? service.price;
 
-    final displayTitle = service.treatmentName == service.detailName || service.detailName.isEmpty
+    final displayTitle =
+        service.treatmentName == service.detailName ||
+            service.detailName.isEmpty
         ? service.treatmentName
         : "${service.treatmentName} - ${service.detailName}";
 
@@ -172,7 +183,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: EdgeInsets.only(
-                left: 24, right: 24, top: 24,
+                left: 24,
+                right: 24,
+                top: 24,
                 bottom: MediaQuery.of(ctx).viewInsets.bottom + 32,
               ),
               child: Column(
@@ -181,7 +194,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                 children: [
                   Center(
                     child: Container(
-                      width: 40, height: 4,
+                      width: 40,
+                      height: 4,
                       decoration: BoxDecoration(
                         color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(2),
@@ -189,34 +203,70 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     ),
                   ),
                   const SizedBox(height: 20),
-                  Text(displayTitle, style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: primaryColor)),
+                  Text(
+                    displayTitle,
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                      color: primaryColor,
+                    ),
+                  ),
                   const SizedBox(height: 4),
-                  Text("Choose or adjust service price".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                  Text(
+                    "Choose or adjust service price".tr,
+                    style: TextStyle(color: mutedText, fontSize: 13),
+                  ),
                   const SizedBox(height: 20),
 
                   if (basePrice > 0) ...[
-                    Text("STANDARD PRICE".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
+                    Text(
+                      "STANDARD PRICE".tr,
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.bold,
+                        color: mutedText,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
                     const SizedBox(height: 12),
                     GestureDetector(
                       onTap: () {
-                        setSheet(() { chosenPrice = basePrice; manualController.text = basePrice.toString(); });
+                        setSheet(() {
+                          chosenPrice = basePrice;
+                          manualController.text = basePrice.toString();
+                        });
                       },
                       child: Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: chosenPrice == basePrice ? primaryColor.withOpacity(0.08) : const Color(0xFFF8FAFC),
+                          color: chosenPrice == basePrice
+                              ? primaryColor.withOpacity(0.08)
+                              : const Color(0xFFF8FAFC),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: chosenPrice == basePrice ? primaryColor : const Color(0xFFE2E8F0),
+                            color: chosenPrice == basePrice
+                                ? primaryColor
+                                : const Color(0xFFE2E8F0),
                             width: chosenPrice == basePrice ? 2 : 1,
                           ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text(_currencyFormat.format(basePrice), style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor, fontSize: 16)),
+                            Text(
+                              _currencyFormat.format(basePrice),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: primaryColor,
+                                fontSize: 16,
+                              ),
+                            ),
                             if (chosenPrice == basePrice)
-                              Icon(Icons.check_circle, color: primaryColor, size: 20),
+                              Icon(
+                                Icons.check_circle,
+                                color: primaryColor,
+                                size: 20,
+                              ),
                           ],
                         ),
                       ),
@@ -224,18 +274,31 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     const SizedBox(height: 20),
                   ],
 
-                  Text("MANUAL PRICE INPUT".tr, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5)),
+                  Text(
+                    "MANUAL PRICE INPUT".tr,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: mutedText,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
                   const SizedBox(height: 12),
                   TextField(
                     controller: manualController,
                     keyboardType: TextInputType.number,
                     inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                     onChanged: (v) {
-                      setSheet(() { chosenPrice = int.tryParse(v) ?? 0; });
+                      setSheet(() {
+                        chosenPrice = int.tryParse(v) ?? 0;
+                      });
                     },
                     decoration: InputDecoration(
                       prefixText: "Rp  ",
-                      prefixStyle: TextStyle(color: primaryColor, fontWeight: FontWeight.bold),
+                      prefixStyle: TextStyle(
+                        color: primaryColor,
+                        fontWeight: FontWeight.bold,
+                      ),
                       hintText: "0",
                       filled: true,
                       fillColor: const Color(0xFFF8FAFC),
@@ -251,7 +314,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: primaryColor, width: 2),
                       ),
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                     ),
                   ),
 
@@ -262,13 +328,21 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
                         backgroundColor: buttonColor,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                         padding: const EdgeInsets.symmetric(vertical: 16),
                         elevation: 0,
                       ),
                       onPressed: () {
-                        final finalPrice = int.tryParse(manualController.text) ?? (chosenPrice ?? basePrice);
-                        final idx = _allServices.indexWhere((s) => (s['service'] as ServiceModel).tdId == service.tdId);
+                        final finalPrice =
+                            int.tryParse(manualController.text) ??
+                            (chosenPrice ?? basePrice);
+                        final idx = _allServices.indexWhere(
+                          (s) =>
+                              (s['service'] as ServiceModel).tdId ==
+                              service.tdId,
+                        );
                         if (idx != -1) {
                           setState(() {
                             _allServices[idx]['adjusted_price'] = finalPrice;
@@ -277,7 +351,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         }
                         Navigator.pop(ctx);
                       },
-                      child: Text("Add to Booking".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                      child: Text(
+                        "Add to Booking".tr,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -301,11 +382,18 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Center(
                 child: Text(
                   "New Booking".tr,
-                  style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
@@ -318,7 +406,6 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        
                         // Select Date
                         Text(
                           "Select Date".tr,
@@ -334,7 +421,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                           child: ListView.separated(
                             scrollDirection: Axis.horizontal,
                             itemCount: _dates.length,
-                            separatorBuilder: (context, _) => const SizedBox(width: 12),
+                            separatorBuilder: (context, _) =>
+                                const SizedBox(width: 12),
                             itemBuilder: (context, index) {
                               final isSelected = index == _selectedDateIndex;
                               return GestureDetector(
@@ -346,11 +434,19 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 },
                                 child: Container(
                                   width: 65,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
                                   decoration: BoxDecoration(
-                                    color: isSelected ? primaryColor : Colors.white,
+                                    color: isSelected
+                                        ? primaryColor
+                                        : Colors.white,
                                     borderRadius: BorderRadius.circular(16),
-                                    border: isSelected ? null : Border.all(color: const Color(0xFFE2E8F0)),
+                                    border: isSelected
+                                        ? null
+                                        : Border.all(
+                                            color: const Color(0xFFE2E8F0),
+                                          ),
                                   ),
                                   child: Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -360,7 +456,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         style: TextStyle(
                                           fontSize: 12,
                                           fontWeight: FontWeight.bold,
-                                          color: isSelected ? Colors.white70 : mutedText,
+                                          color: isSelected
+                                              ? Colors.white70
+                                              : mutedText,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
@@ -369,7 +467,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
-                                          color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                                          color: isSelected
+                                              ? Colors.white
+                                              : const Color(0xFF1E293B),
                                         ),
                                       ),
                                     ],
@@ -402,10 +502,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         const SizedBox(height: 16),
 
                         if (_loadingStylists)
-                          const Center(child: Padding(
-                            padding: EdgeInsets.all(16.0),
-                            child: CircularProgressIndicator(),
-                          ))
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(16.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         else if (_stylists.isEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 24),
@@ -426,12 +528,16 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: _stylists.length,
-                              separatorBuilder: (context, _) => const SizedBox(width: 20),
+                              separatorBuilder: (context, _) =>
+                                  const SizedBox(width: 20),
                               itemBuilder: (context, index) {
-                                final isSelected = index == _selectedStylistIndex;
+                                final isSelected =
+                                    index == _selectedStylistIndex;
                                 final stylist = _stylists[index];
                                 return GestureDetector(
-                                  onTap: () => setState(() => _selectedStylistIndex = index),
+                                  onTap: () => setState(
+                                    () => _selectedStylistIndex = index,
+                                  ),
                                   child: Column(
                                     children: [
                                       Stack(
@@ -440,20 +546,34 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             width: 60,
                                             height: 60,
                                             decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(16),
-                                              border: isSelected 
-                                                  ? Border.all(color: primaryColor, width: 2) 
+                                              borderRadius:
+                                                  BorderRadius.circular(16),
+                                              border: isSelected
+                                                  ? Border.all(
+                                                      color: primaryColor,
+                                                      width: 2,
+                                                    )
                                                   : null,
                                               color: const Color(0xFFE2E8F0),
-                                              image: stylist.avatar != null && stylist.avatar!.isNotEmpty
+                                              image:
+                                                  stylist.avatar != null &&
+                                                      stylist.avatar!.isNotEmpty
                                                   ? DecorationImage(
-                                                      image: NetworkImage(stylist.avatar!),
+                                                      image: NetworkImage(
+                                                        stylist.avatar!,
+                                                      ),
                                                       fit: BoxFit.cover,
                                                     )
                                                   : null,
                                             ),
-                                            child: stylist.avatar == null || stylist.avatar!.isEmpty
-                                                ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 30)
+                                            child:
+                                                stylist.avatar == null ||
+                                                    stylist.avatar!.isEmpty
+                                                ? const Icon(
+                                                    Icons.person,
+                                                    color: Color(0xFF94A3B8),
+                                                    size: 30,
+                                                  )
                                                 : null,
                                           ),
                                           if (isSelected)
@@ -461,13 +581,22 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                               bottom: -2,
                                               right: -2,
                                               child: Container(
-                                                padding: const EdgeInsets.all(4),
+                                                padding: const EdgeInsets.all(
+                                                  4,
+                                                ),
                                                 decoration: BoxDecoration(
                                                   color: primaryColor,
                                                   shape: BoxShape.circle,
-                                                  border: Border.all(color: scaffoldBg, width: 2),
+                                                  border: Border.all(
+                                                    color: scaffoldBg,
+                                                    width: 2,
+                                                  ),
                                                 ),
-                                                child: const Icon(Icons.check, color: Colors.white, size: 8),
+                                                child: const Icon(
+                                                  Icons.check,
+                                                  color: Colors.white,
+                                                  size: 8,
+                                                ),
                                               ),
                                             ),
                                         ],
@@ -481,13 +610,17 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           maxLines: 2,
                                           overflow: TextOverflow.ellipsis,
                                           style: TextStyle(
-                                            fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                            color: isSelected ? primaryColor : mutedText,
+                                            fontWeight: isSelected
+                                                ? FontWeight.bold
+                                                : FontWeight.normal,
+                                            color: isSelected
+                                                ? primaryColor
+                                                : mutedText,
                                             fontSize: 11,
                                             height: 1.2,
                                           ),
                                         ),
-                                      )
+                                      ),
                                     ],
                                   ),
                                 );
@@ -509,7 +642,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
                         // Search
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 2,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0xFFE2E8F0).withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
@@ -519,10 +655,17 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             decoration: InputDecoration(
                               icon: Padding(
                                 padding: const EdgeInsets.only(left: 8.0),
-                                child: Icon(Icons.search, color: mutedText, size: 20),
+                                child: Icon(
+                                  Icons.search,
+                                  color: mutedText,
+                                  size: 20,
+                                ),
                               ),
                               hintText: "Search services...".tr,
-                              hintStyle: TextStyle(color: mutedText, fontSize: 14),
+                              hintStyle: TextStyle(
+                                color: mutedText,
+                                fontSize: 14,
+                              ),
                               border: InputBorder.none,
                             ),
                           ),
@@ -531,32 +674,51 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
                         // Category Chips
                         if (_loadingCategories)
-                          const SizedBox(height: 36, child: Center(child: CircularProgressIndicator(strokeWidth: 2)))
+                          const SizedBox(
+                            height: 36,
+                            child: Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          )
                         else
                           SizedBox(
                             height: 36,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: _categories.length,
-                              separatorBuilder: (_, __) => const SizedBox(width: 8),
+                              separatorBuilder: (_, __) =>
+                                  const SizedBox(width: 8),
                               itemBuilder: (_, i) {
                                 final cat = _categories[i];
                                 final isSelected = _selectedCategory == cat;
                                 return GestureDetector(
-                                  onTap: () => setState(() => _selectedCategory = cat),
+                                  onTap: () =>
+                                      setState(() => _selectedCategory = cat),
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                    ),
                                     decoration: BoxDecoration(
-                                      color: isSelected ? primaryColor : Colors.white,
+                                      color: isSelected
+                                          ? primaryColor
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(20),
-                                      border: Border.all(color: isSelected ? primaryColor : const Color(0xFFE2E8F0)),
+                                      border: Border.all(
+                                        color: isSelected
+                                            ? primaryColor
+                                            : const Color(0xFFE2E8F0),
+                                      ),
                                     ),
                                     alignment: Alignment.center,
                                     child: Text(
                                       cat,
                                       style: TextStyle(
-                                        color: isSelected ? Colors.white : mutedText,
-                                        fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                        color: isSelected
+                                            ? Colors.white
+                                            : mutedText,
+                                        fontWeight: isSelected
+                                            ? FontWeight.bold
+                                            : FontWeight.w600,
                                         fontSize: 13,
                                       ),
                                     ),
@@ -569,12 +731,20 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
                         // Services List
                         if (_loadingServices)
-                          const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+                          const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         else if (filtered.isEmpty)
                           Center(
                             child: Padding(
                               padding: const EdgeInsets.all(32.0),
-                              child: Text("No services found.".tr, style: TextStyle(color: mutedText)),
+                              child: Text(
+                                "No services found.".tr,
+                                style: TextStyle(color: mutedText),
+                              ),
                             ),
                           )
                         else
@@ -582,25 +752,34 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: filtered.length + 1,
-                            separatorBuilder: (_, __) => const SizedBox(height: 12),
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
                             itemBuilder: (_, index) {
-                              if (index == filtered.length) return const SizedBox(height: 120);
+                              if (index == filtered.length)
+                                return const SizedBox(height: 120);
                               final item = filtered[index];
                               final ServiceModel service = item['service'];
                               final isSelected = item['selected'] == true;
-                              final displayTitle = service.treatmentName == service.detailName || service.detailName.isEmpty
+                              final displayTitle =
+                                  service.treatmentName == service.detailName ||
+                                      service.detailName.isEmpty
                                   ? service.treatmentName
                                   : "${service.treatmentName} - ${service.detailName}";
-                              final displayPrice = item['adjusted_price'] ?? service.price;
+                              final displayPrice =
+                                  item['adjusted_price'] ?? service.price;
                               final dur = service.duration;
 
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: isSelected ? primaryColor.withOpacity(0.04) : Colors.white,
+                                  color: isSelected
+                                      ? primaryColor.withOpacity(0.04)
+                                      : Colors.white,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
-                                    color: isSelected ? primaryColor.withOpacity(0.3) : Colors.transparent,
+                                    color: isSelected
+                                        ? primaryColor.withOpacity(0.3)
+                                        : Colors.transparent,
                                     width: isSelected ? 1.5 : 0,
                                   ),
                                   boxShadow: [
@@ -608,11 +787,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       color: Colors.black.withOpacity(0.01),
                                       blurRadius: 10,
                                       offset: const Offset(0, 2),
-                                    )
+                                    ),
                                   ],
                                 ),
                                 child: Row(
-                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
                                     // Service Image
                                     Container(
@@ -628,15 +808,25 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             ? Image.network(
                                                 service.imageUrl!,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) => Icon(Icons.image_outlined, color: mutedText, size: 20),
+                                                errorBuilder: (_, __, ___) =>
+                                                    Icon(
+                                                      Icons.image_outlined,
+                                                      color: mutedText,
+                                                      size: 20,
+                                                    ),
                                               )
-                                            : Icon(Icons.image_outlined, color: mutedText, size: 20),
+                                            : Icon(
+                                                Icons.image_outlined,
+                                                color: mutedText,
+                                                size: 20,
+                                              ),
                                       ),
                                     ),
                                     const SizedBox(width: 14),
                                     Expanded(
                                       child: Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
                                         children: [
                                           Text(
                                             displayTitle,
@@ -649,36 +839,70 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           const SizedBox(height: 4),
                                           Text(
                                             service.category,
-                                            style: TextStyle(fontSize: 11, color: mutedText, letterSpacing: 0.3),
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: mutedText,
+                                              letterSpacing: 0.3,
+                                            ),
                                           ),
                                           const SizedBox(height: 8),
                                           Row(
                                             children: [
-                                              Icon(Icons.access_time_outlined, size: 13, color: mutedText),
+                                              Icon(
+                                                Icons.access_time_outlined,
+                                                size: 13,
+                                                color: mutedText,
+                                              ),
                                               const SizedBox(width: 4),
                                               Text(
-                                                dur > 0 ? "$dur${" Minutes".tr}" : "- Minutes".tr,
-                                                style: TextStyle(color: mutedText, fontSize: 12),
+                                                dur > 0
+                                                    ? "$dur${" Minutes".tr}"
+                                                    : "- Minutes".tr,
+                                                style: TextStyle(
+                                                  color: mutedText,
+                                                  fontSize: 12,
+                                                ),
                                               ),
                                               const SizedBox(width: 10),
                                               Text(
-                                                _currencyFormat.format(displayPrice),
+                                                _currencyFormat.format(
+                                                  displayPrice,
+                                                ),
                                                 style: TextStyle(
                                                   color: primaryColor,
                                                   fontSize: 13,
                                                   fontWeight: FontWeight.w900,
                                                 ),
                                               ),
-                                              if (item['adjusted_price'] != null &&
-                                                  item['adjusted_price'] != service.price) ...[
+                                              if (item['adjusted_price'] !=
+                                                      null &&
+                                                  item['adjusted_price'] !=
+                                                      service.price) ...[
                                                 const SizedBox(width: 6),
                                                 Container(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 6,
+                                                        vertical: 2,
+                                                      ),
                                                   decoration: BoxDecoration(
-                                                    color: const Color(0xFFFBF0D8),
-                                                    borderRadius: BorderRadius.circular(4),
+                                                    color: const Color(
+                                                      0xFFFBF0D8,
+                                                    ),
+                                                    borderRadius:
+                                                        BorderRadius.circular(
+                                                          4,
+                                                        ),
                                                   ),
-                                                  child: const Text("custom", style: TextStyle(fontSize: 10, color: Color(0xFF92400E), fontWeight: FontWeight.bold)),
+                                                  child: const Text(
+                                                    "custom",
+                                                    style: TextStyle(
+                                                      fontSize: 10,
+                                                      color: Color(0xFF92400E),
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
                                                 ),
                                               ],
                                             ],
@@ -692,11 +916,18 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         if (!isSelected) {
                                           await _showPriceDialog(item);
                                         } else {
-                                          final idx = _allServices.indexWhere((s) => (s['service'] as ServiceModel).tdId == service.tdId);
+                                          final idx = _allServices.indexWhere(
+                                            (s) =>
+                                                (s['service'] as ServiceModel)
+                                                    .tdId ==
+                                                service.tdId,
+                                          );
                                           if (idx != -1) {
                                             setState(() {
-                                              _allServices[idx]['selected'] = false;
-                                              _allServices[idx]['adjusted_price'] = null;
+                                              _allServices[idx]['selected'] =
+                                                  false;
+                                              _allServices[idx]['adjusted_price'] =
+                                                  null;
                                             });
                                           }
                                         }
@@ -704,12 +935,18 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       child: Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: isSelected ? primaryColor : const Color(0xFFF1F5F9),
-                                          borderRadius: BorderRadius.circular(12),
+                                          color: isSelected
+                                              ? primaryColor
+                                              : const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(
+                                            12,
+                                          ),
                                         ),
                                         child: Icon(
                                           isSelected ? Icons.check : Icons.add,
-                                          color: isSelected ? Colors.white : primaryColor,
+                                          color: isSelected
+                                              ? Colors.white
+                                              : primaryColor,
                                           size: 20,
                                         ),
                                       ),
@@ -726,18 +963,27 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   // Floating Summary + Continue
                   if (selected.isNotEmpty)
                     Positioned(
-                      bottom: 24, left: 24, right: 24,
+                      bottom: 24,
+                      left: 24,
+                      right: 24,
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Container(
                             margin: const EdgeInsets.only(bottom: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 20,
+                              vertical: 16,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
-                                BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0, 4)),
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
+                                ),
                               ],
                             ),
                             child: Row(
@@ -748,15 +994,28 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   children: [
                                     Text(
                                       "${selected.length}${" services selected".tr}",
-                                      style: TextStyle(color: mutedText, fontSize: 13),
+                                      style: TextStyle(
+                                        color: mutedText,
+                                        fontSize: 13,
+                                      ),
                                     ),
                                     if (_totalMins > 0) ...[
                                       const SizedBox(height: 4),
                                       Row(
                                         children: [
-                                          Icon(Icons.access_time_filled, size: 14, color: primaryColor),
+                                          Icon(
+                                            Icons.access_time_filled,
+                                            size: 14,
+                                            color: primaryColor,
+                                          ),
                                           const SizedBox(width: 4),
-                                          Text("$_totalMins mnt", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                                          Text(
+                                            "$_totalMins mnt",
+                                            style: TextStyle(
+                                              color: primaryColor,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                     ],
@@ -764,7 +1023,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 ),
                                 Text(
                                   _currencyFormat.format(_totalPrice),
-                                  style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.w900),
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.w900,
+                                  ),
                                 ),
                               ],
                             ),
@@ -774,45 +1037,66 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             child: ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 backgroundColor: buttonColor,
-                                disabledBackgroundColor: const Color(0xFFCBD5E1),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                padding: const EdgeInsets.symmetric(vertical: 18),
+                                disabledBackgroundColor: const Color(
+                                  0xFFCBD5E1,
+                                ),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(14),
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 18,
+                                ),
                                 elevation: 8,
                                 shadowColor: Colors.black.withOpacity(0.15),
                               ),
-                              onPressed: _selectedStylistIndex == -1 ? null : () {
-                                final selectedStylist = _stylists[_selectedStylistIndex];
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                      builder: (_) => BookingPage(
-                                        selectedDate: _dates[_selectedDateIndex]["rawDate"] as DateTime,
-                                        stylistId: selectedStylist.id,
-                                        stylistName: selectedStylist.name,
-                                        stylistAvatar: selectedStylist.avatar,
-                                        totalDuration: _totalMins,
-                                        selectedServices: selected.map((s) {
-                                          final svc = s['service'] as ServiceModel;
-                                          return {
-                                            'td_id': svc.tdId,
-                                            'treatment_id': svc.treatmentId,
-                                            'detail_name': svc.detailName,
-                                            'treatment_name': svc.treatmentName,
-                                            'category': svc.category,
-                                            'duration': svc.duration,
-                                            'price': svc.price,
-                                            'selected': s['selected'],
-                                            'adjusted_price': s['adjusted_price'],
-                                          };
-                                        }).toList(),
-                                        totalPrice: _totalPrice.toInt(),
-                                      ),
-                                  ),
-                                );
-                              },
+                              onPressed: _selectedStylistIndex == -1
+                                  ? null
+                                  : () {
+                                      final selectedStylist =
+                                          _stylists[_selectedStylistIndex];
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => BookingPage(
+                                            selectedDate:
+                                                _dates[_selectedDateIndex]["rawDate"]
+                                                    as DateTime,
+                                            stylistId: selectedStylist.id,
+                                            stylistName: selectedStylist.name,
+                                            stylistAvatar:
+                                                selectedStylist.avatar,
+                                            totalDuration: _totalMins,
+                                            selectedServices: selected.map((s) {
+                                              final svc =
+                                                  s['service'] as ServiceModel;
+                                              return {
+                                                'td_id': svc.tdId,
+                                                'treatment_id': svc.treatmentId,
+                                                'detail_name': svc.detailName,
+                                                'treatment_name':
+                                                    svc.treatmentName,
+                                                'category': svc.category,
+                                                'duration': svc.duration,
+                                                'price': svc.price,
+                                                'selected': s['selected'],
+                                                'adjusted_price':
+                                                    s['adjusted_price'],
+                                              };
+                                            }).toList(),
+                                            totalPrice: _totalPrice.toInt(),
+                                          ),
+                                        ),
+                                      );
+                                    },
                               child: Text(
-                                _selectedStylistIndex == -1 ? "Select Stylist Above".tr : "Continue to Schedule".tr, 
-                                style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)
+                                _selectedStylistIndex == -1
+                                    ? "Select Stylist Above".tr
+                                    : "Continue to Schedule".tr,
+                                style: const TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
                               ),
                             ),
                           ),
@@ -830,7 +1114,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
           ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -856,15 +1144,35 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     return GestureDetector(
       onTap: () {
         if (index == 0) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+            (r) => false,
+          );
         } else if (index == 1) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const BookingListPage()),
+            (r) => false,
+          );
         } else if (index == 2) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ManageServicesPage()),
+            (r) => false,
+          );
         } else if (index == 3) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ReportPage()),
+            (r) => false,
+          );
         } else if (index == 4) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+            (r) => false,
+          );
         }
       },
       child: Column(
@@ -872,7 +1180,15 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
         children: [
           Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? primaryColor : mutedText,
+              letterSpacing: 0.5,
+            ),
+          ),
         ],
       ),
     );

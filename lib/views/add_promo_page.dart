@@ -74,6 +74,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
       final TimeOfDay? pickedTime = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.now(),
+        initialEntryMode: TimePickerEntryMode.input,
         builder: (context, child) => Theme(
           data: Theme.of(context).copyWith(
             colorScheme: ColorScheme.light(primary: primaryColor),

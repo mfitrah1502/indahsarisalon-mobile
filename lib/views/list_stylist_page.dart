@@ -13,7 +13,7 @@ import '../utils/popup_helper.dart';
 
 class ListStylistPage extends StatefulWidget {
   final String role;
-  
+
   const ListStylistPage({super.key, required this.role});
 
   @override
@@ -44,7 +44,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
   Future<void> _fetchStylists() async {
     try {
       final data = await _userController.fetchAllStylists();
-          
+
       if (mounted) {
         setState(() {
           _allStylists = data;
@@ -64,7 +64,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
     final filteredStylists = _allStylists.where((stylist) {
       final query = _searchQuery.toLowerCase();
       return stylist.name.toLowerCase().contains(query) ||
-             stylist.email.toLowerCase().contains(query);
+          stylist.email.toLowerCase().contains(query);
     }).toList();
 
     return Scaffold(
@@ -75,17 +75,24 @@ class _ListStylistPageState extends State<ListStylistPage> {
             Expanded(
               child: SingleChildScrollView(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24.0,
+                    vertical: 24.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // Back Arrow
                       GestureDetector(
                         onTap: () => Navigator.pop(context),
-                        child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: primaryColor,
+                          size: 28,
+                        ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Title
                       Text(
                         "${widget.role}s",
@@ -106,15 +113,19 @@ class _ListStylistPageState extends State<ListStylistPage> {
                         ),
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Search and Add New Row
                       Row(
                         children: [
                           Expanded(
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0), // Light grey input background
+                                color: const Color(
+                                  0xFFE2E8F0,
+                                ), // Light grey input background
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: TextField(
@@ -124,7 +135,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   });
                                 },
                                 decoration: InputDecoration(
-                                  icon: Icon(Icons.search, color: mutedText, size: 20),
+                                  icon: Icon(
+                                    Icons.search,
+                                    color: mutedText,
+                                    size: 20,
+                                  ),
                                   hintText: "Search member",
                                   hintStyle: TextStyle(
                                     color: mutedText.withOpacity(0.8),
@@ -158,15 +173,23 @@ class _ListStylistPageState extends State<ListStylistPage> {
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // List of Stylists
                       if (_isLoading)
-                        const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+                        const Center(
+                          child: Padding(
+                            padding: EdgeInsets.all(32),
+                            child: CircularProgressIndicator(),
+                          ),
+                        )
                       else if (filteredStylists.isEmpty)
                         Center(
                           child: Padding(
                             padding: const EdgeInsets.all(32.0),
-                            child: Text("Belum ada data ${widget.role}.", style: TextStyle(color: mutedText)),
+                            child: Text(
+                              "Belum ada data ${widget.role}.",
+                              style: TextStyle(color: mutedText),
+                            ),
                           ),
                         )
                       else
@@ -174,24 +197,25 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: filteredStylists.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 12),
-                        itemBuilder: (context, index) {
-                          final stylist = filteredStylists[index];
-                          return Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(16),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.black.withOpacity(0.02),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
+                          separatorBuilder: (context, index) =>
+                              const SizedBox(height: 12),
+                          itemBuilder: (context, index) {
+                            final stylist = filteredStylists[index];
+                            return Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(16),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withOpacity(0.02),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
                                   // Avatar
                                   Container(
                                     width: 56,
@@ -199,26 +223,39 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(12),
                                       color: const Color(0xFFF1F5F9),
-                                      image: stylist.avatar != null && stylist.avatar!.isNotEmpty
+                                      image:
+                                          stylist.avatar != null &&
+                                              stylist.avatar!.isNotEmpty
                                           ? DecorationImage(
-                                              image: NetworkImage(stylist.avatar!),
+                                              image: NetworkImage(
+                                                stylist.avatar!,
+                                              ),
                                               fit: BoxFit.cover,
                                             )
                                           : null,
                                     ),
-                                    child: stylist.avatar == null || stylist.avatar!.isEmpty
-                                        ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 32)
+                                    child:
+                                        stylist.avatar == null ||
+                                            stylist.avatar!.isEmpty
+                                        ? const Icon(
+                                            Icons.person,
+                                            color: Color(0xFF94A3B8),
+                                            size: 32,
+                                          )
                                         : null,
                                   ),
                                   const SizedBox(width: 16),
-                                  
+
                                   // Text details
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          stylist.name.isNotEmpty ? stylist.name : '-',
+                                          stylist.name.isNotEmpty
+                                              ? stylist.name
+                                              : '-',
                                           style: TextStyle(
                                             fontSize: 16,
                                             fontWeight: FontWeight.bold,
@@ -226,18 +263,23 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                           ),
                                         ),
                                         const SizedBox(height: 2),
-                                        if (stylist.position != null && stylist.position!.isNotEmpty)
+                                        if (stylist.position != null &&
+                                            stylist.position!.isNotEmpty)
                                           Text(
                                             "${stylist.position} ${stylist.division != null && stylist.division!.isNotEmpty ? '• ${stylist.division}' : ''}",
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: buttonColor.withOpacity(0.8),
+                                              color: buttonColor.withOpacity(
+                                                0.8,
+                                              ),
                                             ),
                                           ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          stylist.email.isNotEmpty ? stylist.email : '-',
+                                          stylist.email.isNotEmpty
+                                              ? stylist.email
+                                              : '-',
                                           style: TextStyle(
                                             fontSize: 13,
                                             color: mutedText,
@@ -246,10 +288,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                       ],
                                     ),
                                   ),
-                                  
+
                                   // Edit Icon
                                   GestureDetector(
-                                    onTap: () => _showAddStylistModal(stylist: stylist),
+                                    onTap: () =>
+                                        _showAddStylistModal(stylist: stylist),
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
@@ -264,25 +307,33 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     ),
                                   ),
                                   const SizedBox(width: 8),
-                                  
+
                                   // Delete Icon
                                   GestureDetector(
                                     onTap: () {
                                       PopupHelper.showConfirm(
                                         context,
                                         title: "Hapus Stylist",
-                                        message: "Yakin ingin menghapus ${stylist.name} dari tim?",
+                                        message:
+                                            "Yakin ingin menghapus ${stylist.name} dari tim?",
                                         onConfirm: () async {
                                           if (stylist.id != null) {
                                             try {
-                                              await _userController.deleteStylist(stylist.id!);
+                                              await _userController
+                                                  .deleteStylist(stylist.id!);
                                               _fetchStylists();
                                               if (mounted) {
-                                                PopupHelper.showSuccess(context, 'Stylist berhasil dihapus');
+                                                PopupHelper.showSuccess(
+                                                  context,
+                                                  'Stylist berhasil dihapus',
+                                                );
                                               }
                                             } catch (e) {
                                               if (mounted) {
-                                                PopupHelper.showError(context, 'Gagal menghapus stylist: $e');
+                                                PopupHelper.showError(
+                                                  context,
+                                                  'Gagal menghapus stylist: $e',
+                                                );
                                               }
                                             }
                                           }
@@ -303,10 +354,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     ),
                                   ),
                                 ],
-                            ),
-                          );
-                        },
-                      ),
+                              ),
+                            );
+                          },
+                        ),
                       const SizedBox(height: 100), // padding for bottom nav
                     ],
                   ),
@@ -316,7 +367,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
           ],
         ),
       ),
-      
+
       // Bottom Navigation Bar
       extendBody: true,
       bottomNavigationBar: Container(
@@ -351,19 +402,43 @@ class _ListStylistPageState extends State<ListStylistPage> {
 
   void _showAddStylistModal({UserModel? stylist}) {
     final isEdit = stylist != null;
-    final nameController = TextEditingController(text: isEdit ? stylist.name : '');
-    final nicknameController = TextEditingController(text: isEdit ? stylist.nickname : '');
-    final birthPlaceController = TextEditingController(text: isEdit ? stylist.birthPlace : '');
-    final emailController = TextEditingController(text: isEdit ? stylist.email : '');
-    final phoneController = TextEditingController(text: isEdit ? stylist.phone : '');
-    final addressController = TextEditingController(text: isEdit ? stylist.address : '');
-    final positionController = TextEditingController(text: isEdit ? stylist.position : '');
-    final divisionController = TextEditingController(text: isEdit ? stylist.division : '');
-    final emergencyContactController = TextEditingController(text: isEdit ? stylist.emergencyContact : '');
-    final bankAccountNameController = TextEditingController(text: isEdit ? stylist.bankAccountName : '');
-    final bankAccountNumberController = TextEditingController(text: isEdit ? stylist.bankAccountNumber : '');
-    final lastEducationController = TextEditingController(text: isEdit ? stylist.lastEducation : '');
-    
+    final nameController = TextEditingController(
+      text: isEdit ? stylist.name : '',
+    );
+    final nicknameController = TextEditingController(
+      text: isEdit ? stylist.nickname : '',
+    );
+    final birthPlaceController = TextEditingController(
+      text: isEdit ? stylist.birthPlace : '',
+    );
+    final emailController = TextEditingController(
+      text: isEdit ? stylist.email : '',
+    );
+    final phoneController = TextEditingController(
+      text: isEdit ? stylist.phone : '',
+    );
+    final addressController = TextEditingController(
+      text: isEdit ? stylist.address : '',
+    );
+    final positionController = TextEditingController(
+      text: isEdit ? stylist.position : '',
+    );
+    final divisionController = TextEditingController(
+      text: isEdit ? stylist.division : '',
+    );
+    final emergencyContactController = TextEditingController(
+      text: isEdit ? stylist.emergencyContact : '',
+    );
+    final bankAccountNameController = TextEditingController(
+      text: isEdit ? stylist.bankAccountName : '',
+    );
+    final bankAccountNumberController = TextEditingController(
+      text: isEdit ? stylist.bankAccountNumber : '',
+    );
+    final lastEducationController = TextEditingController(
+      text: isEdit ? stylist.lastEducation : '',
+    );
+
     DateTime? selectedBirthDate = stylist?.birthDate;
     DateTime? selectedJoinDate = stylist?.joinDate;
     String? selectedGender = stylist?.gender;
@@ -382,11 +457,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setModalState) {
-            
             Future<void> pickAndUploadImage() async {
               try {
                 final picker = ImagePicker();
-                final image = await picker.pickImage(source: ImageSource.gallery);
+                final image = await picker.pickImage(
+                  source: ImageSource.gallery,
+                );
                 if (image == null) return;
 
                 setModalState(() {
@@ -395,7 +471,8 @@ class _ListStylistPageState extends State<ListStylistPage> {
                 });
 
                 final fileExt = image.path.split('.').last;
-                final fileName = 'stylist-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
+                final fileName =
+                    'stylist-${DateTime.now().millisecondsSinceEpoch}.$fileExt';
 
                 await Supabase.instance.client.storage
                     .from('avatars')
@@ -418,10 +495,15 @@ class _ListStylistPageState extends State<ListStylistPage> {
               }
             }
 
-            Future<void> selectDate(BuildContext context, bool isBirthDate) async {
+            Future<void> selectDate(
+              BuildContext context,
+              bool isBirthDate,
+            ) async {
               final DateTime? picked = await showDatePicker(
                 context: context,
-                initialDate: (isBirthDate ? selectedBirthDate : selectedJoinDate) ?? DateTime.now(),
+                initialDate:
+                    (isBirthDate ? selectedBirthDate : selectedJoinDate) ??
+                    DateTime.now(),
                 firstDate: DateTime(1950),
                 lastDate: DateTime(2100),
                 builder: (context, child) {
@@ -452,23 +534,34 @@ class _ListStylistPageState extends State<ListStylistPage> {
               height: MediaQuery.of(context).size.height * 0.9,
               decoration: BoxDecoration(
                 color: scaffoldBg,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
               ),
               child: Column(
                 children: [
                   // Header
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 20,
+                    ),
                     decoration: const BoxDecoration(
                       color: Colors.white,
-                      borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+                      borderRadius: BorderRadius.vertical(
+                        top: Radius.circular(24),
+                      ),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         GestureDetector(
                           onTap: () => Navigator.pop(context),
-                          child: Icon(Icons.close, color: primaryColor, size: 24),
+                          child: Icon(
+                            Icons.close,
+                            color: primaryColor,
+                            size: 24,
+                          ),
                         ),
                         Text(
                           isEdit ? "Update Karyawan" : "Add Karyawan",
@@ -481,27 +574,36 @@ class _ListStylistPageState extends State<ListStylistPage> {
                         GestureDetector(
                           onTap: () async {
                             if (nameController.text.isNotEmpty) {
-                              final emailValue = emailController.text.trim().isEmpty 
-                                  ? "${DateTime.now().millisecondsSinceEpoch}@example.com" 
+                              final emailValue =
+                                  emailController.text.trim().isEmpty
+                                  ? "${DateTime.now().millisecondsSinceEpoch}@example.com"
                                   : emailController.text.trim();
-                                  
+
                               final dataPayload = {
                                 "name": nameController.text.trim(),
                                 "nickname": nicknameController.text.trim(),
                                 "birth_place": birthPlaceController.text.trim(),
-                                "birth_date": selectedBirthDate?.toIso8601String(),
+                                "birth_date": selectedBirthDate
+                                    ?.toIso8601String(),
                                 "gender": selectedGender,
                                 "address": addressController.text.trim(),
                                 "phone": phoneController.text.trim(),
                                 "email": emailValue,
                                 "position": selectedPosition,
                                 "division": selectedDivision,
-                                "join_date": selectedJoinDate?.toIso8601String(),
+                                "join_date": selectedJoinDate
+                                    ?.toIso8601String(),
                                 "employment_status": selectedEmploymentStatus,
-                                "emergency_contact": emergencyContactController.text.trim(),
-                                "bank_account_name": bankAccountNameController.text.trim(),
-                                "bank_account_number": bankAccountNumberController.text.trim(),
-                                "last_education": lastEducationController.text.trim(),
+                                "emergency_contact": emergencyContactController
+                                    .text
+                                    .trim(),
+                                "bank_account_name": bankAccountNameController
+                                    .text
+                                    .trim(),
+                                "bank_account_number":
+                                    bankAccountNumberController.text.trim(),
+                                "last_education": lastEducationController.text
+                                    .trim(),
                                 "kategori": widget.role.toLowerCase(),
                                 "type": 'karyawan',
                                 "role": 'karyawan',
@@ -509,20 +611,33 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               };
 
                               if (!isEdit) {
-                                dataPayload["username"] = nameController.text.trim().replaceAll(' ', '').toLowerCase() + DateTime.now().millisecondsSinceEpoch.toString().substring(8);
+                                dataPayload["username"] =
+                                    nameController.text
+                                        .trim()
+                                        .replaceAll(' ', '')
+                                        .toLowerCase() +
+                                    DateTime.now().millisecondsSinceEpoch
+                                        .toString()
+                                        .substring(8);
                                 dataPayload["password"] = "password";
                               }
-                              
+
                               if (avatarUrl != null) {
                                 dataPayload["avatar"] = avatarUrl!;
                               }
-                              
+
                               try {
-                                await _userController.saveStylist(dataPayload, id: stylist?.id);
+                                await _userController.saveStylist(
+                                  dataPayload,
+                                  id: stylist?.id,
+                                );
                                 _fetchStylists();
                               } catch (e) {
                                 debugPrint("Error saving stylist: $e");
-                                PopupHelper.showError(context, 'Failed to save data: $e');
+                                PopupHelper.showError(
+                                  context,
+                                  'Failed to save data: $e',
+                                );
                               }
                             }
                             if (mounted) Navigator.pop(context);
@@ -539,10 +654,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                       ],
                     ),
                   ),
-                  
+
                   Expanded(
                     child: SingleChildScrollView(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 24,
+                      ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
@@ -563,15 +681,23 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                             image: FileImage(selectedImage!),
                                             fit: BoxFit.cover,
                                           )
-                                        : (avatarUrl != null && avatarUrl!.isNotEmpty)
-                                            ? DecorationImage(
-                                                image: NetworkImage(avatarUrl!),
-                                                fit: BoxFit.cover,
-                                              )
-                                            : null,
+                                        : (avatarUrl != null &&
+                                              avatarUrl!.isNotEmpty)
+                                        ? DecorationImage(
+                                            image: NetworkImage(avatarUrl!),
+                                            fit: BoxFit.cover,
+                                          )
+                                        : null,
                                   ),
-                                  child: (selectedImage == null && (avatarUrl == null || avatarUrl!.isEmpty))
-                                      ? const Icon(Icons.person, color: Color(0xFF94A3B8), size: 48)
+                                  child:
+                                      (selectedImage == null &&
+                                          (avatarUrl == null ||
+                                              avatarUrl!.isEmpty))
+                                      ? const Icon(
+                                          Icons.person,
+                                          color: Color(0xFF94A3B8),
+                                          size: 48,
+                                        )
                                       : null,
                                 ),
                                 Transform.translate(
@@ -581,13 +707,27 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     decoration: BoxDecoration(
                                       color: primaryColor,
                                       borderRadius: BorderRadius.circular(8),
-                                      border: Border.all(color: scaffoldBg, width: 2),
+                                      border: Border.all(
+                                        color: scaffoldBg,
+                                        width: 2,
+                                      ),
                                     ),
-                                    child: isUploading 
-                                        ? const SizedBox(width: 16, height: 16, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                                        : const Icon(Icons.camera_alt_outlined, color: Colors.white, size: 16),
+                                    child: isUploading
+                                        ? const SizedBox(
+                                            width: 16,
+                                            height: 16,
+                                            child: CircularProgressIndicator(
+                                              color: Colors.white,
+                                              strokeWidth: 2,
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.camera_alt_outlined,
+                                            color: Colors.white,
+                                            size: 16,
+                                          ),
                                   ),
-                                )
+                                ),
                               ],
                             ),
                           ),
@@ -602,10 +742,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             ),
                           ),
                           const SizedBox(height: 32),
-                          
+
                           // Form Details
                           _buildTextFieldLabel("NAMA LENGKAP"),
-                          _buildTextField("e.g. Julianne Smith", nameController),
+                          _buildTextField(
+                            "e.g. Julianne Smith",
+                            nameController,
+                          ),
                           const SizedBox(height: 20),
 
                           _buildTextFieldLabel("NAMA PANGGILAN"),
@@ -618,7 +761,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 child: Column(
                                   children: [
                                     _buildTextFieldLabel("TEMPAT LAHIR"),
-                                    _buildTextField("e.g. Jakarta", birthPlaceController),
+                                    _buildTextField(
+                                      "e.g. Jakarta",
+                                      birthPlaceController,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -628,9 +774,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   children: [
                                     _buildTextFieldLabel("TANGGAL LAHIR"),
                                     _buildDatePickerField(
-                                      selectedBirthDate == null 
-                                        ? "Select Date" 
-                                        : "${selectedBirthDate!.day}/${selectedBirthDate!.month}/${selectedBirthDate!.year}",
+                                      selectedBirthDate == null
+                                          ? "Select Date"
+                                          : "${selectedBirthDate!.day}/${selectedBirthDate!.month}/${selectedBirthDate!.year}",
                                       () => selectDate(context, true),
                                     ),
                                   ],
@@ -643,27 +789,50 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           _buildTextFieldLabel("JENIS KELAMIN"),
                           Row(
                             children: [
-                              _buildChoiceChip("Laki-laki", selectedGender == "Laki-laki", (val) {
-                                setModalState(() => selectedGender = "Laki-laki");
-                              }),
+                              _buildChoiceChip(
+                                "Laki-laki",
+                                selectedGender == "Laki-laki",
+                                (val) {
+                                  setModalState(
+                                    () => selectedGender = "Laki-laki",
+                                  );
+                                },
+                              ),
                               const SizedBox(width: 12),
-                              _buildChoiceChip("Perempuan", selectedGender == "Perempuan", (val) {
-                                setModalState(() => selectedGender = "Perempuan");
-                              }),
+                              _buildChoiceChip(
+                                "Perempuan",
+                                selectedGender == "Perempuan",
+                                (val) {
+                                  setModalState(
+                                    () => selectedGender = "Perempuan",
+                                  );
+                                },
+                              ),
                             ],
                           ),
                           const SizedBox(height: 20),
 
                           _buildTextFieldLabel("ALAMAT"),
-                          _buildTextField("e.g. Jl. Melati No. 12", addressController),
+                          _buildTextField(
+                            "e.g. Jl. Melati No. 12",
+                            addressController,
+                          ),
                           const SizedBox(height: 20),
 
                           _buildTextFieldLabel("NOMOR HP AKTIF"),
-                          _buildTextField("e.g. 08123456789", phoneController, TextInputType.phone),
+                          _buildTextField(
+                            "e.g. 08123456789",
+                            phoneController,
+                            TextInputType.phone,
+                          ),
                           const SizedBox(height: 20),
-                          
+
                           _buildTextFieldLabel("EMAIL ADDRESS"),
-                          _buildTextField("julianne@salon.com", emailController, TextInputType.emailAddress),
+                          _buildTextField(
+                            "julianne@salon.com",
+                            emailController,
+                            TextInputType.emailAddress,
+                          ),
                           const SizedBox(height: 20),
 
                           Row(
@@ -674,9 +843,15 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     _buildTextFieldLabel("JABATAN"),
                                     _buildDropdownField(
                                       selectedPosition ?? "Select Jabatan",
-                                      ["hairstylist", "beautician", "therapist"],
+                                      [
+                                        "hairstylist",
+                                        "beautician",
+                                        "therapist",
+                                      ],
                                       (val) {
-                                        setModalState(() => selectedPosition = val);
+                                        setModalState(
+                                          () => selectedPosition = val,
+                                        );
                                       },
                                     ),
                                   ],
@@ -691,7 +866,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                       selectedDivision ?? "Select Divisi",
                                       ["hair", "beauty"],
                                       (val) {
-                                        setModalState(() => selectedDivision = val);
+                                        setModalState(
+                                          () => selectedDivision = val,
+                                        );
                                       },
                                     ),
                                   ],
@@ -708,9 +885,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   children: [
                                     _buildTextFieldLabel("TANGGAL MASUK"),
                                     _buildDatePickerField(
-                                      selectedJoinDate == null 
-                                        ? "Select Date" 
-                                        : "${selectedJoinDate!.day}/${selectedJoinDate!.month}/${selectedJoinDate!.year}",
+                                      selectedJoinDate == null
+                                          ? "Select Date"
+                                          : "${selectedJoinDate!.day}/${selectedJoinDate!.month}/${selectedJoinDate!.year}",
                                       () => selectDate(context, false),
                                     ),
                                   ],
@@ -722,10 +899,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   children: [
                                     _buildTextFieldLabel("STATUS KERJA"),
                                     _buildDropdownField(
-                                      selectedEmploymentStatus ?? "Select Status",
+                                      selectedEmploymentStatus ??
+                                          "Select Status",
                                       ["TRAINING", "TETAP"],
                                       (val) {
-                                        setModalState(() => selectedEmploymentStatus = val);
+                                        setModalState(
+                                          () => selectedEmploymentStatus = val,
+                                        );
                                       },
                                     ),
                                   ],
@@ -736,7 +916,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           const SizedBox(height: 20),
 
                           _buildTextFieldLabel("KONTAK DARURAT (NAMA & NO HP)"),
-                          _buildTextField("e.g. Budi (08123456789)", emergencyContactController),
+                          _buildTextField(
+                            "e.g. Budi (08123456789)",
+                            emergencyContactController,
+                          ),
                           const SizedBox(height: 20),
 
                           Row(
@@ -745,7 +928,10 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 child: Column(
                                   children: [
                                     _buildTextFieldLabel("NAMA REKENING"),
-                                    _buildTextField("e.g. Julianne Smith", bankAccountNameController),
+                                    _buildTextField(
+                                      "e.g. Julianne Smith",
+                                      bankAccountNameController,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -754,7 +940,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 child: Column(
                                   children: [
                                     _buildTextFieldLabel("NOMOR REKENING"),
-                                    _buildTextField("e.g. 1234567890", bankAccountNumberController, TextInputType.number),
+                                    _buildTextField(
+                                      "e.g. 1234567890",
+                                      bankAccountNumberController,
+                                      TextInputType.number,
+                                    ),
                                   ],
                                 ),
                               ),
@@ -763,8 +953,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           const SizedBox(height: 20),
 
                           _buildTextFieldLabel("PENDIDIKAN TERAKHIR"),
-                          _buildTextField("e.g. SMK Kecantikan", lastEducationController),
-                          
+                          _buildTextField(
+                            "e.g. SMK Kecantikan",
+                            lastEducationController,
+                          ),
+
                           const SizedBox(height: 48),
                         ],
                       ),
@@ -773,7 +966,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                 ],
               ),
             );
-          }
+          },
         );
       },
     );
@@ -797,7 +990,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
     );
   }
 
-  Widget _buildTextField(String hint, [TextEditingController? controller, TextInputType? keyboardType]) {
+  Widget _buildTextField(
+    String hint, [
+    TextEditingController? controller,
+    TextInputType? keyboardType,
+  ]) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -833,7 +1030,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
         child: Text(
           text,
           style: TextStyle(
-            color: text == "Select Date" ? const Color(0xFF64748B).withOpacity(0.6) : Colors.black87,
+            color: text == "Select Date"
+                ? const Color(0xFF64748B).withOpacity(0.6)
+                : Colors.black87,
             fontSize: 15,
           ),
         ),
@@ -841,7 +1040,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
     );
   }
 
-  Widget _buildChoiceChip(String label, bool isSelected, Function(bool) onSelected) {
+  Widget _buildChoiceChip(
+    String label,
+    bool isSelected,
+    Function(bool) onSelected,
+  ) {
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
@@ -852,11 +1055,18 @@ class _ListStylistPageState extends State<ListStylistPage> {
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
       backgroundColor: const Color(0xFFE2E8F0).withOpacity(0.6),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide.none),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+        side: BorderSide.none,
+      ),
     );
   }
 
-  Widget _buildDropdownField(String value, List<String> items, Function(String?) onChanged) {
+  Widget _buildDropdownField(
+    String value,
+    List<String> items,
+    Function(String?) onChanged,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
@@ -866,13 +1076,16 @@ class _ListStylistPageState extends State<ListStylistPage> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: items.contains(value) ? value : null,
-          hint: Text(value, style: TextStyle(color: const Color(0xFF64748B).withOpacity(0.6), fontSize: 15)),
+          hint: Text(
+            value,
+            style: TextStyle(
+              color: const Color(0xFF64748B).withOpacity(0.6),
+              fontSize: 15,
+            ),
+          ),
           isExpanded: true,
           items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Text(item),
-            );
+            return DropdownMenuItem<String>(value: item, child: Text(item));
           }).toList(),
           onChanged: onChanged,
         ),
@@ -923,11 +1136,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? primaryColor : mutedText,
-            size: 26,
-          ),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
           Text(
             label,

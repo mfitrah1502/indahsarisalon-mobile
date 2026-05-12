@@ -28,7 +28,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   final Color buttonColor = const Color(0xFFB53D7C);
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
-  final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+  final _currency = NumberFormat.currency(
+    locale: 'id_ID',
+    symbol: 'Rp ',
+    decimalDigits: 0,
+  );
 
   int _selectedIndex = 2;
   String _searchQuery = '';
@@ -65,11 +69,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   List<ServiceModel> get _filteredServices {
     return _services.where((s) {
       final q = _searchQuery.toLowerCase();
-      final matchesSearch = s.displayName.toLowerCase().contains(q) ||
+      final matchesSearch =
+          s.displayName.toLowerCase().contains(q) ||
           s.category.toLowerCase().contains(q);
-      final matchesCat = _selectedCategory == 'All' ||
+      final matchesCat =
+          _selectedCategory == 'All' ||
           s.category.toLowerCase() == _selectedCategory.toLowerCase();
-      
+
       // Hide inactive services (Soft Deleted)
       if (!s.isActive) return false;
 
@@ -81,7 +87,8 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     PopupHelper.showConfirm(
       context,
       title: "Delete Service".tr,
-      message: "${"Are you sure you want to delete".tr} \"${service.displayName}\"?",
+      message:
+          "${"Are you sure you want to delete".tr} \"${service.displayName}\"?",
       onConfirm: () async {
         try {
           await _serviceController.deleteService(service.tdId);
@@ -89,7 +96,8 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         } catch (e) {
           String errorMsg = "Gagal menghapus: $e";
           if (e.toString().contains("violates foreign key constraint")) {
-            errorMsg = "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
+            errorMsg =
+                "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
           }
           if (mounted) PopupHelper.showError(context, errorMsg);
         }
@@ -116,7 +124,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         return StatefulBuilder(
           builder: (ctx, setStateDialog) {
             return Dialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(20),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(24.0),
                 child: Column(
@@ -125,10 +135,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                   children: [
                     Text(
                       "Edit Promo".tr,
-                      style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     // Status Switch
                     Container(
                       padding: const EdgeInsets.all(16),
@@ -143,20 +157,33 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text("Status Promo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                              Text(isActive ? "Aktif" : "Nonaktif", style: TextStyle(color: mutedText, fontSize: 12)),
+                              const Text(
+                                "Status Promo",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 15,
+                                ),
+                              ),
+                              Text(
+                                isActive ? "Aktif" : "Nonaktif",
+                                style: TextStyle(
+                                  color: mutedText,
+                                  fontSize: 12,
+                                ),
+                              ),
                             ],
                           ),
                           Switch(
                             value: isActive,
-                            onChanged: (val) => setStateDialog(() => isActive = val),
+                            onChanged: (val) =>
+                                setStateDialog(() => isActive = val),
                             activeColor: primaryColor,
                           ),
                         ],
                       ),
                     ),
                     const SizedBox(height: 20),
-                    
+
                     // Start Date
                     _fieldLabel("WAKTU MULAI"),
                     const SizedBox(height: 8),
@@ -165,12 +192,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       icon: Icons.calendar_today,
                       onTap: () async {
                         final picked = await _selectDateTimeQuick(ctx, startAt);
-                        if (picked != null) setStateDialog(() => startAt = picked);
+                        if (picked != null)
+                          setStateDialog(() => startAt = picked);
                       },
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // End Date
                     _fieldLabel("WAKTU SELESAI"),
                     const SizedBox(height: 8),
@@ -179,18 +207,21 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       icon: Icons.calendar_today,
                       onTap: () async {
                         final picked = await _selectDateTimeQuick(ctx, endAt);
-                        if (picked != null) setStateDialog(() => endAt = picked);
+                        if (picked != null)
+                          setStateDialog(() => endAt = picked);
                       },
                     ),
 
                     const SizedBox(height: 32),
-                    
+
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
                           backgroundColor: buttonColor,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         onPressed: () async {
@@ -203,7 +234,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           );
                           _fetchAll();
                         },
-                        child: Text("Simpan Perubahan".tr, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          "Simpan Perubahan".tr,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -211,7 +248,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       width: double.infinity,
                       child: TextButton(
                         onPressed: () => Navigator.pop(ctx),
-                        child: Text("Batal".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                        child: Text(
+                          "Batal".tr,
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                       ),
                     ),
                   ],
@@ -224,14 +267,19 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     );
   }
 
-  Future<DateTime?> _selectDateTimeQuick(BuildContext context, DateTime initial) async {
+  Future<DateTime?> _selectDateTimeQuick(
+    BuildContext context,
+    DateTime initial,
+  ) async {
     final date = await showDatePicker(
       context: context,
       initialDate: initial,
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
       builder: (context, child) => Theme(
-        data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+        data: Theme.of(
+          context,
+        ).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
         child: child!,
       ),
     );
@@ -243,24 +291,36 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         initialTime: TimeOfDay.fromDateTime(initial),
         initialEntryMode: TimePickerEntryMode.input, // Text input, no dial
         builder: (context, child) => Theme(
-          data: Theme.of(context).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+          data: Theme.of(
+            context,
+          ).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
           child: child!,
         ),
       );
       if (time != null) {
-        return DateTime(date.year, date.month, date.day, time.hour, time.minute);
+        return DateTime(
+          date.year,
+          date.month,
+          date.day,
+          time.hour,
+          time.minute,
+        );
       }
     }
     return null;
   }
 
-  Widget _dateBox({required String text, required IconData icon, required VoidCallback onTap}) {
+  Widget _dateBox({
+    required String text,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
     return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9), 
+          color: const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: const Color(0xFFE2E8F0)),
         ),
@@ -268,7 +328,15 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           children: [
             Icon(icon, size: 18, color: primaryColor),
             const SizedBox(width: 12),
-            Expanded(child: Text(text, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600))),
+            Expanded(
+              child: Text(
+                text,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
             Icon(Icons.edit, size: 14, color: mutedText),
           ],
         ),
@@ -283,11 +351,21 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     }
 
     final isEdit = service != null;
-    final nameController = TextEditingController(text: isEdit ? service.detailName : '');
-    final treatmentController = TextEditingController(text: isEdit ? service.treatmentName : '');
-    final priceController = TextEditingController(text: isEdit ? service.price.toString() : '');
-    final durationController = TextEditingController(text: isEdit ? service.duration.toString() : '');
-    String selectedCategory = isEdit ? service.category : (_categories.length > 1 ? _categories[1] : 'All');
+    final nameController = TextEditingController(
+      text: isEdit ? service.detailName : '',
+    );
+    final treatmentController = TextEditingController(
+      text: isEdit ? service.treatmentName : '',
+    );
+    final priceController = TextEditingController(
+      text: isEdit ? service.price.toString() : '',
+    );
+    final durationController = TextEditingController(
+      text: isEdit ? service.duration.toString() : '',
+    );
+    String selectedCategory = isEdit
+        ? service.category
+        : (_categories.length > 1 ? _categories[1] : 'All');
 
     XFile? dialogImage;
     final ImagePicker picker = ImagePicker();
@@ -296,8 +374,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       context: context,
       builder: (ctx) {
         return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          insetPadding: const EdgeInsets.symmetric(
+            horizontal: 24,
+            vertical: 24,
+          ),
           child: StatefulBuilder(
             builder: (ctx, setStateDialog) {
               return SingleChildScrollView(
@@ -308,11 +391,17 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     children: [
                       Text(
                         isEdit ? "Edit Service".tr : "Add New Service".tr,
-                        style: TextStyle(color: primaryColor, fontSize: 20, fontWeight: FontWeight.bold),
+                        style: TextStyle(
+                          color: primaryColor,
+                          fontSize: 20,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        isEdit ? "Update service details".tr : "Create new service for clients".tr,
+                        isEdit
+                            ? "Update service details".tr
+                            : "Create new service for clients".tr,
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                       const SizedBox(height: 24),
@@ -321,11 +410,18 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       GestureDetector(
                         onTap: () async {
                           try {
-                            final picked = await picker.pickImage(source: ImageSource.gallery, imageQuality: 70);
-                            if (picked != null) setStateDialog(() => dialogImage = picked);
+                            final picked = await picker.pickImage(
+                              source: ImageSource.gallery,
+                              imageQuality: 70,
+                            );
+                            if (picked != null)
+                              setStateDialog(() => dialogImage = picked);
                           } catch (e) {
                             debugPrint("Error picking image: $e");
-                            PopupHelper.showError(context, "Gagal mengambil gambar: $e");
+                            PopupHelper.showError(
+                              context,
+                              "Gagal mengambil gambar: $e",
+                            );
                           }
                         },
                         child: Container(
@@ -340,18 +436,39 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             borderRadius: BorderRadius.circular(16),
                             child: dialogImage != null
                                 ? (kIsWeb
-                                    ? Image.network(dialogImage!.path, fit: BoxFit.cover)
-                                    : Image.file(File(dialogImage!.path), fit: BoxFit.cover))
+                                      ? Image.network(
+                                          dialogImage!.path,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : Image.file(
+                                          File(dialogImage!.path),
+                                          fit: BoxFit.cover,
+                                        ))
                                 : (isEdit && service.imageUrl != null)
-                                    ? Image.network(service.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => const Icon(Icons.add_a_photo, size: 30))
-                                    : Column(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(Icons.add_a_photo_outlined, color: primaryColor, size: 30),
-                                          const SizedBox(height: 8),
-                                          Text("Add Service Photo".tr, style: TextStyle(color: mutedText, fontSize: 12)),
-                                        ],
+                                ? Image.network(
+                                    service.imageUrl!,
+                                    fit: BoxFit.cover,
+                                    errorBuilder: (_, __, ___) =>
+                                        const Icon(Icons.add_a_photo, size: 30),
+                                  )
+                                : Column(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.add_a_photo_outlined,
+                                        color: primaryColor,
+                                        size: 30,
                                       ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        "Add Service Photo".tr,
+                                        style: TextStyle(
+                                          color: mutedText,
+                                          fontSize: 12,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                           ),
                         ),
                       ),
@@ -360,13 +477,19 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       // Treatment Name
                       _fieldLabel("TREATMENT NAME / SERVICE CATEGORY".tr),
                       const SizedBox(height: 8),
-                      _textField(controller: treatmentController, hint: "e.g. Grey Hair Colouring".tr),
+                      _textField(
+                        controller: treatmentController,
+                        hint: "e.g. Grey Hair Colouring".tr,
+                      ),
 
                       const SizedBox(height: 16),
                       // Detail Name (Variant)
                       _fieldLabel("DETAIL NAME / VARIANT".tr),
                       const SizedBox(height: 8),
-                      _textField(controller: nameController, hint: "e.g. Short, Medium, Long (optional)".tr),
+                      _textField(
+                        controller: nameController,
+                        hint: "e.g. Short, Medium, Long (optional)".tr,
+                      ),
 
                       const SizedBox(height: 16),
                       // Category Dropdown
@@ -380,13 +503,26 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
-                            value: _categories.contains(selectedCategory) ? selectedCategory : (_categories.length > 1 ? _categories[1] : _categories[0]),
+                            value: _categories.contains(selectedCategory)
+                                ? selectedCategory
+                                : (_categories.length > 1
+                                      ? _categories[1]
+                                      : _categories[0]),
                             isExpanded: true,
                             icon: Icon(Icons.expand_more, color: mutedText),
-                            items: _categories.where((c) => c != 'All').map((String v) {
-                              return DropdownMenuItem(value: v, child: Text(v, style: const TextStyle(fontSize: 14)));
+                            items: _categories.where((c) => c != 'All').map((
+                              String v,
+                            ) {
+                              return DropdownMenuItem(
+                                value: v,
+                                child: Text(
+                                  v,
+                                  style: const TextStyle(fontSize: 14),
+                                ),
+                              );
                             }).toList(),
-                            onChanged: (v) => setStateDialog(() => selectedCategory = v!),
+                            onChanged: (v) =>
+                                setStateDialog(() => selectedCategory = v!),
                           ),
                         ),
                       ),
@@ -400,7 +536,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               children: [
                                 _fieldLabel("PRICE (Rp)".tr),
                                 const SizedBox(height: 8),
-                                _textField(controller: priceController, hint: "150000", numeric: true),
+                                _textField(
+                                  controller: priceController,
+                                  hint: "150000",
+                                  numeric: true,
+                                ),
                               ],
                             ),
                           ),
@@ -411,7 +551,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               children: [
                                 _fieldLabel("DURATION (MINUTES)".tr),
                                 const SizedBox(height: 8),
-                                _textField(controller: durationController, hint: "60", numeric: true),
+                                _textField(
+                                  controller: durationController,
+                                  hint: "60",
+                                  numeric: true,
+                                ),
                               ],
                             ),
                           ),
@@ -424,19 +568,28 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
                           onPressed: () async {
-                            if (treatmentController.text.isEmpty && nameController.text.isEmpty) return;
+                            if (treatmentController.text.isEmpty &&
+                                nameController.text.isEmpty)
+                              return;
                             Navigator.pop(ctx);
-                            
+
                             String? imageUrl;
                             if (dialogImage != null) {
                               final bytes = await dialogImage!.readAsBytes();
                               final ext = dialogImage!.name.split('.').last;
-                              final fileName = 'svc_${DateTime.now().millisecondsSinceEpoch}.$ext';
-                              imageUrl = await _serviceController.uploadImage(bytes, fileName, 'services');
+                              final fileName =
+                                  'svc_${DateTime.now().millisecondsSinceEpoch}.$ext';
+                              imageUrl = await _serviceController.uploadImage(
+                                bytes,
+                                fileName,
+                                'services',
+                              );
                             }
 
                             await _saveService(
@@ -446,13 +599,18 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               detailName: nameController.text,
                               category: selectedCategory,
                               price: int.tryParse(priceController.text) ?? 0,
-                              duration: int.tryParse(durationController.text) ?? 0,
+                              duration:
+                                  int.tryParse(durationController.text) ?? 0,
                               imageUrl: imageUrl,
                             );
                           },
                           child: Text(
                             isEdit ? "Save Changes".tr : "Add Service".tr,
-                            style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                            ),
                           ),
                         ),
                       ),
@@ -461,7 +619,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         width: double.infinity,
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
-                          child: Text("Cancel".tr, style: TextStyle(fontSize: 16, color: primaryColor, fontWeight: FontWeight.bold)),
+                          child: Text(
+                            "Cancel".tr,
+                            style: TextStyle(
+                              fontSize: 16,
+                              color: primaryColor,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
                     ],
@@ -475,9 +640,21 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     );
   }
 
-  Widget _fieldLabel(String text) => Text(text, style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: mutedText, letterSpacing: 0.5));
+  Widget _fieldLabel(String text) => Text(
+    text,
+    style: TextStyle(
+      fontSize: 11,
+      fontWeight: FontWeight.bold,
+      color: mutedText,
+      letterSpacing: 0.5,
+    ),
+  );
 
-  Widget _textField({required TextEditingController controller, required String hint, bool numeric = false}) {
+  Widget _textField({
+    required TextEditingController controller,
+    required String hint,
+    bool numeric = false,
+  }) {
     return TextField(
       controller: controller,
       keyboardType: numeric ? TextInputType.number : TextInputType.text,
@@ -487,8 +664,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         hintStyle: TextStyle(color: mutedText.withOpacity(0.6), fontSize: 14),
         filled: true,
         fillColor: const Color(0xFFE2E8F0).withOpacity(0.5),
-        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(8),
+          borderSide: BorderSide.none,
+        ),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
       ),
     );
   }
@@ -532,7 +715,10 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Center(
                 child: Text(
                   "Manage Services".tr,
@@ -553,7 +739,10 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                   children: [
                     // Search Bar
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 2,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFE2E8F0),
                         borderRadius: BorderRadius.circular(12),
@@ -563,7 +752,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         decoration: InputDecoration(
                           icon: Padding(
                             padding: const EdgeInsets.only(left: 8.0),
-                            child: Icon(Icons.search, color: mutedText, size: 20),
+                            child: Icon(
+                              Icons.search,
+                              color: mutedText,
+                              size: 20,
+                            ),
                           ),
                           hintText: "Search services...".tr,
                           hintStyle: TextStyle(color: mutedText, fontSize: 14),
@@ -584,20 +777,29 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           final cat = _categories[i];
                           final isSelected = _selectedCategory == cat;
                           return GestureDetector(
-                            onTap: () => setState(() => _selectedCategory = cat),
+                            onTap: () =>
+                                setState(() => _selectedCategory = cat),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                              ),
                               decoration: BoxDecoration(
                                 color: isSelected ? primaryColor : Colors.white,
                                 borderRadius: BorderRadius.circular(20),
-                                border: Border.all(color: isSelected ? primaryColor : const Color(0xFFE2E8F0)),
+                                border: Border.all(
+                                  color: isSelected
+                                      ? primaryColor
+                                      : const Color(0xFFE2E8F0),
+                                ),
                               ),
                               alignment: Alignment.center,
                               child: Text(
                                 cat,
                                 style: TextStyle(
                                   color: isSelected ? Colors.white : mutedText,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.w600,
+                                  fontWeight: isSelected
+                                      ? FontWeight.bold
+                                      : FontWeight.w600,
                                   fontSize: 13,
                                 ),
                               ),
@@ -615,7 +817,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonColor,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                             elevation: 2,
                           ),
@@ -625,7 +829,14 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             children: [
                               Icon(Icons.add, color: Colors.white, size: 20),
                               SizedBox(width: 8),
-                              Text("Add New Service".tr, style: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: Colors.white)),
+                              Text(
+                                "Add New Service".tr,
+                                style: const TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -640,22 +851,37 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
                             side: BorderSide(color: primaryColor),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
                             padding: const EdgeInsets.symmetric(vertical: 14),
                           ),
                           onPressed: () async {
                             final updated = await Navigator.push(
                               context,
-                              MaterialPageRoute(builder: (_) => const AddPromoPage()),
+                              MaterialPageRoute(
+                                builder: (_) => const AddPromoPage(),
+                              ),
                             );
                             if (updated == true && mounted) _fetchAll();
                           },
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.local_offer_outlined, color: primaryColor, size: 20),
+                              Icon(
+                                Icons.local_offer_outlined,
+                                color: primaryColor,
+                                size: 20,
+                              ),
                               const SizedBox(width: 8),
-                              Text("Add Promo".tr, style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, color: primaryColor)),
+                              Text(
+                                "Add Promo".tr,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
+                              ),
                             ],
                           ),
                         ),
@@ -666,109 +892,186 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     // Count
                     Text(
                       "${filtered.length}${" services".tr}",
-                      style: TextStyle(fontSize: 13, color: mutedText, fontWeight: FontWeight.w500),
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: mutedText,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 12),
 
                     // Services List
                     _loading
-                        ? const Center(child: Padding(padding: EdgeInsets.all(32), child: CircularProgressIndicator()))
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(32),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                         : filtered.isEmpty
-                            ? Center(child: Padding(
-                                padding: const EdgeInsets.all(32.0),
-                                child: Text("No services.".tr, style: TextStyle(color: mutedText)),
-                              ))
-                            : ListView.separated(
-                                shrinkWrap: true,
-                                physics: const NeverScrollableScrollPhysics(),
-                                itemCount: filtered.length,
-                                separatorBuilder: (_, __) => const SizedBox(height: 12),
-                                itemBuilder: (_, index) {
-                                  final svc = filtered[index];
-                                  final price = svc.price;
-                                  final dur = svc.duration;
-
-                                  return Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: Colors.white,
-                                      borderRadius: BorderRadius.circular(16),
-                                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 8, offset: const Offset(0, 2))],
-                                    ),
-                                    child: Row(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
-                                      children: [
-                                        // Category Icon / Service Image
-                                        Container(
-                                          width: 44,
-                                          height: 44,
-                                          decoration: BoxDecoration(
-                                            color: const Color(0xFFE4F0FA),
-                                            borderRadius: BorderRadius.circular(12),
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(12),
-                                            child: svc.imageUrl != null
-                                                ? Image.network(svc.imageUrl!, fit: BoxFit.cover, errorBuilder: (_, __, ___) => Icon(Icons.content_cut_rounded, size: 20, color: primaryColor))
-                                                : Icon(Icons.content_cut_rounded, size: 20, color: primaryColor),
-                                          ),
-                                        ),
-                                        const SizedBox(width: 14),
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment: CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                svc.displayName,
-                                                style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor),
-                                              ),
-                                              const SizedBox(height: 3),
-                                              Text(svc.category, style: TextStyle(fontSize: 11, color: mutedText)),
-                                              const SizedBox(height: 8),
-                                              Row(
-                                                children: [
-                                                  if (dur > 0) ...[
-                                                    Icon(Icons.access_time_outlined, size: 13, color: mutedText),
-                                                    const SizedBox(width: 3),
-                                                    Text("$dur${" min".tr}", style: TextStyle(fontSize: 12, color: mutedText)),
-                                                    const SizedBox(width: 10),
-                                                  ],
-                                                  Text(
-                                                    _currency.format(price),
-                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: primaryColor),
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        if (AppSession.userRole == 'owner')
-                                          Column(
-                                            children: [
-                                              GestureDetector(
-                                                onTap: () => _showServiceDialog(service: svc),
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6),
-                                                  decoration: BoxDecoration(color: const Color(0xFFF1F5F9), borderRadius: BorderRadius.circular(6)),
-                                                  child: Icon(Icons.edit_outlined, color: primaryColor, size: 16),
-                                                ),
-                                              ),
-                                              const SizedBox(height: 8),
-                                              GestureDetector(
-                                                onTap: () => _deleteService(svc),
-                                                child: Container(
-                                                  padding: const EdgeInsets.all(6),
-                                                  decoration: BoxDecoration(color: const Color(0xFFFEF2F2), borderRadius: BorderRadius.circular(6)),
-                                                  child: const Icon(Icons.delete_outline, color: Color(0xFFDC2626), size: 16),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                      ],
-                                    ),
-                                  );
-                                },
+                        ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(32.0),
+                              child: Text(
+                                "No services.".tr,
+                                style: TextStyle(color: mutedText),
                               ),
+                            ),
+                          )
+                        : ListView.separated(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            itemCount: filtered.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 12),
+                            itemBuilder: (_, index) {
+                              final svc = filtered[index];
+                              final price = svc.price;
+                              final dur = svc.duration;
+
+                              return Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: Colors.white,
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withOpacity(0.02),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    // Category Icon / Service Image
+                                    Container(
+                                      width: 44,
+                                      height: 44,
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFE4F0FA),
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      child: ClipRRect(
+                                        borderRadius: BorderRadius.circular(12),
+                                        child: svc.imageUrl != null
+                                            ? Image.network(
+                                                svc.imageUrl!,
+                                                fit: BoxFit.cover,
+                                                errorBuilder: (_, __, ___) =>
+                                                    Icon(
+                                                      Icons.content_cut_rounded,
+                                                      size: 20,
+                                                      color: primaryColor,
+                                                    ),
+                                              )
+                                            : Icon(
+                                                Icons.content_cut_rounded,
+                                                size: 20,
+                                                color: primaryColor,
+                                              ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 14),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            svc.displayName,
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              fontWeight: FontWeight.bold,
+                                              color: primaryColor,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 3),
+                                          Text(
+                                            svc.category,
+                                            style: TextStyle(
+                                              fontSize: 11,
+                                              color: mutedText,
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          Row(
+                                            children: [
+                                              if (dur > 0) ...[
+                                                Icon(
+                                                  Icons.access_time_outlined,
+                                                  size: 13,
+                                                  color: mutedText,
+                                                ),
+                                                const SizedBox(width: 3),
+                                                Text(
+                                                  "$dur${" min".tr}",
+                                                  style: TextStyle(
+                                                    fontSize: 12,
+                                                    color: mutedText,
+                                                  ),
+                                                ),
+                                                const SizedBox(width: 10),
+                                              ],
+                                              Text(
+                                                _currency.format(price),
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: primaryColor,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                    if (AppSession.userRole == 'owner')
+                                      Column(
+                                        children: [
+                                          GestureDetector(
+                                            onTap: () => _showServiceDialog(
+                                              service: svc,
+                                            ),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFF1F5F9),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: Icon(
+                                                Icons.edit_outlined,
+                                                color: primaryColor,
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ),
+                                          const SizedBox(height: 8),
+                                          GestureDetector(
+                                            onTap: () => _deleteService(svc),
+                                            child: Container(
+                                              padding: const EdgeInsets.all(6),
+                                              decoration: BoxDecoration(
+                                                color: const Color(0xFFFEF2F2),
+                                                borderRadius:
+                                                    BorderRadius.circular(6),
+                                              ),
+                                              child: const Icon(
+                                                Icons.delete_outline,
+                                                color: Color(0xFFDC2626),
+                                                size: 16,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
                     const SizedBox(height: 100),
                   ],
                 ),
@@ -781,7 +1084,13 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
+          ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: SafeArea(
@@ -805,18 +1114,47 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        if (index == 0) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
-        else if (index == 1) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
-        else if (index == 3) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
-        else if (index == 4) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
-        else setState(() => _selectedIndex = index);
+        if (index == 0)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+            (r) => false,
+          );
+        else if (index == 1)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const BookingListPage()),
+            (r) => false,
+          );
+        else if (index == 3)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ReportPage()),
+            (r) => false,
+          );
+        else if (index == 4)
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+            (r) => false,
+          );
+        else
+          setState(() => _selectedIndex = index);
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? primaryColor : mutedText,
+              letterSpacing: 0.5,
+            ),
+          ),
         ],
       ),
     );

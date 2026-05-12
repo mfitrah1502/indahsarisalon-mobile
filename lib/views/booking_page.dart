@@ -69,27 +69,40 @@ class _BookingPageState extends State<BookingPage> {
   @override
   void initState() {
     super.initState();
-    _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) => Map<String, dynamic>.from(e)));
+    _finalServices = List<Map<String, dynamic>>.from(
+      widget.selectedServices.map((e) => Map<String, dynamic>.from(e)),
+    );
     _finalTotalPrice = widget.totalPrice;
     _effectiveDuration = widget.totalDuration;
     // Rule: Coloring & Pelurusan minimal 4 jam (240 menit), Hair Colouring khusus 7 jam (420 menit)
     bool isLongService = false;
     bool isHairColouring = false;
-    final longKeywords = ['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'];
+    final longKeywords = [
+      'color',
+      'warna',
+      'pelurusan',
+      'smoothing',
+      'relaxing',
+      'rebonding',
+    ];
     final colorKeywords = ['color', 'warna', 'pewarnaan'];
-    
+
     for (var s in widget.selectedServices) {
       final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
       final dName = (s['detail_name'] ?? '').toString().toLowerCase();
       final cat = (s['category'] ?? '').toString().toLowerCase();
-      if (longKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+      if (longKeywords.any(
+        (k) => tName.contains(k) || dName.contains(k) || cat.contains(k),
+      )) {
         isLongService = true;
       }
-      if (colorKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+      if (colorKeywords.any(
+        (k) => tName.contains(k) || dName.contains(k) || cat.contains(k),
+      )) {
         isHairColouring = true;
       }
     }
-    
+
     if (isHairColouring) {
       _effectiveDuration = 420; // 7 jam
     } else if (isLongService && _effectiveDuration < 240) {
@@ -107,25 +120,29 @@ class _BookingPageState extends State<BookingPage> {
 
   void _recalculatePrice() {
     int total = 0;
-    _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) {
-      final s = Map<String, dynamic>.from(e);
-      num price = s['adjusted_price'] ?? s['price'];
-      
-      if (_isColourCircleApplied) {
-        String cat = (s['category'] ?? '').toString().toLowerCase();
-        String tName = (s['treatment_name'] ?? '').toString().toLowerCase();
-        if (cat.contains('color') || tName.contains('color')) {
-          price = price * 0.65; // 35% discount
-          s['adjusted_price'] = price;
-          s['is_colour_circle_discount'] = true;
+    _finalServices = List<Map<String, dynamic>>.from(
+      widget.selectedServices.map((e) {
+        final s = Map<String, dynamic>.from(e);
+        num price = s['adjusted_price'] ?? s['price'];
+
+        if (_isColourCircleApplied) {
+          String cat = (s['category'] ?? '').toString().toLowerCase();
+          String tName = (s['treatment_name'] ?? '').toString().toLowerCase();
+          if (cat.contains('color') || tName.contains('color')) {
+            price = price * 0.65; // 35% discount
+            s['adjusted_price'] = price;
+            s['is_colour_circle_discount'] = true;
+          }
+        } else {
+          s['is_colour_circle_discount'] = false;
+          s['adjusted_price'] = widget.selectedServices.firstWhere(
+            (w) => w['td_id'] == s['td_id'],
+          )['adjusted_price'];
         }
-      } else {
-        s['is_colour_circle_discount'] = false;
-        s['adjusted_price'] = widget.selectedServices.firstWhere((w) => w['td_id'] == s['td_id'])['adjusted_price'];
-      }
-      total += price.toInt();
-      return s;
-    }));
+        total += price.toInt();
+        return s;
+      }),
+    );
     _finalTotalPrice = total;
   }
 
@@ -137,7 +154,7 @@ class _BookingPageState extends State<BookingPage> {
 
     try {
       final selectedDate = widget.selectedDate;
-      
+
       final slots = await _bookingController.getAvailableTimeSlots(
         date: selectedDate,
         stylistId: widget.stylistId,
@@ -146,17 +163,31 @@ class _BookingPageState extends State<BookingPage> {
 
       // Rule: Chemical services max booking 16:00
       // Keywords: pewarnaan, permanent blow, blue fire, relaxing, smoothing, coloring, pelurusan
-      final chemicalKeywords = ['pewarnaan', 'color', 'warna', 'permanent blow', 'blue fire', 'relaxing', 'smoothing', 'pelurusan', 'rebonding'];
+      final chemicalKeywords = [
+        'pewarnaan',
+        'color',
+        'warna',
+        'permanent blow',
+        'blue fire',
+        'relaxing',
+        'smoothing',
+        'pelurusan',
+        'rebonding',
+      ];
       bool isChemical = false;
       bool isHairColouring = false;
       for (var s in widget.selectedServices) {
         final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
         final dName = (s['detail_name'] ?? '').toString().toLowerCase();
         final cat = (s['category'] ?? '').toString().toLowerCase();
-        if (chemicalKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        if (chemicalKeywords.any(
+          (k) => tName.contains(k) || dName.contains(k) || cat.contains(k),
+        )) {
           isChemical = true;
         }
-        if (['color', 'warna', 'pewarnaan'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        if (['color', 'warna', 'pewarnaan'].any(
+          (k) => tName.contains(k) || dName.contains(k) || cat.contains(k),
+        )) {
           isHairColouring = true;
         }
       }
@@ -208,12 +239,19 @@ class _BookingPageState extends State<BookingPage> {
           children: [
             // Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Row(
                 children: [
-                   GestureDetector(
+                  GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: primaryColor,
+                      size: 28,
+                    ),
                   ),
                   Expanded(
                     child: Center(
@@ -242,7 +280,10 @@ class _BookingPageState extends State<BookingPage> {
                   children: [
                     // Info Band
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 14,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(12),
@@ -251,19 +292,30 @@ class _BookingPageState extends State<BookingPage> {
                       child: Row(
                         children: [
                           Container(
-                            width: 44, height: 44,
+                            width: 44,
+                            height: 44,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12), 
+                              borderRadius: BorderRadius.circular(12),
                               color: const Color(0xFFE4F0FA),
-                              image: widget.stylistAvatar != null && widget.stylistAvatar!.isNotEmpty
+                              image:
+                                  widget.stylistAvatar != null &&
+                                      widget.stylistAvatar!.isNotEmpty
                                   ? DecorationImage(
-                                      image: NetworkImage(widget.stylistAvatar!),
+                                      image: NetworkImage(
+                                        widget.stylistAvatar!,
+                                      ),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
                             ),
-                            child: widget.stylistAvatar == null || widget.stylistAvatar!.isEmpty
-                                ? Icon(Icons.person, color: primaryColor, size: 24)
+                            child:
+                                widget.stylistAvatar == null ||
+                                    widget.stylistAvatar!.isEmpty
+                                ? Icon(
+                                    Icons.person,
+                                    color: primaryColor,
+                                    size: 24,
+                                  )
                                 : null,
                           ),
                           const SizedBox(width: 16),
@@ -271,20 +323,50 @@ class _BookingPageState extends State<BookingPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text("STYLIST", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                                Text(
+                                  "STYLIST",
+                                  style: TextStyle(
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                    color: mutedText,
+                                  ),
+                                ),
                                 const SizedBox(height: 2),
-                                Text(widget.stylistName, style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
+                                Text(
+                                  widget.stylistName,
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: primaryColor,
+                                  ),
+                                ),
                               ],
                             ),
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text("DURASI", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                              Text(
+                                "DURASI",
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.bold,
+                                  letterSpacing: 1.0,
+                                  color: mutedText,
+                                ),
+                              ),
                               const SizedBox(height: 2),
-                              Text("$_effectiveDuration Menit", style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: primaryColor)),
+                              Text(
+                                "$_effectiveDuration Menit",
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: primaryColor,
+                                ),
+                              ),
                             ],
-                          )
+                          ),
                         ],
                       ),
                     ),
@@ -308,29 +390,43 @@ class _BookingPageState extends State<BookingPage> {
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (_) => const CustomerListPage(isSelectionMode: true),
+                                builder: (_) => const CustomerListPage(
+                                  isSelectionMode: true,
+                                ),
                               ),
                             );
-                            if (result != null && result is Map<String, dynamic>) {
-                                setState(() {
-                                  _nameCtrl.text = result['name'] ?? '';
-                                  _phoneCtrl.text = result['phone'] ?? '';
-                                  _emailCtrl.text = result['email'] ?? '';
-                                  
-                                  bool isCc = result['is_colour_circle'] == true;
-                                  DateTime? exp = result['colour_circle_expired_at'] != null ? DateTime.tryParse(result['colour_circle_expired_at']) : null;
-                                  _isColourCircleApplied = isCc && exp != null && exp.isAfter(DateTime.now());
-                                  _recalculatePrice();
-                                });
+                            if (result != null &&
+                                result is Map<String, dynamic>) {
+                              setState(() {
+                                _nameCtrl.text = result['name'] ?? '';
+                                _phoneCtrl.text = result['phone'] ?? '';
+                                _emailCtrl.text = result['email'] ?? '';
+
+                                bool isCc = result['is_colour_circle'] == true;
+                                DateTime? exp =
+                                    result['colour_circle_expired_at'] != null
+                                    ? DateTime.tryParse(
+                                        result['colour_circle_expired_at'],
+                                      )
+                                    : null;
+                                _isColourCircleApplied =
+                                    isCc &&
+                                    exp != null &&
+                                    exp.isAfter(DateTime.now());
+                                _recalculatePrice();
+                              });
                             }
                           },
                           icon: const Icon(Icons.person_add_alt_1, size: 18),
                           label: const Text("Dari Daftar"),
                           style: TextButton.styleFrom(
                             foregroundColor: primaryColor,
-                            textStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                            textStyle: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
                           ),
-                        )
+                        ),
                       ],
                     ),
                     const SizedBox(height: 16),
@@ -344,12 +440,26 @@ class _BookingPageState extends State<BookingPage> {
                               labelText: "Nama Lengkap",
                               filled: true,
                               fillColor: Colors.white,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              prefixIcon: Icon(Icons.person_outline, color: mutedText),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: mutedText,
+                              ),
                             ),
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return "Nama harus diisi";
+                              if (v == null || v.trim().isEmpty)
+                                return "Nama harus diisi";
                               return null;
                             },
                           ),
@@ -360,14 +470,29 @@ class _BookingPageState extends State<BookingPage> {
                               labelText: "Nomor WhatsApp / HP",
                               filled: true,
                               fillColor: Colors.white,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              prefixIcon: Icon(Icons.phone_outlined, color: mutedText),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.phone_outlined,
+                                color: mutedText,
+                              ),
                             ),
                             keyboardType: TextInputType.phone,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return "Nomor HP harus diisi";
-                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) return "Nomor telpon harus berupa angka";
+                              if (v == null || v.trim().isEmpty)
+                                return "Nomor HP harus diisi";
+                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim()))
+                                return "Nomor telpon harus berupa angka";
                               return null;
                             },
                           ),
@@ -378,14 +503,31 @@ class _BookingPageState extends State<BookingPage> {
                               labelText: "Email",
                               filled: true,
                               fillColor: Colors.white,
-                              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(12), borderSide: const BorderSide(color: Color(0xFFE2E8F0))),
-                              prefixIcon: Icon(Icons.email_outlined, color: mutedText),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: const BorderSide(
+                                  color: Color(0xFFE2E8F0),
+                                ),
+                              ),
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
+                                color: mutedText,
+                              ),
                             ),
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return "Email harus diisi";
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return "Format email tidak valid";
+                              if (v == null || v.trim().isEmpty)
+                                return "Email harus diisi";
+                              if (!RegExp(
+                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
+                              ).hasMatch(v.trim()))
+                                return "Format email tidak valid";
                               return null;
                             },
                           ),
@@ -410,16 +552,21 @@ class _BookingPageState extends State<BookingPage> {
                       style: TextStyle(fontSize: 13, color: mutedText),
                     ),
                     const SizedBox(height: 24),
-                    
+
                     if (_loadingTimes)
-                      const Center(child: Padding(
-                        padding: EdgeInsets.all(24.0),
-                        child: CircularProgressIndicator(),
-                      ))
+                      const Center(
+                        child: Padding(
+                          padding: EdgeInsets.all(24.0),
+                          child: CircularProgressIndicator(),
+                        ),
+                      )
                     else if (_times.isEmpty)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 24,
+                          horizontal: 16,
+                        ),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(12),
@@ -427,12 +574,19 @@ class _BookingPageState extends State<BookingPage> {
                         ),
                         child: Column(
                           children: [
-                            Icon(Icons.event_busy, color: const Color(0xFFEF4444), size: 32),
+                            Icon(
+                              Icons.event_busy,
+                              color: const Color(0xFFEF4444),
+                              size: 32,
+                            ),
                             const SizedBox(height: 12),
                             Text(
                               "Tidak ada jadwal yang tersedia atau waktu tidak cukup untuk durasi treatment yang kamu pilih.",
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: const Color(0xFF991B1B), fontSize: 13),
+                              style: TextStyle(
+                                color: const Color(0xFF991B1B),
+                                fontSize: 13,
+                              ),
                             ),
                           ],
                         ),
@@ -440,9 +594,41 @@ class _BookingPageState extends State<BookingPage> {
                     else
                       Column(
                         children: [
-                          _buildTimeSection("Pagi", Icons.wb_sunny_outlined, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) < 12).toList()),
-                          _buildTimeSection("Siang", Icons.wb_sunny, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 12 && int.parse(e.value.split(':')[0]) < 15).toList()),
-                          _buildTimeSection("Sore", Icons.wb_twilight, _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 15).toList()),
+                          _buildTimeSection(
+                            "Pagi",
+                            Icons.wb_sunny_outlined,
+                            _times
+                                .asMap()
+                                .entries
+                                .where(
+                                  (e) => int.parse(e.value.split(':')[0]) < 12,
+                                )
+                                .toList(),
+                          ),
+                          _buildTimeSection(
+                            "Siang",
+                            Icons.wb_sunny,
+                            _times
+                                .asMap()
+                                .entries
+                                .where(
+                                  (e) =>
+                                      int.parse(e.value.split(':')[0]) >= 12 &&
+                                      int.parse(e.value.split(':')[0]) < 15,
+                                )
+                                .toList(),
+                          ),
+                          _buildTimeSection(
+                            "Sore",
+                            Icons.wb_twilight,
+                            _times
+                                .asMap()
+                                .entries
+                                .where(
+                                  (e) => int.parse(e.value.split(':')[0]) >= 15,
+                                )
+                                .toList(),
+                          ),
                         ],
                       ),
 
@@ -455,7 +641,9 @@ class _BookingPageState extends State<BookingPage> {
                         style: ElevatedButton.styleFrom(
                           backgroundColor: buttonColor,
                           disabledBackgroundColor: const Color(0xFFCBD5E1),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 0,
                         ),
@@ -464,35 +652,53 @@ class _BookingPageState extends State<BookingPage> {
                             : () async {
                                 if (_formKey.currentState!.validate()) {
                                   final time = _times[_selectedTimeIndex];
-                                  final dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
-                                  final reservationDatetime = "$dateStr $time:00";
+                                  final dateStr = DateFormat(
+                                    'yyyy-MM-dd',
+                                  ).format(widget.selectedDate);
+                                  final reservationDatetime =
+                                      "$dateStr $time:00";
 
-                                  if (widget.isRescheduling && widget.rescheduleBookingId != null) {
+                                  if (widget.isRescheduling &&
+                                      widget.rescheduleBookingId != null) {
                                     // HANDLE RESCHEDULE
                                     setState(() => _loadingTimes = true);
                                     try {
                                       await Supabase.instance.client
                                           .from('bookings')
                                           .update({
-                                            'reservation_datetime': reservationDatetime,
+                                            'reservation_datetime':
+                                                reservationDatetime,
                                             'customer_name': _nameCtrl.text,
                                             'customer_phone': _phoneCtrl.text,
                                             'customer_email': _emailCtrl.text,
                                           })
-                                          .eq('id', widget.rescheduleBookingId!);
-                                      
-                                      if (mounted) {
-                                        PopupHelper.showSuccess(context, "Jadwal berhasil diubah!", onConfirm: () {
-                                          Navigator.pushAndRemoveUntil(
-                                            context,
-                                            MaterialPageRoute(builder: (_) => const BookingListPage()),
-                                            (route) => false,
+                                          .eq(
+                                            'id',
+                                            widget.rescheduleBookingId!,
                                           );
-                                        });
+
+                                      if (mounted) {
+                                        PopupHelper.showSuccess(
+                                          context,
+                                          "Jadwal berhasil diubah!",
+                                          onConfirm: () {
+                                            Navigator.pushAndRemoveUntil(
+                                              context,
+                                              MaterialPageRoute(
+                                                builder: (_) =>
+                                                    const BookingListPage(),
+                                              ),
+                                              (route) => false,
+                                            );
+                                          },
+                                        );
                                       }
                                     } catch (e) {
                                       if (mounted) {
-                                        PopupHelper.showError(context, "Gagal mengubah jadwal: $e");
+                                        PopupHelper.showError(
+                                          context,
+                                          "Gagal mengubah jadwal: $e",
+                                        );
                                         setState(() => _loadingTimes = false);
                                       }
                                     }
@@ -501,16 +707,18 @@ class _BookingPageState extends State<BookingPage> {
                                     Navigator.push(
                                       context,
                                       MaterialPageRoute(
-                                        builder: (context) => PaymentDetailsPage(
-                                          reservationDatetime: reservationDatetime,
-                                          stylistId: widget.stylistId,
-                                          stylistName: widget.stylistName,
-                                          totalPrice: _finalTotalPrice,
-                                          customerName: _nameCtrl.text,
-                                          customerPhone: _phoneCtrl.text,
-                                          customerEmail: _emailCtrl.text,
-                                          selectedServices: _finalServices,
-                                        ),
+                                        builder: (context) =>
+                                            PaymentDetailsPage(
+                                              reservationDatetime:
+                                                  reservationDatetime,
+                                              stylistId: widget.stylistId,
+                                              stylistName: widget.stylistName,
+                                              totalPrice: _finalTotalPrice,
+                                              customerName: _nameCtrl.text,
+                                              customerPhone: _phoneCtrl.text,
+                                              customerEmail: _emailCtrl.text,
+                                              selectedServices: _finalServices,
+                                            ),
                                       ),
                                     );
                                   }
@@ -541,7 +749,11 @@ class _BookingPageState extends State<BookingPage> {
           color: Colors.white,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
-            BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5)),
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 20,
+              offset: const Offset(0, -5),
+            ),
           ],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -562,7 +774,11 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  Widget _buildTimeSection(String title, IconData icon, List<MapEntry<int, String>> slots) {
+  Widget _buildTimeSection(
+    String title,
+    IconData icon,
+    List<MapEntry<int, String>> slots,
+  ) {
     if (slots.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -594,7 +810,10 @@ class _BookingPageState extends State<BookingPage> {
               onTap: () => setState(() => _selectedTimeIndex = index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: isSelected ? primaryColor : Colors.white,
                   borderRadius: BorderRadius.circular(12),
@@ -603,8 +822,20 @@ class _BookingPageState extends State<BookingPage> {
                     width: 1.5,
                   ),
                   boxShadow: isSelected
-                      ? [BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 8, offset: const Offset(0, 4))]
-                      : [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 4, offset: const Offset(0, 2))],
+                      ? [
+                          BoxShadow(
+                            color: primaryColor.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ]
+                      : [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                 ),
                 child: Text(
                   time,
@@ -628,15 +859,35 @@ class _BookingPageState extends State<BookingPage> {
     return GestureDetector(
       onTap: () {
         if (index == 0) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const HomePage()),
+            (r) => false,
+          );
         } else if (index == 1) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const BookingListPage()),
+            (r) => false,
+          );
         } else if (index == 2) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ManageServicesPage()),
+            (r) => false,
+          );
         } else if (index == 3) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const ReportPage()),
+            (r) => false,
+          );
         } else if (index == 4) {
-          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (_) => const SettingsPage()),
+            (r) => false,
+          );
         }
       },
       child: Column(
@@ -644,7 +895,15 @@ class _BookingPageState extends State<BookingPage> {
         children: [
           Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w800,
+              color: isSelected ? primaryColor : mutedText,
+              letterSpacing: 0.5,
+            ),
+          ),
         ],
       ),
     );

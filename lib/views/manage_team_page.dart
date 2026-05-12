@@ -21,13 +21,15 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
   final Color scaffoldBg = const Color(0xFFF6F8FA);
   final Color mutedText = const Color(0xFF64748B);
 
-  int _selectedIndex = 4; // Represents the SETTINGS tab since Manage Team is in Settings
+  int _selectedIndex =
+      4; // Represents the SETTINGS tab since Manage Team is in Settings
 
   final List<Map<String, dynamic>> _roles = [
     {
       "title": "Stylist",
       "type": "stylist",
-      "subtitle": "Professional stylists handling all salon services and treatments.",
+      "subtitle":
+          "Professional stylists handling all salon services and treatments.",
       "icon": Icons.content_cut,
     },
     {
@@ -45,7 +47,10 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -56,11 +61,17 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                       onTap: () {
                         Navigator.pushAndRemoveUntil(
                           context,
-                          MaterialPageRoute(builder: (context) => const SettingsPage()),
+                          MaterialPageRoute(
+                            builder: (context) => const SettingsPage(),
+                          ),
                           (route) => false,
                         );
                       },
-                      child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                      child: Icon(
+                        Icons.arrow_back,
+                        color: primaryColor,
+                        size: 28,
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -73,25 +84,24 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                         ),
                       ),
                     ),
-                    const SizedBox(width: 44), // To balance the back button for centering effect
+                    const SizedBox(
+                      width: 44,
+                    ), // To balance the back button for centering effect
                   ],
                 ),
                 const SizedBox(height: 8),
                 Text(
                   "Manage team members and organizational hierarchy.",
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: mutedText,
-                    height: 1.4,
-                  ),
+                  style: TextStyle(fontSize: 15, color: mutedText, height: 1.4),
                 ),
                 const SizedBox(height: 32),
-                
+
                 ListView.separated(
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   itemCount: _roles.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: 16),
+                  separatorBuilder: (context, index) =>
+                      const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final role = _roles[index];
                     return InkWell(
@@ -108,7 +118,8 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => ListStylistPage(role: role['title']),
+                              builder: (context) =>
+                                  ListStylistPage(role: role['title']),
                             ),
                           );
                         }
@@ -134,7 +145,9 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9), // Light blue-grey background
+                                color: const Color(
+                                  0xFFF1F5F9,
+                                ), // Light blue-grey background
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -144,7 +157,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                               ),
                             ),
                             const SizedBox(width: 16),
-                            
+
                             // Texts
                             Expanded(
                               child: Column(
@@ -171,7 +184,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                               ),
                             ),
                             const SizedBox(width: 12),
-                            
+
                             // Chevron Arrow
                             Icon(
                               Icons.chevron_right,
@@ -184,13 +197,15 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 150), // Increased padding for bottom nav to ensure everything is clickable
+                const SizedBox(
+                  height: 150,
+                ), // Increased padding for bottom nav to ensure everything is clickable
               ],
             ),
           ),
         ),
       ),
-      
+
       // Custom Bottom Navigation Bar
       extendBody: true,
       bottomNavigationBar: Container(
@@ -222,7 +237,6 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       ),
     );
   }
-
 
   Widget _buildNavItem(int index, String label, IconData icon) {
     final isSelected = _selectedIndex == index;
@@ -267,11 +281,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? primaryColor : mutedText,
-            size: 26,
-          ),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
           Text(
             label,
