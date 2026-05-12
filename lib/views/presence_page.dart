@@ -147,7 +147,7 @@ class _PresencePageState extends State<PresencePage> {
                           "Staff Attendance",
                           style: TextStyle(
                             color: primaryColor,
-                            fontSize: 20,
+                            fontSize: 18,
                             fontWeight: FontWeight.bold,
                           ),
                         ),

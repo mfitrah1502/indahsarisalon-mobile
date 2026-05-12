@@ -421,7 +421,7 @@ class _ReportPageState extends State<ReportPage> {
                     "Report".tr,
                     style: TextStyle(
                       color: primaryColor,
-                      fontSize: 22,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

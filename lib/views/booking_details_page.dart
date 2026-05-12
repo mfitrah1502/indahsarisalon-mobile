@@ -219,19 +219,17 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         "💇 *Treatment:* $servicesStr\n\n"
         "_Mohon bersiap sebelum jam booking. Terima kasih!_";
 
-    // Copy to clipboard
-    await Clipboard.setData(ClipboardData(text: message));
-    
-    // Redirect to Group
-    final Uri url = Uri.parse("https://chat.whatsapp.com/DRFrlEewU79EnvKEGatZeb?mode=gi_t");
-    if (await canLaunchUrl(url)) {
-      await launchUrl(url, mode: LaunchMode.externalApplication);
-      if (mounted) {
-        PopupHelper.showSuccess(context, "Pesan disalin. Silakan tempel di grup WhatsApp.");
-      }
-    } else {
-      // Fallback to share if link fails
+    try {
+      // Use Share.share which automatically "pastes" the message into the text box
+      // when the user selects a contact or group in WhatsApp.
       await Share.share(message);
+    } catch (e) {
+      debugPrint("Error broadcasting: $e");
+      // Fallback to clipboard if sharing fails
+      await Clipboard.setData(ClipboardData(text: message));
+      if (mounted) {
+        PopupHelper.showInfo(context, "Pesan disalin ke clipboard.");
+      }
     }
   }
 

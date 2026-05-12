@@ -6,6 +6,7 @@ import 'manage_services_page.dart';
 import 'list_stylist_page.dart';
 import 'presence_page.dart';
 import 'report_page.dart';
+import '../utils/popup_helper.dart';
 
 class ManageTeamPage extends StatefulWidget {
   const ManageTeamPage({super.key});
@@ -25,11 +26,13 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
   final List<Map<String, dynamic>> _roles = [
     {
       "title": "Stylist",
+      "type": "stylist",
       "subtitle": "Professional stylists handling all salon services and treatments.",
       "icon": Icons.content_cut,
     },
     {
       "title": "Presence",
+      "type": "presence",
       "subtitle": "View and manage daily attendance for all team members.",
       "icon": Icons.access_time_filled,
     },
@@ -57,34 +60,20 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                           (route) => false,
                         );
                       },
-                      child: Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withOpacity(0.05),
-                              blurRadius: 10,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: Icon(Icons.arrow_back, color: primaryColor, size: 24),
-                      ),
+                      child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Text(
                         "Team and Roles",
                         style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
                           color: primaryColor,
-                          letterSpacing: -0.5,
                         ),
                       ),
                     ),
+                    const SizedBox(width: 44), // To balance the back button for centering effect
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -105,9 +94,10 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                   separatorBuilder: (context, index) => const SizedBox(height: 16),
                   itemBuilder: (context, index) {
                     final role = _roles[index];
-                    return GestureDetector(
+                    return InkWell(
                       onTap: () {
-                        if (role['title'] == 'Presence') {
+                        final type = role['type'];
+                        if (type == 'presence') {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
@@ -123,6 +113,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                           );
                         }
                       },
+                      borderRadius: BorderRadius.circular(20),
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
@@ -193,7 +184,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                     );
                   },
                 ),
-                const SizedBox(height: 100), // padding for bottom nav
+                const SizedBox(height: 150), // Increased padding for bottom nav to ensure everything is clickable
               ],
             ),
           ),
@@ -231,6 +222,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       ),
     );
   }
+
 
   Widget _buildNavItem(int index, String label, IconData icon) {
     final isSelected = _selectedIndex == index;
