@@ -4,6 +4,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../app_session.dart';
 import '../utils/translations.dart';
+import '../utils/popup_helper.dart';
 
 class EditProfilePage extends StatefulWidget {
   const EditProfilePage({super.key});
@@ -115,17 +116,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (_avatarUrl != null) AppSession.userAvatar = _avatarUrl;
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Profile updated successfully!".tr)),
-        );
-        Navigator.pop(context, true); // Return true to indicate update
+        PopupHelper.showSuccess(context, "Profile updated successfully!".tr, onConfirm: () {
+          Navigator.pop(context, true); // Return true to indicate update
+        });
       }
     } catch (e) {
       debugPrint("Error updating profile: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to update profile".tr)),
-        );
+        PopupHelper.showError(context, "Failed to update profile".tr);
         setState(() => _saving = false);
       }
     }
@@ -145,9 +143,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       debugPrint("Error picking image: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to pick image".tr)),
-        );
+        PopupHelper.showError(context, "Failed to pick image".tr);
       }
     }
   }
@@ -181,9 +177,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       debugPrint("Error uploading image: $e");
       if (mounted) {
         setState(() => _uploadingImage = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Failed to upload image".tr)),
-        );
+        PopupHelper.showError(context, "Failed to upload image".tr);
       }
     }
   }
@@ -367,7 +361,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           padding: const EdgeInsets.symmetric(vertical: 16),
                         ),
                         onPressed: () {
-                          Navigator.pop(context);
+                          PopupHelper.showConfirm(
+                            context,
+                            title: "Discard Changes?".tr,
+                            message: "Are you sure you want to discard your changes?".tr,
+                            onConfirm: () {
+                              Navigator.pop(context);
+                            },
+                          );
                         },
                         child: Text(
                           "DISCARD CHANGES".tr,

@@ -9,6 +9,7 @@ import 'booking_details_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import '../utils/translations.dart';
+import '../utils/popup_helper.dart';
 
 class BookingListPage extends StatefulWidget {
   const BookingListPage({super.key});
@@ -102,34 +103,21 @@ class _BookingListPageState extends State<BookingListPage> {
   }
 
   Future<void> _deleteAllBookings() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Delete All Bookings?".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text("This action will permanently delete all bookings from the database. Continue?".tr),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Yes, Delete".tr, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    PopupHelper.showConfirm(
+      context,
+      title: "Delete All Bookings?".tr,
+      message: "This action will permanently delete all bookings from the database. Continue?".tr,
+      onConfirm: () async {
+        setState(() => _loading = true);
+        try {
+          await _bookingListController.deleteAllBookings();
+          _fetchBookings();
+        } catch (e) {
+          debugPrint("Error deleting: $e");
+          if (mounted) setState(() => _loading = false);
+        }
+      },
     );
-
-    if (confirm == true) {
-      setState(() => _loading = true);
-      try {
-        await _bookingListController.deleteAllBookings();
-        _fetchBookings();
-
-      } catch (e) {
-        debugPrint("Error deleting: $e");
-        if (mounted) setState(() => _loading = false);
-      }
-    }
   }
 
   Color _statusColor(String status) {

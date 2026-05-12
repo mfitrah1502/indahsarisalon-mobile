@@ -14,6 +14,7 @@ import 'settings_page.dart';
 import 'report_page.dart';
 import 'add_promo_page.dart';
 import '../utils/translations.dart';
+import '../utils/popup_helper.dart';
 
 class ManageServicesPage extends StatefulWidget {
   const ManageServicesPage({super.key});
@@ -77,35 +78,23 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   }
 
   Future<void> _deleteService(ServiceModel service) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Delete Service".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-        content: Text("${"Are you sure you want to delete".tr} \"${service.displayName}\"?"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Delete".tr, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        await _serviceController.deleteService(service.tdId);
-        _fetchAll();
-      } catch (e) {
-        String errorMsg = "Gagal menghapus: $e";
-        if (e.toString().contains("violates foreign key constraint")) {
-          errorMsg = "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
+    PopupHelper.showConfirm(
+      context,
+      title: "Delete Service".tr,
+      message: "${"Are you sure you want to delete".tr} \"${service.displayName}\"?",
+      onConfirm: () async {
+        try {
+          await _serviceController.deleteService(service.tdId);
+          _fetchAll();
+        } catch (e) {
+          String errorMsg = "Gagal menghapus: $e";
+          if (e.toString().contains("violates foreign key constraint")) {
+            errorMsg = "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
+          }
+          if (mounted) PopupHelper.showError(context, errorMsg);
         }
-        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(errorMsg), backgroundColor: Colors.red));
-      }
-    }
+      },
+    );
   }
 
   void _showPromoEditDialog(ServiceModel service) async {
@@ -336,9 +325,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             if (picked != null) setStateDialog(() => dialogImage = picked);
                           } catch (e) {
                             debugPrint("Error picking image: $e");
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text("Gagal mengambil gambar: $e")),
-                            );
+                            PopupHelper.showError(context, "Gagal mengambil gambar: $e");
                           }
                         },
                         child: Container(
@@ -530,7 +517,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       _fetchAll();
     } catch (e) {
       debugPrint('Error saving service: $e');
-      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal menyimpan: $e"), backgroundColor: Colors.red));
+      if (mounted) PopupHelper.showError(context, "Gagal menyimpan: $e");
     }
   }
 
@@ -546,22 +533,15 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
             // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pushAndRemoveUntil(
-                      context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+              child: Center(
+                child: Text(
+                  "Manage Services".tr,
+                  style: TextStyle(
+                    color: primaryColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 28.0),
-                        child: Text("Manage Services".tr, style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-                  ),
-                ],
+                ),
               ),
             ),
 

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'auth_page.dart';
+import '../utils/popup_helper.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
@@ -255,9 +256,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                     ),
                     onPressed: (_has8Chars && _hasUppercase && _hasSpecialSymbol && !_isLoading) ? () async {
                       if (passwordController.text != confirmController.text) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(content: Text('Passwords do not match')),
-                        );
+                        PopupHelper.showError(context, 'Passwords do not match');
                         return;
                       }
 
@@ -278,22 +277,17 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         } catch (_) {}
 
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Password successfully updated!')),
-                          );
-                          // Since the user is authenticated from verifyOTP, 
-                          // navigate back to AuthPage to determine routing (Home or Login)
-                          Navigator.pushAndRemoveUntil(
-                            context,
-                            MaterialPageRoute(builder: (context) => const AuthPage()),
-                            (route) => false,
-                          );
+                          PopupHelper.showSuccess(context, 'Password successfully updated!', onConfirm: () {
+                            Navigator.pushAndRemoveUntil(
+                              context,
+                              MaterialPageRoute(builder: (context) => const AuthPage()),
+                              (route) => false,
+                            );
+                          });
                         }
                       } catch (e) {
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(content: Text('Error updating password: ${e.toString()}')),
-                          );
+                          PopupHelper.showError(context, 'Error updating password: ${e.toString()}');
                         }
                       } finally {
                         if (mounted) {

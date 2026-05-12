@@ -20,6 +20,8 @@ import 'customer_list_page.dart';
 import '../app_session.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/translations.dart';
+import 'promo_list_page.dart';
+import '../utils/popup_helper.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -46,6 +48,9 @@ class _HomePageState extends State<HomePage> {
   num customersIncrease = 0;
   List<PromoModel> _promos = [];
 
+  bool _hasUnreadNotifications = false;
+  RealtimeChannel? _notifChannel;
+
   final HomeController _homeController = HomeController();
 
   @override
@@ -53,6 +58,45 @@ class _HomePageState extends State<HomePage> {
     super.initState();
     _fetchDashboardData();
     _fetchPromos();
+    _checkUnreadNotifications();
+    _setupRealtime();
+  }
+
+  @override
+  void dispose() {
+    _notifChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  Future<void> _checkUnreadNotifications() async {
+    try {
+      final res = await Supabase.instance.client
+          .from('notifikasi')
+          .select('id')
+          .eq('is_read', false)
+          .limit(1);
+      if (mounted) {
+        setState(() {
+          _hasUnreadNotifications = res.isNotEmpty;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error check unread: $e');
+    }
+  }
+
+  void _setupRealtime() {
+    _notifChannel = Supabase.instance.client
+        .channel('public:notifikasi')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifikasi',
+          callback: (payload) {
+            _checkUnreadNotifications();
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _fetchPromos() async {
@@ -202,12 +246,30 @@ class _HomePageState extends State<HomePage> {
                               MaterialPageRoute(
                                 builder: (context) => const NotificationsPage(),
                               ),
-                            );
+                            ).then((_) => _checkUnreadNotifications());
                           },
-                          icon: Icon(
-                            Icons.notifications_none,
-                            color: primaryColor,
-                            size: 28,
+                          icon: Stack(
+                            children: [
+                              Icon(
+                                Icons.notifications_none,
+                                color: primaryColor,
+                                size: 28,
+                              ),
+                              if (_hasUnreadNotifications)
+                                Positioned(
+                                  right: 0,
+                                  top: 0,
+                                  child: Container(
+                                    width: 10,
+                                    height: 10,
+                                    decoration: BoxDecoration(
+                                      color: Colors.red,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(color: Colors.white, width: 2),
+                                    ),
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                       ],
@@ -217,36 +279,74 @@ class _HomePageState extends State<HomePage> {
                 
                 const SizedBox(height: 32),
 
-                // Search Bar
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
-                        blurRadius: 10,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    children: [
-                      Icon(Icons.search, color: mutedText, size: 24),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Text(
-                          "Search bookings, customers...".tr,
-                          style: TextStyle(
-                            color: mutedText,
-                            fontSize: 15,
+                // Day, Date, and Time Section
+                StreamBuilder<DateTime>(
+                  stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+                  builder: (context, snapshot) {
+                    final now = snapshot.data ?? DateTime.now();
+                    final dayFormat = DateFormat('EEEE', AppTranslations.currentLanguage == 'Indonesia' ? 'id_ID' : 'en_US');
+                    final dateFormat = DateFormat('d MMMM yyyy', AppTranslations.currentLanguage == 'Indonesia' ? 'id_ID' : 'en_US');
+                    final timeFormat = DateFormat('HH:mm');
+
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(20),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.03),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
-                          overflow: TextOverflow.ellipsis,
+                        ],
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [Colors.white, Colors.pink.shade50.withOpacity(0.3)],
                         ),
                       ),
-                    ],
-                  ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: primaryColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Icon(Icons.calendar_month_outlined, color: primaryColor, size: 28),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  "${dayFormat.format(now)}, ${dateFormat.format(now)}",
+                                  style: TextStyle(
+                                    color: mutedText,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  timeFormat.format(now),
+                                  style: TextStyle(
+                                    color: primaryColor,
+                                    fontSize: 24,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.0,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 32),
@@ -260,9 +360,14 @@ class _HomePageState extends State<HomePage> {
                         "SPECIAL OFFERS".tr,
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
                       ),
-                      Text(
-                        "See All".tr,
-                        style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                      GestureDetector(
+                        onTap: () {
+                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PromoListPage()));
+                        },
+                        child: Text(
+                          "See All".tr,
+                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                        ),
                       ),
                     ],
                   ),
@@ -549,12 +654,7 @@ class _HomePageState extends State<HomePage> {
 
     try {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Menyiapkan broadcast promo..."),
-            duration: Duration(seconds: 1),
-          ),
-        );
+        PopupHelper.showInfo(context, "Menyiapkan broadcast promo...");
       }
 
       if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
@@ -580,12 +680,7 @@ class _HomePageState extends State<HomePage> {
       // Fallback to clipboard if sharing fails
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text("Gagal sharing langsung. Pesan disalin ke clipboard."),
-            backgroundColor: Colors.orange,
-          ),
-        );
+        PopupHelper.showInfo(context, "Gagal sharing langsung. Pesan disalin ke clipboard.");
       }
     }
   }

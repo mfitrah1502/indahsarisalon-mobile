@@ -241,14 +241,10 @@ class PdfReportHelper {
       ),
     );
 
-    // Save to Downloads
+    // Save to Temporary Directory
     final bytes = await pdf.save();
     
-    Directory? directory = await getDownloadsDirectory();
-    if (directory == null) {
-      directory = await getApplicationDocumentsDirectory();
-    }
-    
+    final directory = await getTemporaryDirectory();
     final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf";
     final path = "${directory.path}/$fileName";
     final file = File(path);

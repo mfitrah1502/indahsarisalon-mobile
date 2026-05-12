@@ -40,8 +40,13 @@ class BookingController {
           .select('''
             reservation_datetime, 
             status,
+            updated_at,
             booking_details (
-              treatment_details ( duration )
+              treatment_details ( 
+                duration,
+                name,
+                treatments ( name, categories ( name ) )
+              )
             )
           ''')
           .eq('stylist_id', stylistId)
@@ -61,20 +66,63 @@ class BookingController {
         
         // Hitung total durasi dari booking ini
         int sumDuration = 0;
+        bool isHairColouring = false;
+        bool isLongService = false;
         final details = b['booking_details'] as List<dynamic>?;
         if (details != null) {
           for (var detail in details) {
             final td = detail['treatment_details'] as Map<String, dynamic>?;
-            if (td != null && td['duration'] != null) {
-              sumDuration += (td['duration'] as num).toInt();
+            if (td != null) {
+              if (td['duration'] != null) {
+                sumDuration += (td['duration'] as num).toInt();
+              }
+              final treatments = td['treatments'] as Map<String, dynamic>?;
+              final tName = (treatments?['name'] ?? '').toString().toLowerCase();
+              final categories = treatments?['categories'] as Map<String, dynamic>?;
+              final cat = (categories?['name'] ?? '').toString().toLowerCase();
+              final dName = (td['name'] ?? '').toString().toLowerCase();
+              
+              if (['color', 'warna', 'pewarnaan'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+                isHairColouring = true;
+              }
+              if (['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+                isLongService = true;
+              }
             }
           }
+        }
+        
+        if (isHairColouring) {
+          sumDuration = 420;
+        } else if (isLongService && sumDuration < 240) {
+          sumDuration = 240;
         }
         
         // Jika karena alasan tertentu durasi 0, kita asumsikan default 30 menit
         if (sumDuration == 0) sumDuration = 30;
 
-        final endTime = startTime.add(Duration(minutes: sumDuration));
+        DateTime endTime = startTime.add(Duration(minutes: sumDuration));
+        
+        final status = b['status'] as String?;
+        if (status != null && status.toLowerCase() == 'berhasil') {
+          // Jika sudah selesai (berhasil), gunakan waktu update sebagai end time
+          // agar jadwal setelahnya terbuka kembali.
+          final updatedAtStr = b['updated_at'] as String?;
+          if (updatedAtStr != null) {
+            final updatedAt = DateTime.parse(updatedAtStr).toLocal();
+            // Hanya berlaku jika selesai pada hari yang sama dengan booking
+            if (updatedAt.year == startTime.year && 
+                updatedAt.month == startTime.month && 
+                updatedAt.day == startTime.day) {
+              if (endTime.isAfter(updatedAt)) {
+                endTime = updatedAt.isAfter(startTime) ? updatedAt : startTime;
+              }
+            } else if (updatedAt.isBefore(startTime)) {
+              // Jika diselesaikan sebelum mulai (misal admin salah klik)
+              endTime = startTime;
+            }
+          }
+        }
         
         existingBookings.add(_TimeRange(start: startTime, end: endTime));
       }
@@ -121,8 +169,9 @@ class BookingController {
       }
 
       return availableSlots;
-    } catch (e) {
-      debugPrint("Error fetching schedules: \$e");
+    } catch (e, stack) {
+      debugPrint("Error fetching schedules: $e");
+      debugPrint("Stacktrace: $stack");
       // Fallback aman jika terjadi error
       return []; 
     }
@@ -207,6 +256,7 @@ class BookingController {
         'user_id': userId,
         'title': 'Booking Berhasil',
         'message': 'Booking untuk jadwal ${reservationDatetime.substring(0, 16)} telah berhasil dibuat.',
+        'booking_id': bookingId,
       });
     } catch (e) {
       debugPrint('Failed to insert notification: \$e');

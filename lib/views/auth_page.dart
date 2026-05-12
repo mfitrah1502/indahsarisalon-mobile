@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../controllers/auth_controller.dart';
 import 'home_page.dart';
 import 'forgot_password_page.dart';
+import '../utils/popup_helper.dart';
 
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -32,24 +33,19 @@ class _AuthPageState extends State<AuthPage> {
 
       if (success) {
         // Berhasil login
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Login berhasil!")),
-        );
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(builder: (context) => const HomePage()),
-        );
+        PopupHelper.showSuccess(context, "Login berhasil!", onConfirm: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(builder: (context) => const HomePage()),
+          );
+        });
       } else {
         // Gagal login
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Username atau password salah")),
-        );
+        PopupHelper.showError(context, "Username atau password salah");
       }
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      PopupHelper.showError(context, e.toString());
     }
   }
 
@@ -305,9 +301,7 @@ class _AuthPageState extends State<AuthPage> {
                           ),
                           onPressed: () {
                             if (username.text.isEmpty || password.text.isEmpty) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(content: Text("Isi semua field")),
-                              );
+                              PopupHelper.showError(context, "Isi semua field");
                               return;
                             }
                             login();

@@ -302,6 +302,7 @@
 			);
 			name = "Thin Binary";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/ThinBinary",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
@@ -339,6 +340,7 @@
 			);
 			name = "Run Script";
 			outputPaths = (
+				"$(DERIVED_FILE_DIR)/flutter_build.txt",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;

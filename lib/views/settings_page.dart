@@ -14,6 +14,7 @@ import '../controllers/auth_controller.dart';
 import '../utils/translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'report_page.dart';
+import '../utils/popup_helper.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});
@@ -50,17 +51,15 @@ class _SettingsPageState extends State<SettingsPage> {
             // AppBar / Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: Row(
-                children: [
-                  Text(
-                    "Settings".tr,
-                    style: TextStyle(
-                      color: mainTextColor,
-                      fontSize: 24,
-                      fontWeight: FontWeight.bold,
-                    ),
+              child: Center(
+                child: Text(
+                  "Settings".tr,
+                  style: TextStyle(
+                    color: mainTextColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                ],
+                ),
               ),
             ),
             
@@ -281,7 +280,23 @@ class _SettingsPageState extends State<SettingsPage> {
                         iconBgOverride: isDarkMode ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
                         iconColor: const Color(0xFFEF4444),
                         hideArrow: true,
-                        onTap: () => _showLogoutDialog(context),
+                        onTap: () {
+                          PopupHelper.showConfirm(
+                            context,
+                            title: "Logout".tr,
+                            message: "Are you sure you want to log out?".tr,
+                            onConfirm: () async {
+                              await AuthController().logout();
+                              if (mounted) {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(builder: (context) => const AuthPage()),
+                                  (route) => false,
+                                );
+                              }
+                            },
+                          );
+                        },
                       ),
                     ),
                     
@@ -497,101 +512,5 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showLogoutDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (ctx) {
-        return Dialog(
-          backgroundColor: Colors.transparent,
-          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Logout Icon Box
-                Container(
-                  width: 64, height: 64,
-                  decoration: BoxDecoration(
-                    color: isDarkMode ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Icon(Icons.logout, color: const Color(0xFFD660A1), size: 28),
-                ),
-                const SizedBox(height: 20),
-                Text(
-                  "Logout".tr,
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Are you sure you want to log out?".tr,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
-                  ),
-                ),
-                const SizedBox(height: 32),
-                
-                // Yes Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFB53D7C),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 0,
-                    ),
-                    onPressed: () async {
-                      await AuthController().logout();
-                      Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AuthPage()),
-                        (route) => false,
-                      );
-                    },
-                    child: Text("Yes".tr, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                
-                // No Button
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: isDarkMode ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                    ),
-                    onPressed: () => Navigator.pop(ctx),
-                    child: Text(
-                      "No".tr,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
+
 }

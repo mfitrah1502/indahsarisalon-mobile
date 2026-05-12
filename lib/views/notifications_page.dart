@@ -1,10 +1,14 @@
+import 'booking_details_page.dart';
+import '../controllers/booking_list_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 import 'manage_services_page.dart';
 import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'report_page.dart';
 import 'settings_page.dart';
+import '../utils/popup_helper.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -22,11 +26,33 @@ class _NotificationsPageState extends State<NotificationsPage> {
   bool isLoading = true;
   List<Map<String, dynamic>> todayNotifications = [];
   List<Map<String, dynamic>> earlierNotifications = [];
+  RealtimeChannel? _notifChannel;
 
   @override
   void initState() {
     super.initState();
     _fetchNotifications();
+    _setupRealtime();
+  }
+
+  @override
+  void dispose() {
+    _notifChannel?.unsubscribe();
+    super.dispose();
+  }
+
+  void _setupRealtime() {
+    _notifChannel = Supabase.instance.client
+        .channel('public:notifikasi:page')
+        .onPostgresChanges(
+          event: PostgresChangeEvent.all,
+          schema: 'public',
+          table: 'notifikasi',
+          callback: (payload) {
+            _fetchNotifications();
+          },
+        )
+        .subscribe();
   }
 
   Future<void> _fetchNotifications() async {
@@ -77,13 +103,17 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   String _getTimeAgo(DateTime date) {
-    final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 60) {
-      return "${diff.inMinutes} mins ago";
-    } else if (diff.inHours < 24) {
-      return "${diff.inHours} hours ago";
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final aDate = DateTime(date.year, date.month, date.day);
+    final yesterday = today.subtract(const Duration(days: 1));
+    
+    if (aDate == today) {
+       return DateFormat('HH:mm').format(date);
+    } else if (aDate == yesterday) {
+       return "Yesterday, ${DateFormat('HH:mm').format(date)}";
     } else {
-      return "${diff.inDays} days ago";
+       return DateFormat('dd MMM, HH:mm').format(date);
     }
   }
 
@@ -196,6 +226,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 iconColor: primaryColor,
                                 isUnread: notif['is_read'] == false,
                                 showButton: notif['title'].toString().toLowerCase().contains('booking'),
+                                bookingId: notif['booking_id'],
                               ),
                               const SizedBox(height: 16),
                             ],
@@ -222,7 +253,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 iconBgColor: const Color(0xFFDEE3E8),
                                 iconColor: const Color(0xFF5A6A7D),
                                 isUnread: notif['is_read'] == false,
-                                showButton: false,
+                                showButton: notif['title'].toString().toLowerCase().contains('booking'),
+                                bookingId: notif['booking_id'],
                               ),
                               const SizedBox(height: 16),
                             ],
@@ -285,6 +317,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
     required Color iconColor,
     required bool isUnread,
     required bool showButton,
+    int? bookingId,
   }) {
     Color cardBg = isUnread ? Colors.white : const Color(0xFFF1F4F8);
 
@@ -312,7 +345,25 @@ class _NotificationsPageState extends State<NotificationsPage> {
               color: iconBgColor,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(iconData, color: iconColor, size: 28),
+            child: Stack(
+              children: [
+                Icon(iconData, color: iconColor, size: 28),
+                if (isUnread)
+                  Positioned(
+                    top: 0,
+                    right: 0,
+                    child: Container(
+                      width: 10,
+                      height: 10,
+                      decoration: BoxDecoration(
+                        color: Colors.red,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 2),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
           ),
           const SizedBox(width: 16),
           Expanded(
@@ -368,7 +419,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     height: 1.4,
                   ),
                 ),
-                if (showButton) ...[
+                if (showButton && bookingId != null) ...[
                   const SizedBox(height: 12),
                   SizedBox(
                     height: 36,
@@ -382,7 +433,35 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         ),
                         padding: const EdgeInsets.symmetric(horizontal: 20),
                       ),
-                      onPressed: () {},
+                      onPressed: () async {
+                        showDialog(
+                          context: context,
+                          barrierDismissible: false,
+                          builder: (context) => const Center(child: CircularProgressIndicator()),
+                        );
+                        try {
+                          final controller = BookingListController();
+                          final model = await controller.fetchBookingById(bookingId);
+                          if (mounted) {
+                            Navigator.pop(context); // close dialog
+                            if (model != null) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => BookingDetailsPage(booking: model.toMap()),
+                                ),
+                              );
+                            } else {
+                              PopupHelper.showError(context, 'Booking details not found.');
+                            }
+                          }
+                        } catch (e) {
+                          if (mounted) {
+                            Navigator.pop(context);
+                            PopupHelper.showError(context, 'Error: $e');
+                          }
+                        }
+                      },
                       child: const Text(
                         "View Detail",
                         style: TextStyle(

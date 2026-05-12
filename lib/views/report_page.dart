@@ -15,6 +15,7 @@ import 'manage_services_page.dart';
 import 'settings_page.dart';
 import '../utils/translations.dart';
 import '../utils/pdf_report_helper.dart';
+import '../utils/popup_helper.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -236,14 +237,14 @@ class _ReportPageState extends State<ReportPage> {
                         if (!context.mounted) return;
                         Navigator.pop(context);
                         _fetchData();
-                        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Pengeluaran berhasil ditambahkan")));
+                        PopupHelper.showSuccess(context, "Pengeluaran berhasil ditambahkan");
                       } catch (e) {
                         debugPrint("Error adding expense: $e");
                         if (!context.mounted) return;
-                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal: $e")));
+                        PopupHelper.showError(context, "Gagal: $e");
                       }
                     } else {
-                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("Harap isi semua field")));
+                      PopupHelper.showError(context, "Harap isi semua field");
                     }
                   },
                   child: const Text("Simpan", style: TextStyle(color: Colors.white)),
@@ -270,16 +271,20 @@ class _ReportPageState extends State<ReportPage> {
         summary: summary,
         dateRange: _dateRange,
       );
+      
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text("Berhasil disimpan ke: $path"),
-        backgroundColor: Colors.green,
-        duration: const Duration(seconds: 4),
-      ));
+
+      // Open Share Sheet so user can Save to Files / WhatsApp / etc.
+      await Share.shareXFiles(
+        [XFile(path)],
+        subject: "Report Salon Indah Sari",
+      );
+
+      PopupHelper.showInfo(context, "PDF Report ready to share/save".tr);
     } catch (e) {
       debugPrint("Error exporting pdf: $e");
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal mengunduh report PDF: $e")));
+      PopupHelper.showError(context, "Gagal mengunduh report PDF: $e");
     }
   }
 

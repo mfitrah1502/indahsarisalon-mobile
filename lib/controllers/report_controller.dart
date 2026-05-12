@@ -43,10 +43,10 @@ class ReportController {
     }
 
     try {
-      // Fetch Expenses (Removing 'name' as it might not exist in DB yet)
+      // Fetch Expenses
       expensesData = await _supabase
           .from('expenses')
-          .select('amount, expense_date, category')
+          .select('amount, expense_date, category, description')
           .gte('expense_date', startStr)
           .lt('expense_date', endStr);
     } catch (e) {
@@ -128,7 +128,7 @@ class ReportController {
 
       expenseDetails.add(ExpenseDetail(
         date: eDate,
-        name: e['category'] ?? 'Pengeluaran', // Use category as name since name column is missing
+        name: e['description'] ?? e['category'] ?? 'Pengeluaran',
         category: e['category'] ?? 'others',
         amount: amount,
       ));
@@ -159,23 +159,11 @@ class ReportController {
   }
 
   Future<void> addExpense({required String name, required int amount, required String category}) async {
-    // Note: We might not be able to save 'name' if the column doesn't exist.
-    // For now, let's keep it safe. If 'name' column is added later, this will work.
-    // To be safe, we can try to insert and if it fails, insert without name.
-    try {
-      await _supabase.from('expenses').insert({
-        'name': name,
-        'amount': amount,
-        'category': category,
-        'expense_date': DateTime.now().toIso8601String(),
-      });
-    } catch (e) {
-      debugPrint("Failed to insert with name, trying without: $e");
-      await _supabase.from('expenses').insert({
-        'amount': amount,
-        'category': category,
-        'expense_date': DateTime.now().toIso8601String(),
-      });
-    }
+    await _supabase.from('expenses').insert({
+      'description': name,
+      'amount': amount,
+      'category': category,
+      'expense_date': DateTime.now().toIso8601String(),
+    });
   }
 }

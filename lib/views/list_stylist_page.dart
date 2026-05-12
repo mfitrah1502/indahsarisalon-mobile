@@ -8,6 +8,8 @@ import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'settings_page.dart';
+import 'report_page.dart';
+import '../utils/popup_helper.dart';
 
 class ListStylistPage extends StatefulWidget {
   final String role;
@@ -265,37 +267,27 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   
                                   // Delete Icon
                                   GestureDetector(
-                                    onTap: () async {
-                                      final confirm = await showDialog<bool>(
-                                        context: context,
-                                        builder: (_) => AlertDialog(
-                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                                          title: Text("Hapus Stylist", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
-                                          content: Text("Yakin ingin menghapus ${stylist.name} dari tim?"),
-                                          actions: [
-                                            TextButton(onPressed: () => Navigator.pop(context, false), child: const Text("Batal")),
-                                            ElevatedButton(
-                                              style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
-                                              onPressed: () => Navigator.pop(context, true),
-                                              child: const Text("Hapus", style: TextStyle(color: Colors.white)),
-                                            ),
-                                          ],
-                                        ),
+                                    onTap: () {
+                                      PopupHelper.showConfirm(
+                                        context,
+                                        title: "Hapus Stylist",
+                                        message: "Yakin ingin menghapus ${stylist.name} dari tim?",
+                                        onConfirm: () async {
+                                          if (stylist.id != null) {
+                                            try {
+                                              await _userController.deleteStylist(stylist.id!);
+                                              _fetchStylists();
+                                              if (mounted) {
+                                                PopupHelper.showSuccess(context, 'Stylist berhasil dihapus');
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                PopupHelper.showError(context, 'Gagal menghapus stylist: $e');
+                                              }
+                                            }
+                                          }
+                                        },
                                       );
-
-                                      if (confirm == true && stylist.id != null) {
-                                        try {
-                                          await _userController.deleteStylist(stylist.id!);
-                                          _fetchStylists();
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Stylist berhasil dihapus')));
-                                          }
-                                        } catch (e) {
-                                          if (mounted) {
-                                            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Gagal menghapus stylist: $e')));
-                                          }
-                                        }
-                                      }
                                     },
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
@@ -376,6 +368,8 @@ class _ListStylistPageState extends State<ListStylistPage> {
     DateTime? selectedJoinDate = stylist?.joinDate;
     String? selectedGender = stylist?.gender;
     String? selectedEmploymentStatus = stylist?.employmentStatus;
+    String? selectedPosition = stylist?.position;
+    String? selectedDivision = stylist?.division;
 
     File? selectedImage;
     String? avatarUrl = stylist?.avatar;
@@ -419,7 +413,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                 setModalState(() => isUploading = false);
                 debugPrint("Error uploading image: $e");
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Gagal upload foto: $e")));
+                  PopupHelper.showError(context, "Gagal upload foto: $e");
                 }
               }
             }
@@ -500,8 +494,8 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 "address": addressController.text.trim(),
                                 "phone": phoneController.text.trim(),
                                 "email": emailValue,
-                                "position": positionController.text.trim(),
-                                "division": divisionController.text.trim(),
+                                "position": selectedPosition,
+                                "division": selectedDivision,
                                 "join_date": selectedJoinDate?.toIso8601String(),
                                 "employment_status": selectedEmploymentStatus,
                                 "emergency_contact": emergencyContactController.text.trim(),
@@ -528,7 +522,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 _fetchStylists();
                               } catch (e) {
                                 debugPrint("Error saving stylist: $e");
-                                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Failed to save data: $e')));
+                                PopupHelper.showError(context, 'Failed to save data: $e');
                               }
                             }
                             if (mounted) Navigator.pop(context);
@@ -678,7 +672,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 child: Column(
                                   children: [
                                     _buildTextFieldLabel("JABATAN"),
-                                    _buildTextField("e.g. Senior Stylist", positionController),
+                                    _buildDropdownField(
+                                      selectedPosition ?? "Select Jabatan",
+                                      ["hairstylist", "beautician", "therapist"],
+                                      (val) {
+                                        setModalState(() => selectedPosition = val);
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -687,7 +687,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 child: Column(
                                   children: [
                                     _buildTextFieldLabel("DIVISI"),
-                                    _buildTextField("e.g. Hair", divisionController),
+                                    _buildDropdownField(
+                                      selectedDivision ?? "Select Divisi",
+                                      ["hair", "beauty"],
+                                      (val) {
+                                        setModalState(() => selectedDivision = val);
+                                      },
+                                    ),
                                   ],
                                 ),
                               ),
@@ -900,6 +906,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const SettingsPage()),
+            (route) => false,
+          );
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const ReportPage()),
             (route) => false,
           );
         } else {

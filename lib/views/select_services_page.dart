@@ -302,25 +302,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             // Header
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pushAndRemoveUntil(
-                      context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 28.0),
-                        child: Text(
-                          "New Booking".tr,
-                          style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
+              child: Center(
+                child: Text(
+                  "New Booking".tr,
+                  style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
 

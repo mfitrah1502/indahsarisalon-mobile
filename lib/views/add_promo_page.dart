@@ -5,6 +5,7 @@ import '../controllers/service_controller.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/popup_helper.dart';
 import 'package:intl/intl.dart';
 
 class AddPromoPage extends StatefulWidget {
@@ -48,9 +49,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
     } catch (e) {
       debugPrint("Error picking image: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal mengambil gambar: $e")),
-        );
+        PopupHelper.showError(context, "Gagal mengambil gambar: $e");
       }
     }
   }
@@ -107,9 +106,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
         _priceController.text.isEmpty || 
         _startDate == null || 
         _endDate == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Harap lengkapi semua data")),
-      );
+      PopupHelper.showError(context, "Harap lengkapi semua data");
       return;
     }
 
@@ -128,9 +125,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
         } catch (uploadError) {
           debugPrint("Upload process failed: $uploadError");
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("Gagal upload gambar: $uploadError. Pastikan bucket 'treatments' sudah ada.")),
-            );
+            PopupHelper.showError(context, "Gagal upload gambar: $uploadError. Pastikan bucket 'treatments' sudah ada.");
           }
           // Continue saving without image if upload fails, or return if you want to force image
         }
@@ -212,17 +207,14 @@ class _AddPromoPageState extends State<AddPromoPage> {
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Promo berhasil ditambahkan ke Layanan!")),
-        );
-        Navigator.pop(context, true);
+        PopupHelper.showSuccess(context, "Promo berhasil ditambahkan ke Layanan!", onConfirm: () {
+          Navigator.pop(context, true);
+        });
       }
     } catch (e) {
       debugPrint("Error saving promo: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal menyimpan promo: $e")),
-        );
+        PopupHelper.showError(context, "Gagal menyimpan promo: $e");
         setState(() => _loading = false);
       }
     }

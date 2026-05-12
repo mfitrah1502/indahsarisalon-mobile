@@ -65,20 +65,27 @@ class _BookingPageState extends State<BookingPage> {
     _finalServices = List<Map<String, dynamic>>.from(widget.selectedServices.map((e) => Map<String, dynamic>.from(e)));
     _finalTotalPrice = widget.totalPrice;
     _effectiveDuration = widget.totalDuration;
-    
-    // Rule: Coloring & Pelurusan minimal 4 jam (240 menit)
+    // Rule: Coloring & Pelurusan minimal 4 jam (240 menit), Hair Colouring khusus 7 jam (420 menit)
     bool isLongService = false;
+    bool isHairColouring = false;
     final longKeywords = ['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'];
+    final colorKeywords = ['color', 'warna', 'pewarnaan'];
+    
     for (var s in widget.selectedServices) {
       final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
       final dName = (s['detail_name'] ?? '').toString().toLowerCase();
       final cat = (s['category'] ?? '').toString().toLowerCase();
       if (longKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
         isLongService = true;
-        break;
+      }
+      if (colorKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        isHairColouring = true;
       }
     }
-    if (isLongService && _effectiveDuration < 240) {
+    
+    if (isHairColouring) {
+      _effectiveDuration = 420; // 7 jam
+    } else if (isLongService && _effectiveDuration < 240) {
       _effectiveDuration = 240;
     }
 
@@ -128,18 +135,30 @@ class _BookingPageState extends State<BookingPage> {
       // Keywords: pewarnaan, permanent blow, blue fire, relaxing, smoothing, coloring, pelurusan
       final chemicalKeywords = ['pewarnaan', 'color', 'warna', 'permanent blow', 'blue fire', 'relaxing', 'smoothing', 'pelurusan', 'rebonding'];
       bool isChemical = false;
+      bool isHairColouring = false;
       for (var s in widget.selectedServices) {
         final tName = (s['treatment_name'] ?? '').toString().toLowerCase();
         final dName = (s['detail_name'] ?? '').toString().toLowerCase();
         final cat = (s['category'] ?? '').toString().toLowerCase();
         if (chemicalKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
           isChemical = true;
-          break;
+        }
+        if (['color', 'warna', 'pewarnaan'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+          isHairColouring = true;
         }
       }
 
       List<String> filteredSlots = slots;
-      if (isChemical) {
+      if (isHairColouring) {
+        filteredSlots = slots.where((t) {
+          final hour = int.parse(t.split(':')[0]);
+          final minute = int.parse(t.split(':')[1]);
+          // Hanya bisa di 09:00, 09:30, 10:00, 10:30
+          if (hour == 9) return true;
+          if (hour == 10 && (minute == 0 || minute == 30)) return true;
+          return false;
+        }).toList();
+      } else if (isChemical) {
         filteredSlots = slots.where((t) {
           final hour = int.parse(t.split(':')[0]);
           final minute = int.parse(t.split(':')[1]);

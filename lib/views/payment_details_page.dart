@@ -8,6 +8,7 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import '../utils/midtrans_helper.dart';
+import '../utils/popup_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 
@@ -112,60 +113,23 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         );
       } else {
         // For Tunai, show Success Dialog
-        showDialog(
-          context: context,
-          barrierDismissible: false,
-          builder: (_) => AlertDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const SizedBox(height: 8),
-                Container(
-                  width: 64, height: 64,
-                  decoration: BoxDecoration(color: const Color(0xFFE4F0FA), shape: BoxShape.circle),
-                  child: Icon(Icons.check, color: primaryColor, size: 36),
-                ),
-                const SizedBox(height: 16),
-                Text("Booking Berhasil!", style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor)),
-                const SizedBox(height: 8),
-                Text(
-                  "Jadwal dengan ${widget.stylistName} telah tersimpan.\n${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: mutedText, fontSize: 13),
-                ),
-              ],
-            ),
-            actions: [
-              SizedBox(
-                width: double.infinity,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: buttonColor,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                  onPressed: () {
-                    Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const BookingListPage()),
-                      (route) => false,
-                    );
-                  },
-                  child: const Text("Lihat Daftar Booking", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                ),
-              ),
-            ],
-          ),
+        PopupHelper.showSuccess(
+          context,
+          "Jadwal dengan ${widget.stylistName} telah tersimpan.\n${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
+          onConfirm: () {
+            Navigator.pushAndRemoveUntil(
+              context,
+              MaterialPageRoute(builder: (_) => const BookingListPage()),
+              (route) => false,
+            );
+          },
         );
       }
 
     } catch (e) {
       debugPrint('Booking error: $e');
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal menyimpan booking: $e"), backgroundColor: Colors.red),
-        );
+        PopupHelper.showError(context, "Gagal menyimpan booking: $e");
         setState(() => _processing = false);
       }
     }

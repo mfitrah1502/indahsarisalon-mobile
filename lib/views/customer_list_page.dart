@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../controllers/user_controller.dart';
 import 'package:intl/intl.dart';
 import '../utils/translations.dart';
+import 'customer_booking_history_page.dart';
+import '../utils/popup_helper.dart';
 
 class CustomerListPage extends StatefulWidget {
   final bool isSelectionMode;
@@ -92,6 +94,13 @@ class _CustomerListPageState extends State<CustomerListPage> {
               _selectedKeys.add(key);
             }
           });
+        } else {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => CustomerBookingHistoryPage(customer: customer),
+            ),
+          );
         }
       },
       child: Container(
@@ -272,21 +281,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
   Future<void> _deleteSelectedCustomers() async {
     if (_selectedKeys.isEmpty) return;
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: Text("Delete Customer?".tr),
-        content: Text("${"Are you sure you want to delete ".tr}${_selectedKeys.length}${" selected customers? All related booking data will also be deleted.".tr}"),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("Cancel".tr, style: TextStyle(color: mutedText))),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.red, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Delete".tr),
-          ),
-        ],
-      ),
+    final confirm = await PopupHelper.showConfirm(
+      context,
+      title: "Delete Customer?".tr,
+      message: "${"Are you sure you want to delete ".tr}${_selectedKeys.length}${" selected customers? All related booking data will also be deleted.".tr}",
     );
 
     if (confirm != true) return;
@@ -301,7 +299,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
       await _userController.deleteCustomers(customersToDelete);
       
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Customer data cleared successfully".tr)));
+        PopupHelper.showSuccess(context, "Customer data cleared successfully".tr);
         setState(() {
           _isSelectionActive = false;
           _selectedKeys.clear();
@@ -311,7 +309,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     } catch (e) {
       debugPrint("Error deleting customers: $e");
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text("Failed to delete some customer data.".tr)));
+        PopupHelper.showError(context, "Failed to delete some customer data.".tr);
         setState(() => _loading = false);
       }
     }

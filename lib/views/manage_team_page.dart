@@ -5,6 +5,7 @@ import 'settings_page.dart';
 import 'manage_services_page.dart';
 import 'list_stylist_page.dart';
 import 'presence_page.dart';
+import 'report_page.dart';
 
 class ManageTeamPage extends StatefulWidget {
   const ManageTeamPage({super.key});
@@ -257,6 +258,12 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (context) => const SettingsPage()),
+            (route) => false,
+          );
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(
+            context,
+            MaterialPageRoute(builder: (context) => const ReportPage()),
             (route) => false,
           );
         } else {

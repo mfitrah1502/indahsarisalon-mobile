@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../app_session.dart';
 import '../utils/translations.dart';
+import '../utils/popup_helper.dart';
 
 class ChangePasswordPage extends StatefulWidget {
   const ChangePasswordPage({super.key});
@@ -40,23 +41,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final confirmPass = confirmController.text;
 
     if (currentPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Please fill all fields'.tr)),
-      );
+      PopupHelper.showError(context, 'Please fill all fields'.tr);
       return;
     }
 
     if (newPass != confirmPass) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('New passwords do not match'.tr)),
-      );
+      PopupHelper.showError(context, 'New passwords do not match'.tr);
       return;
     }
 
     if (newPass.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Password must be at least 8 characters'.tr)),
-      );
+      PopupHelper.showError(context, 'Password must be at least 8 characters'.tr);
       return;
     }
 
@@ -76,9 +71,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final isCurrentCorrect = BCrypt.checkpw(currentPass, userData['password']);
       if (!isCurrentCorrect) {
         setState(() => _isLoading = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Current password is incorrect'.tr)),
-        );
+        PopupHelper.showError(context, 'Current password is incorrect'.tr);
         return;
       }
 
@@ -97,16 +90,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       } catch (_) {}
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Password successfully updated!'.tr)),
-        );
-        Navigator.pop(context);
+        PopupHelper.showSuccess(context, 'Password successfully updated!'.tr, onConfirm: () {
+          Navigator.pop(context);
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error updating password: ${e.toString()}'.tr)),
-        );
+        PopupHelper.showError(context, 'Error updating password: ${e.toString()}'.tr);
       }
     } finally {
       if (mounted) {

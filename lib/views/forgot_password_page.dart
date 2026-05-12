@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'auth_page.dart';
 import 'reset_password_page.dart';
+import '../utils/popup_helper.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -201,15 +202,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                   final username = usernameController.text.trim();
 
                                   if (username.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter your username')),
-                                    );
+                                      PopupHelper.showError(context, 'Please enter your username');
                                     return;
                                   }
                                   if (email.isEmpty) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(content: Text('Please enter your email')),
-                                    );
+                                      PopupHelper.showError(context, 'Please enter your email');
                                     return;
                                   }
 
@@ -222,17 +219,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         .maybeSingle();
 
                                     if (user == null) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Username tidak ditemukan')),
-                                      );
+                                        PopupHelper.showError(context, 'Username tidak ditemukan');
                                       setState(() => _isLoading = false);
                                       return;
                                     }
 
                                     if (user['email'] != email) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        const SnackBar(content: Text('Email tidak sesuai dengan username tersebut')),
-                                      );
+                                        PopupHelper.showError(context, 'Email tidak sesuai dengan username tersebut');
                                       setState(() => _isLoading = false);
                                       return;
                                     }
@@ -247,18 +240,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       if (e.statusCode == '429' || e.message.contains('rate limit')) {
                                         message = 'Too many requests. Please wait a while before requesting another OTP.';
                                       }
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(
-                                          content: Text(message),
-                                          backgroundColor: Colors.red.shade400,
-                                        ),
-                                      );
+                                        PopupHelper.showError(context, message);
                                     }
                                   } catch (e) {
                                     if (mounted) {
-                                      ScaffoldMessenger.of(context).showSnackBar(
-                                        SnackBar(content: Text('Error: ${e.toString()}')),
-                                      );
+                                        PopupHelper.showError(context, 'Error: ${e.toString()}');
                                     }
                                   } finally {
                                     if (mounted) {
@@ -356,9 +342,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             Future<void> verify() async {
               final otp = _otpControllers.map((c) => c.text).join();
               if (otp.length != 8) {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('Please enter a valid 8-digit OTP')),
-                );
+                  PopupHelper.showError(context, 'Please enter a valid 8-digit OTP');
                 return;
               }
 
@@ -381,9 +365,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                 }
               } catch (e) {
                 if (mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(content: Text('Invalid OTP or error: ${e.toString()}')),
-                  );
+                    PopupHelper.showError(context, 'Invalid OTP or error: ${e.toString()}');
                 }
               } finally {
                 if (mounted) {
@@ -524,7 +506,16 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
                 // Cancel Button
                 TextButton(
-                  onPressed: () => Navigator.pop(ctx),
+                  onPressed: () {
+                    PopupHelper.showConfirm(
+                      context,
+                      title: "Cancel Verification?",
+                      message: "Are you sure you want to cancel the OTP verification process?",
+                      onConfirm: () {
+                        Navigator.pop(ctx);
+                      },
+                    );
+                  },
                   child: Text(
                     "Cancel",
                     style: TextStyle(
@@ -552,15 +543,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                         try {
                           await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(content: Text('OTP sent successfully!')),
-                            );
+                              PopupHelper.showSuccess(context, 'OTP sent successfully!');
                           }
                         } catch (e) {
                           if (mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(content: Text('Failed to resend OTP: ${e.toString()}')),
-                            );
+                              PopupHelper.showError(context, 'Failed to resend OTP: ${e.toString()}');
                           }
                         } finally {
                           setStateDialog(() => isResending = false);

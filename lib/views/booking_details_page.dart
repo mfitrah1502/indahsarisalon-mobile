@@ -9,6 +9,7 @@ import 'report_page.dart';
 import '../app_session.dart';
 import '../utils/translations.dart';
 import 'receipt_page.dart';
+import '../utils/popup_helper.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -74,6 +75,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             'user_id': userId,
             'title': 'Status Booking Diperbarui',
             'message': 'Booking dengan jadwal \n${widget.booking['datetime']} statusnya $statusText.',
+            'booking_id': widget.booking['id'],
           });
         }
       } catch (e) {
@@ -87,31 +89,20 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       debugPrint('Error updating booking: $e');
       if (mounted) {
         setState(() => _updating = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Gagal memperbarui: $e"), backgroundColor: Colors.red),
-        );
+        PopupHelper.showError(context, "Gagal memperbarui: $e");
       }
     }
   }
 
   Future<void> _cancelBooking() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text("Cancel Booking?".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
-        content: Text("Cancelled bookings cannot be restored.".tr),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(context, false), child: Text("No".tr)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFDC2626)),
-            onPressed: () => Navigator.pop(context, true),
-            child: Text("Yes, Cancel".tr, style: const TextStyle(color: Colors.white)),
-          ),
-        ],
-      ),
+    PopupHelper.showConfirm(
+      context,
+      title: "Cancel Booking?".tr,
+      message: "Cancelled bookings cannot be restored.".tr,
+      onConfirm: () async {
+        await _updateStatus('dibatalkan');
+      },
     );
-    if (confirm == true) await _updateStatus('dibatalkan'); // Cancel status
   }
 
   Future<void> _showReceipt() async {

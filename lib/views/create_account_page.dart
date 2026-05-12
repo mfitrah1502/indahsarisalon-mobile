@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
+import '../utils/popup_helper.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -61,16 +62,13 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Admin account created successfully!"), backgroundColor: Colors.green),
-        );
-        Navigator.pop(context);
+        PopupHelper.showSuccess(context, "Admin account created successfully!", onConfirm: () {
+          Navigator.pop(context);
+        });
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(e.toString()), backgroundColor: Colors.redAccent),
-        );
+        PopupHelper.showError(context, e.toString());
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
