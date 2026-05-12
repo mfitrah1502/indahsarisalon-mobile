@@ -9,6 +9,7 @@ import 'booking_list_page.dart';
 import 'report_page.dart';
 import 'settings_page.dart';
 import '../utils/popup_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -124,6 +125,59 @@ class _NotificationsPageState extends State<NotificationsPage> {
     if (t.contains("payment")) return Icons.payments_outlined;
     if (t.contains("reminder")) return Icons.alarm_rounded;
     return Icons.info_outline;
+  }
+
+  Future<void> _sendWhatsAppReminder(int bookingId) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const Center(child: CircularProgressIndicator()),
+    );
+    
+    try {
+      final controller = BookingListController();
+      final booking = await controller.fetchBookingById(bookingId);
+      
+      if (!mounted) return;
+      Navigator.pop(context); // Close loading
+
+      if (booking == null) {
+        PopupHelper.showError(context, "Booking tidak ditemukan.");
+        return;
+      }
+
+      final phone = booking.customerPhone;
+      if (phone == '-' || phone.isEmpty) {
+        PopupHelper.showError(context, "Nomor telepon pelanggan tidak tersedia.");
+        return;
+      }
+
+      // Clean phone number
+      String cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+      if (cleanPhone.startsWith('0')) {
+        cleanPhone = '62${cleanPhone.substring(1)}';
+      } else if (!cleanPhone.startsWith('62')) {
+        cleanPhone = '62$cleanPhone';
+      }
+
+      final String time = booking.datetime.substring(11, 16);
+      final String message = "Halo ${booking.customerName}, ini reminder dari *Indah Sari Salon*. 🌸\n\n"
+          "Treatment Anda dijadwalkan pukul *$time WIB*. Apakah ada perubahan jadwal atau konfirmasi kehadiran? \n\n"
+          "Terima kasih!";
+
+      final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+      final uri = Uri.parse(url);
+      if (await canLaunchUrl(uri)) {
+        await launchUrl(uri, mode: LaunchMode.externalApplication);
+      } else {
+        PopupHelper.showError(context, "Gagal membuka WhatsApp.");
+      }
+    } catch (e) {
+      if (mounted) {
+        Navigator.pop(context);
+        PopupHelper.showError(context, "Gagal mengirim reminder: $e");
+      }
+    }
   }
 
   @override
@@ -421,55 +475,75 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 ),
                 if (showButton && bookingId != null) ...[
                   const SizedBox(height: 12),
-                  SizedBox(
-                    height: 36,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: buttonColor,
-                        foregroundColor: Colors.white,
-                        elevation: 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(18),
+                  Row(
+                    children: [
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFF25D366),
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          onPressed: () => _sendWhatsAppReminder(bookingId),
+                          icon: const Icon(Icons.chat, size: 16),
+                          label: const Text("Reminder WA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
-                        padding: const EdgeInsets.symmetric(horizontal: 20),
                       ),
-                      onPressed: () async {
-                        showDialog(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (context) => const Center(child: CircularProgressIndicator()),
-                        );
-                        try {
-                          final controller = BookingListController();
-                          final model = await controller.fetchBookingById(bookingId);
-                          if (mounted) {
-                            Navigator.pop(context); // close dialog
-                            if (model != null) {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => BookingDetailsPage(booking: model.toMap()),
-                                ),
-                              );
-                            } else {
-                              PopupHelper.showError(context, 'Booking details not found.');
+                      const SizedBox(width: 8),
+                      SizedBox(
+                        height: 36,
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(18),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                          ),
+                          onPressed: () async {
+                            showDialog(
+                              context: context,
+                              barrierDismissible: false,
+                              builder: (context) => const Center(child: CircularProgressIndicator()),
+                            );
+                            try {
+                              final controller = BookingListController();
+                              final model = await controller.fetchBookingById(bookingId);
+                              if (mounted) {
+                                Navigator.pop(context); // close dialog
+                                if (model != null) {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(
+                                      builder: (_) => BookingDetailsPage(booking: model.toMap()),
+                                    ),
+                                  );
+                                } else {
+                                  PopupHelper.showError(context, 'Booking details not found.');
+                                }
+                              }
+                            } catch (e) {
+                              if (mounted) {
+                                Navigator.pop(context);
+                                PopupHelper.showError(context, 'Error: $e');
+                              }
                             }
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                            Navigator.pop(context);
-                            PopupHelper.showError(context, 'Error: $e');
-                          }
-                        }
-                      },
-                      child: const Text(
-                        "View Detail",
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.bold,
+                          },
+                          child: const Text(
+                            "View Detail",
+                            style: TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
+                    ],
                   ),
                 ],
               ],

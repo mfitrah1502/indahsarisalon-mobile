@@ -9,6 +9,8 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import 'payment_details_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../utils/popup_helper.dart';
 
 class BookingPage extends StatefulWidget {
   final DateTime selectedDate;
@@ -28,7 +30,12 @@ class BookingPage extends StatefulWidget {
     required this.totalDuration,
     required this.selectedServices,
     required this.totalPrice,
+    this.isRescheduling = false,
+    this.rescheduleBookingId,
   });
+
+  final bool isRescheduling;
+  final int? rescheduleBookingId;
 
   @override
   State<BookingPage> createState() => _BookingPageState();
@@ -87,6 +94,12 @@ class _BookingPageState extends State<BookingPage> {
       _effectiveDuration = 420; // 7 jam
     } else if (isLongService && _effectiveDuration < 240) {
       _effectiveDuration = 240;
+    }
+
+    if (widget.isRescheduling) {
+      _nameCtrl.text = widget.selectedServices[0]['customer_name'] ?? '';
+      _phoneCtrl.text = widget.selectedServices[0]['customer_phone'] ?? '';
+      _emailCtrl.text = widget.selectedServices[0]['customer_email'] ?? '';
     }
 
     _fetchAvailableTimes();
@@ -446,31 +459,63 @@ class _BookingPageState extends State<BookingPage> {
                           padding: const EdgeInsets.symmetric(vertical: 18),
                           elevation: 0,
                         ),
-                        onPressed: _selectedTimeIndex == -1 ? null : () {
-                          if (!_formKey.currentState!.validate()) {
-                            return;
-                          }
-                          
-                          final selectedDateStr = "${widget.selectedDate.year}-${widget.selectedDate.month.toString().padLeft(2,'0')}-${widget.selectedDate.day.toString().padLeft(2,'0')}";
-                          final selectedTime = _times[_selectedTimeIndex];
-                          final dateTimeStr = "$selectedDateStr $selectedTime:00";
+                        onPressed: _selectedTimeIndex == -1
+                            ? null
+                            : () async {
+                                if (_formKey.currentState!.validate()) {
+                                  final time = _times[_selectedTimeIndex];
+                                  final dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+                                  final reservationDatetime = "$dateStr $time:00";
 
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => PaymentDetailsPage(
-                                stylistId: widget.stylistId,
-                                stylistName: widget.stylistName,
-                                reservationDatetime: dateTimeStr,
-                                selectedServices: _finalServices,
-                                totalPrice: _finalTotalPrice,
-                                customerName: _nameCtrl.text.trim(),
-                                customerPhone: _phoneCtrl.text.trim(),
-                                customerEmail: _emailCtrl.text.trim(),
-                              ),
-                            ),
-                          );
-                        },
+                                  if (widget.isRescheduling && widget.rescheduleBookingId != null) {
+                                    // HANDLE RESCHEDULE
+                                    setState(() => _loadingTimes = true);
+                                    try {
+                                      await Supabase.instance.client
+                                          .from('bookings')
+                                          .update({
+                                            'reservation_datetime': reservationDatetime,
+                                            'customer_name': _nameCtrl.text,
+                                            'customer_phone': _phoneCtrl.text,
+                                            'customer_email': _emailCtrl.text,
+                                          })
+                                          .eq('id', widget.rescheduleBookingId!);
+                                      
+                                      if (mounted) {
+                                        PopupHelper.showSuccess(context, "Jadwal berhasil diubah!", onConfirm: () {
+                                          Navigator.pushAndRemoveUntil(
+                                            context,
+                                            MaterialPageRoute(builder: (_) => const BookingListPage()),
+                                            (route) => false,
+                                          );
+                                        });
+                                      }
+                                    } catch (e) {
+                                      if (mounted) {
+                                        PopupHelper.showError(context, "Gagal mengubah jadwal: $e");
+                                        setState(() => _loadingTimes = false);
+                                      }
+                                    }
+                                  } else {
+                                    // NORMAL BOOKING
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => PaymentDetailsPage(
+                                          reservationDatetime: reservationDatetime,
+                                          stylistId: widget.stylistId,
+                                          stylistName: widget.stylistName,
+                                          totalPrice: _finalTotalPrice,
+                                          customerName: _nameCtrl.text,
+                                          customerPhone: _phoneCtrl.text,
+                                          customerEmail: _emailCtrl.text,
+                                          selectedServices: _finalServices,
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                         child: Text(
                           _selectedTimeIndex == -1
                               ? "Pilih Waktu"

@@ -10,6 +10,8 @@ import 'report_page.dart';
 import '../utils/midtrans_helper.dart';
 import '../utils/popup_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:whatsapp_share/whatsapp_share.dart';
+import 'package:share_plus/share_plus.dart';
 
 
 
@@ -117,11 +119,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           context,
           "Jadwal dengan ${widget.stylistName} telah tersimpan.\n${widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' | ')}",
           onConfirm: () {
-            Navigator.pushAndRemoveUntil(
-              context,
-              MaterialPageRoute(builder: (_) => const BookingListPage()),
-              (route) => false,
-            );
+            if (mounted) {
+              Navigator.pushAndRemoveUntil(
+                context,
+                MaterialPageRoute(builder: (_) => const BookingListPage()),
+                (route) => false,
+              );
+            }
           },
         );
       }
@@ -132,6 +136,25 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         PopupHelper.showError(context, "Gagal menyimpan booking: $e");
         setState(() => _processing = false);
       }
+    }
+  }
+  Future<void> _broadcastToEmployeeGroup() async {
+    final String date = widget.reservationDatetime.substring(0, 10);
+    final String time = widget.reservationDatetime.substring(11, 16);
+    final String services = widget.selectedServices.map((s) => s['name'] ?? s['treatment_name']).join(", ");
+
+    final String message = "*BOOKING BARU - INDAH SARI SALON*\n\n"
+        "📍 *Stylist:* ${widget.stylistName}\n"
+        "👤 *Customer:* ${widget.customerName}\n"
+        "📅 *Jadwal:* $date | $time WIB\n"
+        "💇 *Treatment:* $services\n\n"
+        "_Mohon bersiap sebelum jam booking. Terima kasih!_";
+
+    try {
+      // Use standard share to allow selecting WhatsApp Group
+      await Share.share(message);
+    } catch (e) {
+      debugPrint("Broadcast Error: $e");
     }
   }
 

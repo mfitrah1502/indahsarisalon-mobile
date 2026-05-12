@@ -10,6 +10,10 @@ import '../app_session.dart';
 import '../utils/translations.dart';
 import 'receipt_page.dart';
 import '../utils/popup_helper.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:flutter/services.dart';
+import 'booking_page.dart';
 
 class BookingDetailsPage extends StatefulWidget {
   final Map<String, dynamic> booking;
@@ -103,6 +107,132 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         await _updateStatus('dibatalkan');
       },
     );
+  }
+
+  Future<void> _rescheduleBooking() async {
+    // We need to extract the services in the format expected by BookingPage
+    final details = widget.booking['full_details'] as List<dynamic>? ?? [];
+    List<Map<String, dynamic>> services = [];
+    int totalDuration = 0;
+
+    for (var d in details) {
+      final td = d['treatment_details'] as Map<String, dynamic>?;
+      if (td != null) {
+        services.add({
+          'td_id': d['treatment_detail_id'],
+          'name': td['name'],
+          'treatment_name': td['treatments']?['name'],
+          'price': d['price'],
+          'adjusted_price': d['price'],
+          'treatment_id': td['treatment_id'],
+          'customer_name': widget.booking['customer_name'],
+          'customer_phone': widget.booking['customer_phone'],
+          'customer_email': widget.booking['customer_email'],
+        });
+        totalDuration += (td['duration'] as num?)?.toInt() ?? 0;
+      }
+    }
+
+    if (services.isEmpty) {
+      PopupHelper.showError(context, "Data layanan tidak lengkap untuk reschedule.");
+      return;
+    }
+
+    final String stylistName = widget.booking['stylist'] ?? 'Stylist';
+    final int stylistId = widget.booking['stylist_id'] ?? 0;
+
+    if (stylistId == 0) {
+      PopupHelper.showError(context, "ID Stylist tidak ditemukan.");
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => BookingPage(
+          selectedDate: DateTime.now(),
+          stylistId: stylistId,
+          stylistName: stylistName,
+          totalDuration: totalDuration,
+          selectedServices: services,
+          totalPrice: (widget.booking['total_price'] as num).toInt(),
+          isRescheduling: true,
+          rescheduleBookingId: widget.booking['id'],
+        ),
+      ),
+    ).then((val) {
+      if (val == true) {
+        Navigator.pop(context, true);
+      }
+    });
+  }
+
+  Future<void> _sendWhatsAppReminder() async {
+    final String phone = widget.booking['customer_phone'] ?? '';
+    if (phone == '-' || phone.isEmpty) {
+      PopupHelper.showError(context, "Nomor telepon pelanggan tidak tersedia.");
+      return;
+    }
+
+    // Clean phone number
+    String cleanPhone = phone.replaceAll(RegExp(r'[^0-9]'), '');
+    if (cleanPhone.startsWith('0')) {
+      cleanPhone = '62${cleanPhone.substring(1)}';
+    } else if (!cleanPhone.startsWith('62')) {
+      cleanPhone = '62$cleanPhone';
+    }
+
+    final String time = widget.booking['datetime'].toString().substring(11, 16);
+    final String message = "Halo ${widget.booking['customer_name']}, ini reminder dari *Indah Sari Salon*. 🌸\n\n"
+        "Treatment Anda dijadwalkan pukul *$time WIB*. Apakah ada perubahan jadwal atau konfirmasi kehadiran? \n\n"
+        "Terima kasih!";
+
+    final url = "https://wa.me/$cleanPhone?text=${Uri.encodeComponent(message)}";
+    final uri = Uri.parse(url);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      PopupHelper.showError(context, "Gagal membuka WhatsApp.");
+    }
+  }
+
+  Future<void> _broadcastToGroup() async {
+    final datetimeRaw = widget.booking['datetime'] ?? widget.booking['reservation_datetime'] ?? '';
+    final String date = datetimeRaw.toString().substring(0, 10);
+    final String time = datetimeRaw.toString().substring(11, 16);
+    
+    // Extract services
+    final details = widget.booking['full_details'] as List<dynamic>? ?? [];
+    String servicesStr = "";
+    if (details.isNotEmpty) {
+      servicesStr = details.map((d) => d['treatment_details']?['name'] ?? '').where((s) => s.isNotEmpty).join(", ");
+    } else {
+      final s = widget.booking['services'];
+      if (s is List) servicesStr = s.join(", ");
+      else if (s is String) servicesStr = s;
+    }
+
+    final String message = "*BOOKING BARU - INDAH SARI SALON*\n\n"
+        "📍 *Stylist:* ${widget.booking['stylist'] ?? 'Stylist'}\n"
+        "👤 *Customer:* ${widget.booking['customer_name'] ?? 'Customer'}\n"
+        "📅 *Jadwal:* $date | $time WIB\n"
+        "💇 *Treatment:* $servicesStr\n\n"
+        "_Mohon bersiap sebelum jam booking. Terima kasih!_";
+
+    // Copy to clipboard
+    await Clipboard.setData(ClipboardData(text: message));
+    
+    // Redirect to Group
+    final Uri url = Uri.parse("https://chat.whatsapp.com/DRFrlEewU79EnvKEGatZeb?mode=gi_t");
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url, mode: LaunchMode.externalApplication);
+      if (mounted) {
+        PopupHelper.showSuccess(context, "Pesan disalin. Silakan tempel di grup WhatsApp.");
+      }
+    } else {
+      // Fallback to share if link fails
+      await Share.share(message);
+    }
   }
 
   Future<void> _showReceipt() async {
@@ -461,6 +591,55 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
                     // Action Buttons based on status
                     if (_status.toLowerCase() == 'pending') ...[
+                      Row(
+                        children: [
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _sendWhatsAppReminder,
+                              icon: const Icon(Icons.chat, size: 18),
+                              label: const Text("Reminder WA", style: TextStyle(fontSize: 11)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: const Color(0xFF25D366),
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _broadcastToGroup,
+                              icon: const Icon(Icons.group_add_outlined, size: 18),
+                              label: const Text("Broadcast", style: TextStyle(fontSize: 11)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: Colors.blueAccent,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: ElevatedButton.icon(
+                              onPressed: _rescheduleBooking,
+                              icon: const Icon(Icons.calendar_month_outlined, size: 18),
+                              label: const Text("Reschedule", style: TextStyle(fontSize: 11)),
+                              style: ElevatedButton.styleFrom(
+                                backgroundColor: primaryColor,
+                                foregroundColor: Colors.white,
+                                padding: const EdgeInsets.symmetric(vertical: 14),
+                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                elevation: 0,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 12),
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
