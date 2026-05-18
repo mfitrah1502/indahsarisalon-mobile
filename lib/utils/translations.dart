@@ -212,6 +212,7 @@ class AppTranslations {
       'Cancel Booking': 'Batalkan Pesanan',
       'This booking is already ': 'Pesanan ini sudah ',
       'View Receipt': 'Lihat Struk',
+      'Role Mismatch': 'Ketidakcocokan Jabatan',
     },
   };
 

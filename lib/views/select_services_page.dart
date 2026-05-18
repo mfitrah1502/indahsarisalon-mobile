@@ -33,6 +33,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
   int _selectedIndex = 1;
   String _selectedCategory = 'All';
+  String _selectedStaffCategory = 'All';
   String _searchQuery = '';
 
   bool _loadingCategories = true;
@@ -85,7 +86,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
       if (mounted) {
         setState(() {
-          _stylists = availableStylists;
+          _stylists = availableStylists.where((u) {
+            final pos = (u.position ?? '').toLowerCase().trim();
+            return pos == 'hairstylist' ||
+                pos == 'hair stylist' ||
+                pos == 'beautician' ||
+                pos == 'therapist';
+          }).toList();
           _selectedStylistIndex = -1; // Reset selection when date changes
           _loadingStylists = false;
         });
@@ -94,6 +101,204 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       debugPrint('Error fetching stylists: $e');
       if (mounted) setState(() => _loadingStylists = false);
     }
+  }
+
+  List<String> _getQualifiedPositions(ServiceModel service) {
+    final category = service.category.toLowerCase().trim();
+    final name = (service.treatmentName + " " + service.detailName).toLowerCase();
+    
+    if (category == 'haircut' || category == 'hair coloring') {
+      return ['hairstylist'];
+    }
+    if (category == 'facial') {
+      return ['beautician'];
+    }
+    if (category == 'nail treatment' || category == 'hair ritual') {
+      return ['therapist'];
+    }
+    
+    // Fallback / Promo category check by keywords in category or name
+    if (category == 'promo' || category == 'all') {
+      if (name.contains('cut') || name.contains('color') || name.contains('warna') || name.contains('cat ') || name.contains('smoothing') || name.contains('chemical') || name.contains('styling') || name.contains('blow')) {
+        return ['hairstylist'];
+      }
+      if (name.contains('facial') || name.contains('face') || name.contains('wajah') || name.contains('masker wajah') || name.contains('treatment wajah')) {
+        return ['beautician'];
+      }
+      if (name.contains('nail') || name.contains('pedi') || name.contains('mani') || name.contains('kuku') || name.contains('body') || name.contains('massage') || name.contains('spa') || name.contains('ritual') || name.contains('creambath') || name.contains('hair treatment')) {
+        return ['therapist'];
+      }
+    }
+    
+    // Default to all active positions if we can't determine
+    return ['hairstylist', 'beautician', 'therapist'];
+  }
+
+  String _formatRoleName(String role) {
+    if (role == 'hairstylist') return 'Hair Stylist';
+    if (role == 'beautician') return 'Beautician';
+    if (role == 'therapist') return 'Therapist';
+    return role;
+  }
+
+  Set<String> _getIntersectionOfRequiredPositions(List<ServiceModel> selectedAndNewServices) {
+    if (selectedAndNewServices.isEmpty) return {'hairstylist', 'beautician', 'therapist'};
+    
+    Set<String> intersection = _getQualifiedPositions(selectedAndNewServices.first).toSet();
+    for (int i = 1; i < selectedAndNewServices.length; i++) {
+      final positions = _getQualifiedPositions(selectedAndNewServices[i]).toSet();
+      intersection = intersection.intersection(positions);
+    }
+    return intersection;
+  }
+
+  String? _checkServiceConflict(ServiceModel newService) {
+    final selected = _selectedServices.map((s) => s['service'] as ServiceModel).toList();
+    
+    // 1. Check if there's a stylist selected first
+    if (_selectedStylistIndex != -1) {
+      final stylist = _filteredStylists[_selectedStylistIndex];
+      final stylistPos = (stylist.position ?? '').toLowerCase().trim();
+      final normalizedStylistPos = (stylistPos == 'hair stylist' || stylistPos == 'hairstylist') ? 'hairstylist' : stylistPos;
+      final qualified = _getQualifiedPositions(newService);
+      if (!qualified.contains(normalizedStylistPos)) {
+        final requiredRoles = qualified.map((r) => _formatRoleName(r)).join(' or ');
+        return _getStylistConflictMessage(stylist.name, _formatRoleName(normalizedStylistPos), requiredRoles);
+      }
+    }
+    
+    // 2. Check if the new service conflicts with other already selected services
+    final allServicesWithNew = [...selected, newService];
+    final intersection = _getIntersectionOfRequiredPositions(allServicesWithNew);
+    if (intersection.isEmpty) {
+      final newServiceRoles = _getQualifiedPositions(newService).map((r) => _formatRoleName(r)).join(' or ');
+      return _getRoleConflictMessage(newServiceRoles);
+    }
+    
+    return null; // No conflict
+  }
+
+  bool _isServiceCompatibleWithStaffCategory(ServiceModel service, String staffCategory) {
+    if (staffCategory == 'All') return true;
+    final cat = service.category.toLowerCase();
+    final tName = service.treatmentName.toLowerCase();
+    final dName = service.detailName.toLowerCase();
+
+    if (staffCategory == 'hairstylist') {
+      final matchesHairCut = cat.contains('cut') || tName.contains('cut') || dName.contains('cut');
+      final matchesChemical = cat.contains('color') || tName.contains('color') || dName.contains('color') ||
+                              cat.contains('colour') || tName.contains('colour') || dName.contains('colour') ||
+                              cat.contains('chemical') || tName.contains('chemical') || dName.contains('chemical') ||
+                              cat.contains('smoothing') || tName.contains('smoothing') || dName.contains('smoothing') ||
+                              tName.contains('relaxing') || dName.contains('relaxing') ||
+                              tName.contains('rebonding') || dName.contains('rebonding');
+      return matchesHairCut || matchesChemical;
+    } else if (staffCategory == 'beautician') {
+      return cat.contains('face') || tName.contains('face') || dName.contains('face') ||
+             cat.contains('facial') || tName.contains('facial') || dName.contains('facial');
+    } else if (staffCategory == 'therapist') {
+      final matchesBody = cat.contains('body') || tName.contains('body') || dName.contains('body');
+      final matchesNail = cat.contains('nail') || tName.contains('nail') || dName.contains('nail') ||
+                          tName.contains('pedi') || dName.contains('pedi') ||
+                          tName.contains('mani') || dName.contains('mani');
+      final matchesHairRitual = cat.contains('ritual') || tName.contains('ritual') || dName.contains('ritual') ||
+                                tName.contains('creambath') || dName.contains('creambath') ||
+                                tName.contains('spa') || dName.contains('spa');
+      return matchesBody || matchesNail || matchesHairRitual;
+    }
+    return true;
+  }
+
+  List<UserModel> get _filteredStylists {
+    if (_selectedStaffCategory == 'All') {
+      return _stylists;
+    }
+    return _stylists.where((u) {
+      final pos = (u.position ?? '').toLowerCase().trim();
+      final normalizedPos = (pos == 'hair stylist' || pos == 'hairstylist') ? 'hairstylist' : pos;
+      return normalizedPos == _selectedStaffCategory.toLowerCase();
+    }).toList();
+  }
+
+  String? _checkStylistConflict(UserModel stylist) {
+    final selected = _selectedServices.map((s) => s['service'] as ServiceModel).toList();
+    if (selected.isEmpty) return null;
+    
+    final stylistPos = (stylist.position ?? '').toLowerCase().trim();
+    final normalizedStylistPos = (stylistPos == 'hair stylist' || stylistPos == 'hairstylist') ? 'hairstylist' : stylistPos;
+    
+    for (var svc in selected) {
+      final qualified = _getQualifiedPositions(svc);
+      if (!qualified.contains(normalizedStylistPos)) {
+        final requiredRoles = qualified.map((r) => _formatRoleName(r)).join(' or ');
+        return _getStylistConflictForServiceMessage(stylist.name, _formatRoleName(normalizedStylistPos), svc.displayName, requiredRoles);
+      }
+    }
+    return null;
+  }
+
+  void _showConflictWarning(String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        title: Row(
+          children: [
+            Icon(Icons.warning_amber_rounded, color: primaryColor, size: 28),
+            const SizedBox(width: 10),
+            Text(
+              "Role Mismatch".tr,
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          message,
+          style: const TextStyle(
+            fontSize: 14,
+            height: 1.5,
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: Text(
+              "Close".tr,
+              style: TextStyle(
+                color: primaryColor,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  String _getStylistConflictMessage(String stylistName, String stylistRole, String requiredRoles) {
+    if (AppTranslations.currentLanguage == 'Indonesia') {
+      return "Konflik Stylist: Anda memilih $stylistName ($stylistRole), sedangkan layanan ini membutuhkan $requiredRoles. Silakan ganti stylist atau pesan layanan ini secara terpisah.";
+    }
+    return "Stylist Conflict: You selected $stylistName ($stylistRole), but this service requires a $requiredRoles. Please change the stylist or book this service separately.";
+  }
+
+  String _getRoleConflictMessage(String newServiceRoles) {
+    if (AppTranslations.currentLanguage == 'Indonesia') {
+      return "Konflik Jabatan: Layanan ini membutuhkan $newServiceRoles, yang tidak cocok dengan layanan terpilih lainnya. Silakan pesan layanan dengan jabatan berbeda secara terpisah.";
+    }
+    return "Role Conflict: This service requires a $newServiceRoles, which conflicts with other selected services. Please book services requiring different roles separately.";
+  }
+
+  String _getStylistConflictForServiceMessage(String stylistName, String stylistRole, String serviceName, String requiredRoles) {
+    if (AppTranslations.currentLanguage == 'Indonesia') {
+      return "Konflik Stylist: $stylistName ($stylistRole) tidak memiliki kualifikasi untuk melakukan $serviceName yang membutuhkan $requiredRoles. Silakan pilih stylist lain atau pesan layanan ini secara terpisah.";
+    }
+    return "Stylist Conflict: $stylistName ($stylistRole) is not qualified to perform $serviceName which requires a $requiredRoles. Please select a qualified stylist or book this service separately.";
   }
 
   Future<void> _fetchCategoriesAndServices() async {
@@ -131,6 +336,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
       // Filter out inactive services (Soft Deleted)
       if (!s.isActive) return false;
+
+      // Filter by staff category compatibility
+      if (!_isServiceCompatibleWithStaffCategory(s, _selectedStaffCategory)) {
+        return false;
+      }
 
       final matchesCat =
           _selectedCategory == 'All' ||
@@ -516,10 +726,28 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               ),
                             ),
                             Text(
-                              "${_stylists.length} tersedia",
+                              "${_filteredStylists.length} tersedia",
                               style: TextStyle(fontSize: 13, color: mutedText),
                             ),
                           ],
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Kategori Staff Chips
+                        SizedBox(
+                          height: 38,
+                          child: ListView(
+                            scrollDirection: Axis.horizontal,
+                            children: [
+                              _buildStaffCategoryChip('All', 'Semua Staff', Icons.people_outline),
+                              const SizedBox(width: 8),
+                              _buildStaffCategoryChip('hairstylist', 'Hair Stylist', Icons.content_cut),
+                              const SizedBox(width: 8),
+                              _buildStaffCategoryChip('beautician', 'Beautician', Icons.face),
+                              const SizedBox(width: 8),
+                              _buildStaffCategoryChip('therapist', 'Therapist', Icons.spa),
+                            ],
+                          ),
                         ),
                         const SizedBox(height: 16),
 
@@ -530,16 +758,17 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               child: CircularProgressIndicator(),
                             ),
                           )
-                        else if (_stylists.isEmpty)
+                        else if (_filteredStylists.isEmpty)
                           Container(
                             padding: const EdgeInsets.symmetric(vertical: 24),
+                            width: double.infinity,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
                               color: Colors.white,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "No stylists registered yet.".tr,
+                              "Belum ada staff di kategori ini.".tr,
                               textAlign: TextAlign.center,
                               style: TextStyle(color: mutedText, fontSize: 14),
                             ),
@@ -549,17 +778,22 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             height: 100,
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
-                              itemCount: _stylists.length,
+                              itemCount: _filteredStylists.length,
                               separatorBuilder: (context, _) =>
                                   const SizedBox(width: 20),
                               itemBuilder: (context, index) {
                                 final isSelected =
                                     index == _selectedStylistIndex;
-                                final stylist = _stylists[index];
+                                final stylist = _filteredStylists[index];
                                 return GestureDetector(
-                                  onTap: () => setState(
-                                    () => _selectedStylistIndex = index,
-                                  ),
+                                  onTap: () {
+                                    final conflict = _checkStylistConflict(stylist);
+                                    if (conflict != null) {
+                                      _showConflictWarning(conflict);
+                                      return;
+                                    }
+                                    setState(() => _selectedStylistIndex = index);
+                                  },
                                   child: Column(
                                     children: [
                                       Stack(
@@ -944,6 +1178,11 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                     GestureDetector(
                                       onTap: () async {
                                         if (!isSelected) {
+                                          final conflict = _checkServiceConflict(service);
+                                          if (conflict != null) {
+                                            _showConflictWarning(conflict);
+                                            return;
+                                          }
                                           await _showPriceDialog(item);
                                         } else {
                                           final idx = _allServices.indexWhere(
@@ -1083,7 +1322,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   ? null
                                   : () {
                                       final selectedStylist =
-                                          _stylists[_selectedStylistIndex];
+                                          _filteredStylists[_selectedStylistIndex];
                                       Navigator.push(
                                         context,
                                         MaterialPageRoute(
@@ -1220,6 +1459,57 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _buildStaffCategoryChip(String categoryValue, String label, IconData icon) {
+    final isSelected = _selectedStaffCategory == categoryValue;
+    return GestureDetector(
+      onTap: () {
+        setState(() {
+          _selectedStaffCategory = categoryValue;
+          _selectedStylistIndex = -1; // Reset selection when category changes
+        });
+      },
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? primaryColor : Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
+            width: 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: primaryColor.withOpacity(0.3),
+                    blurRadius: 8,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              icon,
+              size: 16,
+              color: isSelected ? Colors.white : primaryColor,
+            ),
+            const SizedBox(width: 6),
+            Text(
+              label.tr,
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.bold,
+                color: isSelected ? Colors.white : const Color(0xFF1E293B),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

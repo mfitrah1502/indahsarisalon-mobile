@@ -847,6 +847,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                         "hairstylist",
                                         "beautician",
                                         "therapist",
+                                        "Customer Relationship",
                                       ],
                                       (val) {
                                         setModalState(
@@ -863,11 +864,11 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   children: [
                                     _buildTextFieldLabel("DIVISI"),
                                     _buildDropdownField(
-                                      selectedDivision ?? "Select Divisi",
-                                      ["hair", "beauty"],
+                                      (selectedDivision == null || selectedDivision == "") ? "-" : selectedDivision!,
+                                      ["-", "hair", "beauty"],
                                       (val) {
                                         setModalState(
-                                          () => selectedDivision = val,
+                                          () => selectedDivision = (val == null || val == "-" || val == "") ? null : val,
                                         );
                                       },
                                     ),
@@ -1075,7 +1076,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
-          value: items.contains(value) ? value : null,
+          value: items.any((item) => item.toLowerCase() == value.toLowerCase())
+              ? items.firstWhere((item) => item.toLowerCase() == value.toLowerCase())
+              : null,
           hint: Text(
             value,
             style: TextStyle(
