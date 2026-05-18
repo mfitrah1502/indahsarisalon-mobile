@@ -844,10 +844,13 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     _buildDropdownField(
                                       selectedPosition ?? "Select Jabatan",
                                       [
-                                        "hairstylist",
-                                        "beautician",
-                                        "therapist",
-                                        "Customer Relationship",
+                                        "Client Relationship Manager",
+                                        "Senior Hair Technician Specialist",
+                                        "Senior Beautician",
+                                        "Creative Stylist",
+                                        "Senior Therapist",
+                                        "Relationship Client",
+                                        "Junior Therapist",
                                       ],
                                       (val) {
                                         setModalState(

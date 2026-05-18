@@ -152,7 +152,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 32),
 
                     // MEMBERSHIP SECTION
-                    if (AppSession.userRole != 'owner' && AppSession.userRole != 'admin') ...[
+                    if (AppSession.userRole?.toLowerCase() != 'owner' && AppSession.userRole?.toLowerCase() != 'admin') ...[
                       Text(
                         "MEMBERSHIP",
                         style: TextStyle(
@@ -348,7 +348,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               },
                             ),
                           ),
-                          if (AppSession.userRole != 'owner' && AppSession.userRole != 'admin')
+                          if (AppSession.userRole?.toLowerCase() != 'owner' && AppSession.userRole?.toLowerCase() != 'admin')
                             _buildSettingTile(
                               icon: Icons.language,
                               title: "Language".tr,

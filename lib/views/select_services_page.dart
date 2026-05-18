@@ -76,6 +76,26 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     });
   }
 
+  String _normalizePosition(String? pos) {
+    if (pos == null) return '';
+    final p = pos.toLowerCase().trim();
+    if (p == 'hairstylist' ||
+        p == 'hair stylist' ||
+        p == 'senior hair technician specialist' ||
+        p == 'creative stylist') {
+      return 'hairstylist';
+    }
+    if (p == 'beautician' || p == 'senior beautician') {
+      return 'beautician';
+    }
+    if (p == 'therapist' ||
+        p == 'senior therapist' ||
+        p == 'junior therapist') {
+      return 'therapist';
+    }
+    return p;
+  }
+
   Future<void> _fetchStylists() async {
     setState(() => _loadingStylists = true);
     try {
@@ -87,11 +107,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       if (mounted) {
         setState(() {
           _stylists = availableStylists.where((u) {
-            final pos = (u.position ?? '').toLowerCase().trim();
-            return pos == 'hairstylist' ||
-                pos == 'hair stylist' ||
-                pos == 'beautician' ||
-                pos == 'therapist';
+            final norm = _normalizePosition(u.position);
+            return norm == 'hairstylist' ||
+                norm == 'beautician' ||
+                norm == 'therapist';
           }).toList();
           _selectedStylistIndex = -1; // Reset selection when date changes
           _loadingStylists = false;
@@ -158,8 +177,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     // 1. Check if there's a stylist selected first
     if (_selectedStylistIndex != -1) {
       final stylist = _filteredStylists[_selectedStylistIndex];
-      final stylistPos = (stylist.position ?? '').toLowerCase().trim();
-      final normalizedStylistPos = (stylistPos == 'hair stylist' || stylistPos == 'hairstylist') ? 'hairstylist' : stylistPos;
+      final normalizedStylistPos = _normalizePosition(stylist.position);
       final qualified = _getQualifiedPositions(newService);
       if (!qualified.contains(normalizedStylistPos)) {
         final requiredRoles = qualified.map((r) => _formatRoleName(r)).join(' or ');
@@ -214,8 +232,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       return _stylists;
     }
     return _stylists.where((u) {
-      final pos = (u.position ?? '').toLowerCase().trim();
-      final normalizedPos = (pos == 'hair stylist' || pos == 'hairstylist') ? 'hairstylist' : pos;
+      final normalizedPos = _normalizePosition(u.position);
       return normalizedPos == _selectedStaffCategory.toLowerCase();
     }).toList();
   }
@@ -224,8 +241,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     final selected = _selectedServices.map((s) => s['service'] as ServiceModel).toList();
     if (selected.isEmpty) return null;
     
-    final stylistPos = (stylist.position ?? '').toLowerCase().trim();
-    final normalizedStylistPos = (stylistPos == 'hair stylist' || stylistPos == 'hairstylist') ? 'hairstylist' : stylistPos;
+    final normalizedStylistPos = _normalizePosition(stylist.position);
     
     for (var svc in selected) {
       final qualified = _getQualifiedPositions(svc);
