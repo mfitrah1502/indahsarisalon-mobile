@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:intl/intl.dart';
@@ -8,7 +9,7 @@ import '../models/report_model.dart';
 import 'package:flutter/material.dart' show DateTimeRange;
 
 class PdfReportHelper {
-  static Future<String> generatePdf({
+  static Future<Uint8List> generatePdf({
     required ReportSummary summary,
     required DateTimeRange? dateRange,
   }) async {
@@ -241,19 +242,7 @@ class PdfReportHelper {
       ),
     );
 
-    // Save to Temporary Directory
-    final bytes = await pdf.save();
-    
-    final directory = await getTemporaryDirectory();
-    final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf";
-    final path = "${directory.path}/$fileName";
-    final file = File(path);
-    if (!file.parent.existsSync()) {
-      file.parent.createSync(recursive: true);
-    }
-    await file.writeAsBytes(bytes);
-
-    return path;
+    return await pdf.save();
   }
 
   static pw.Widget _buildTableCell(String text, {bool isHeader = false, bool isRight = false, PdfColor? color, bool isBold = false}) {

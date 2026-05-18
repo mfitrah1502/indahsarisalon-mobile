@@ -152,87 +152,89 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 32),
 
                     // MEMBERSHIP SECTION
-                    Text(
-                      "MEMBERSHIP",
-                      style: TextStyle(
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.2,
-                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: _currentTier != 'None'
-                            ? mainTextColor.withOpacity(0.1)
-                            : (isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: _currentTier != 'None'
-                              ? mainTextColor.withOpacity(0.3)
-                              : (isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                    if (AppSession.userRole != 'owner' && AppSession.userRole != 'admin') ...[
+                      Text(
+                        "MEMBERSHIP",
+                        style: TextStyle(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
                         ),
                       ),
-                      child: Row(
-                        children: [
-                          Icon(
-                            _currentTier != 'None' ? Icons.stars : Icons.stars_outlined,
-                            color: _currentTier != 'None' ? mainTextColor : mutedText,
-                            size: 28,
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: _currentTier != 'None'
+                              ? mainTextColor.withOpacity(0.1)
+                              : (isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: _currentTier != 'None'
+                                ? mainTextColor.withOpacity(0.3)
+                                : (isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                           ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: _currentTier != 'None'
-                                ? Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "$_currentTier Member",
-                                        style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor, fontSize: 16),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "Kamu adalah member eksklusif kami.",
-                                        style: TextStyle(color: mutedText, fontSize: 12),
-                                      ),
-                                    ],
-                                  )
-                                : Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Belum ada membership",
-                                        style: TextStyle(fontWeight: FontWeight.bold, color: mutedText, fontSize: 15),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        "Lakukan transaksi untuk mendapatkan tier.",
-                                        style: TextStyle(color: mutedText, fontSize: 12),
-                                      ),
-                                    ],
-                                  ),
-                          ),
-                          if (_currentTier != 'None')
-                            ElevatedButton(
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF25D366),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                              ),
-                              onPressed: () async {
-                                final uri = Uri.parse(LoyaltyConstants.groupLinkForTier(_currentTier));
-                                if (await canLaunchUrl(uri)) {
-                                  await launchUrl(uri, mode: LaunchMode.externalApplication);
-                                }
-                              },
-                              child: const Text("Grup WA", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              _currentTier != 'None' ? Icons.stars : Icons.stars_outlined,
+                              color: _currentTier != 'None' ? mainTextColor : mutedText,
+                              size: 28,
                             ),
-                        ],
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: _currentTier != 'None'
+                                  ? Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "$_currentTier Member",
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor, fontSize: 16),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Kamu adalah member eksklusif kami.",
+                                          style: TextStyle(color: mutedText, fontSize: 12),
+                                        ),
+                                      ],
+                                    )
+                                  : Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Belum ada membership",
+                                          style: TextStyle(fontWeight: FontWeight.bold, color: mutedText, fontSize: 15),
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          "Lakukan transaksi untuk mendapatkan tier.",
+                                          style: TextStyle(color: mutedText, fontSize: 12),
+                                        ),
+                                      ],
+                                    ),
+                            ),
+                            if (_currentTier != 'None')
+                              ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFF25D366),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                ),
+                                onPressed: () async {
+                                  final uri = Uri.parse(LoyaltyConstants.groupLinkForTier(_currentTier));
+                                  if (await canLaunchUrl(uri)) {
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  }
+                                },
+                                child: const Text("Grup WA", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                              ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 24),
+                      const SizedBox(height: 24),
+                    ],
 
                     // ACCOUNT PREFERENCES
                     Text(
@@ -346,26 +348,27 @@ class _SettingsPageState extends State<SettingsPage> {
                               },
                             ),
                           ),
-                          _buildSettingTile(
-                            icon: Icons.language,
-                            title: "Language".tr,
-                            mainTextColor: mainTextColor,
-                            iconBoxBg: iconBoxBg,
-                            trailing: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  AppTranslations.currentLanguage,
-                                  style: TextStyle(color: mutedText, fontSize: 13),
-                                ),
-                                const SizedBox(width: 8),
-                                Icon(Icons.arrow_forward_ios, size: 14, color: mutedText),
-                              ],
+                          if (AppSession.userRole != 'owner' && AppSession.userRole != 'admin')
+                            _buildSettingTile(
+                              icon: Icons.language,
+                              title: "Language".tr,
+                              mainTextColor: mainTextColor,
+                              iconBoxBg: iconBoxBg,
+                              trailing: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    AppTranslations.currentLanguage,
+                                    style: TextStyle(color: mutedText, fontSize: 13),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Icon(Icons.arrow_forward_ios, size: 14, color: mutedText),
+                                ],
+                              ),
+                              onTap: () {
+                                _showLanguagePicker(context);
+                              },
                             ),
-                            onTap: () {
-                              _showLanguagePicker(context);
-                            },
-                          ),
                         ],
                       ),
                     ),

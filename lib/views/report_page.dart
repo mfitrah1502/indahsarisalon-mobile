@@ -6,8 +6,8 @@ import '../controllers/report_controller.dart';
 import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:excel/excel.dart' hide Border;
-import 'package:path_provider/path_provider.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:printing/printing.dart';
+import 'package:pdf/pdf.dart';
 
 import 'home_page.dart';
 import 'booking_list_page.dart';
@@ -302,17 +302,17 @@ class _ReportPageState extends State<ReportPage> {
         incomeDetails: incomeDetails,
         expenseDetails: expenseDetails,
       );
-      final path = await PdfReportHelper.generatePdf(
+      final bytes = await PdfReportHelper.generatePdf(
         summary: summary,
         dateRange: _dateRange,
       );
 
       if (!context.mounted) return;
 
-      // Open Share Sheet so user can Save to Files / WhatsApp / etc.
-      await Share.shareXFiles([
-        XFile(path),
-      ], subject: "Report Salon Indah Sari");
+      final now = DateTime.now();
+      final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf";
+
+      await Printing.sharePdf(bytes: bytes, filename: fileName);
 
       PopupHelper.showInfo(context, "PDF Report ready to share/save".tr);
     } catch (e) {

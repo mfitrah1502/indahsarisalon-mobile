@@ -151,10 +151,32 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     return sum + ((item['adjusted_price'] ?? svc.price) as num);
   });
 
-  int get _totalMins => _selectedServices.fold(0, (sum, item) {
-    final ServiceModel svc = item['service'];
-    return sum + svc.duration;
-  });
+  int get _totalMins {
+    int sum = 0;
+    bool isLongService = false;
+    bool isHairColouring = false;
+    final longKeywords = ['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'];
+    final colorKeywords = ['color', 'warna', 'pewarnaan'];
+
+    for (var item in _selectedServices) {
+      final ServiceModel svc = item['service'];
+      final tName = svc.treatmentName.toLowerCase();
+      final dName = svc.detailName.toLowerCase();
+      final cat = svc.category.toLowerCase();
+
+      if (longKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        isLongService = true;
+      }
+      if (colorKeywords.any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+        isHairColouring = true;
+      }
+      sum += svc.duration;
+    }
+
+    if (isHairColouring) return 420;
+    if (isLongService && sum < 240) return 240;
+    return sum;
+  }
 
   Future<void> _showPriceDialog(Map<String, dynamic> item) async {
     final ServiceModel service = item['service'];
@@ -767,7 +789,15 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   : "${service.treatmentName} - ${service.detailName}";
                               final displayPrice =
                                   item['adjusted_price'] ?? service.price;
-                              final dur = service.duration;
+                              int dur = service.duration;
+                              final tNameLower = service.treatmentName.toLowerCase();
+                              final dNameLower = service.detailName.toLowerCase();
+                              final catLower = service.category.toLowerCase();
+                              final colorKeywords = ['color', 'warna', 'pewarnaan'];
+                              
+                              if (colorKeywords.any((k) => tNameLower.contains(k) || dNameLower.contains(k) || catLower.contains(k))) {
+                                dur = 420;
+                              }
 
                               return Container(
                                 padding: const EdgeInsets.all(16),
