@@ -105,10 +105,31 @@ class HomeController {
       double rInc = yRev == 0 ? (tRev > 0 ? 100 : 0) : ((tRev - yRev) / yRev) * 100;
       double cInc = yCustomers.isEmpty ? (tCustomers.isNotEmpty ? 100 : 0) : ((tCustomers.length - yCustomers.length) / yCustomers.length) * 100;
 
+      // Calculate active staff today
+      final dateStr = "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      
+      final totalActiveStaff = await _supabase
+          .from('users')
+          .select('id')
+          .eq('type', 'karyawan')
+          .neq('role', 'pelanggan')
+          .eq('status', 'aktif');
+          
+      final offStaffToday = await _supabase
+          .from('absensi')
+          .select('user_id')
+          .eq('tanggal', dateStr)
+          .eq('status', 'off');
+
+      final totalStaffCount = (totalActiveStaff as List).length;
+      final offStaffCount = (offStaffToday as List).length;
+      final activeStaffToday = totalStaffCount - offStaffCount;
+
       return DashboardStatsModel(
         todayBookings: tBookings,
         todayRevenue: tRev,
         todayCustomers: tCustomers.length,
+        activeStaffToday: activeStaffToday,
         bookingsIncrease: bInc,
         revenueIncrease: rInc,
         customersIncrease: cInc,

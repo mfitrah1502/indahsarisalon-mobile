@@ -24,6 +24,7 @@ import '../utils/translations.dart';
 import 'promo_list_page.dart';
 import '../utils/popup_helper.dart';
 import '../utils/loyalty_constants.dart';
+import 'presence_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -44,6 +45,7 @@ class _HomePageState extends State<HomePage> {
   int todayBookings = 0;
   int todayRevenue = 0;
   int todayCustomers = 0;
+  int activeStaffToday = 0;
 
   num bookingsIncrease = 0;
   num revenueIncrease = 0;
@@ -136,6 +138,7 @@ class _HomePageState extends State<HomePage> {
           todayBookings = stats.todayBookings;
           todayRevenue = stats.todayRevenue;
           todayCustomers = stats.todayCustomers;
+          activeStaffToday = stats.activeStaffToday;
           bookingsIncrease = stats.bookingsIncrease;
           revenueIncrease = stats.revenueIncrease;
           customersIncrease = stats.customersIncrease;
@@ -183,6 +186,13 @@ class _HomePageState extends State<HomePage> {
       context,
       MaterialPageRoute(builder: (context) => const CustomerListPage()),
     );
+  }
+
+  void _navigateToPresence() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (context) => const PresencePage()),
+    ).then((_) => _fetchDashboardData());
   }
 
   @override
@@ -533,6 +543,18 @@ class _HomePageState extends State<HomePage> {
                       trendIcon: customersIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
                     ),
                   ),
+                  if (AppSession.userRole == 'owner') ...[
+                    const SizedBox(height: 16),
+                    GestureDetector(
+                      onTap: _navigateToPresence,
+                      child: _buildPresenceStatCard(
+                        title: "STYLIST AKTIF HARI INI".tr,
+                        value: "$activeStaffToday",
+                        subtitle: "Kelola kehadiran staff".tr,
+                        iconData: Icons.badge_outlined,
+                      ),
+                    ),
+                  ],
                 ],
                 const SizedBox(height: 100), // padding for bottom nav
               ],
@@ -749,6 +771,95 @@ class _HomePageState extends State<HomePage> {
         PopupHelper.showInfo(context, "Gagal sharing langsung. Pesan disalin ke clipboard.");
       }
     }
+  }
+
+  Widget _buildPresenceStatCard({
+    required String title,
+    required String value,
+    required String subtitle,
+    required IconData iconData,
+  }) {
+    return Container(
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                    color: Color(0xFF4B5563),
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Text(
+                      value,
+                      style: TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: primaryColor,
+                        height: 1.1,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      "staff".tr,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: mutedText,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Icon(Icons.arrow_forward, color: primaryColor, size: 16),
+                    const SizedBox(width: 4),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
+                        color: primaryColor,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          Icon(
+            iconData,
+            size: 64,
+            color: const Color(0xFFF1F5F9),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildStatCard({

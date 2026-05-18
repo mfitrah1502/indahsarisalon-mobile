@@ -2,6 +2,7 @@ class DashboardStatsModel {
   final int todayBookings;
   final int todayRevenue;
   final int todayCustomers;
+  final int activeStaffToday;
   final num bookingsIncrease;
   final num revenueIncrease;
   final num customersIncrease;
@@ -10,6 +11,7 @@ class DashboardStatsModel {
     required this.todayBookings,
     required this.todayRevenue,
     required this.todayCustomers,
+    required this.activeStaffToday,
     required this.bookingsIncrease,
     required this.revenueIncrease,
     required this.customersIncrease,
