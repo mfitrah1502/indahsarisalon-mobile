@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class PresencePage extends StatefulWidget {
   const PresencePage({super.key});
@@ -11,12 +12,12 @@ class PresencePage extends StatefulWidget {
 class _PresencePageState extends State<PresencePage> {
   final Color primaryColor = const Color(0xFFD660A1);
   final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  final Color scaffoldBg = const Color(0xFFFAFAFC);
+  final Color mutedText = const Color(0xFFBE7A9F); // Elegant muted pink/rose font
+  final Color darkText = const Color(0xFFB53D7C);  // Deep premium pink font
 
   List<Map<String, dynamic>> _staffs = [];
-  Map<int, String> _absensiMap =
-      {}; // Maps user_id to status ('hadir' or 'off') for the selected date
+  Map<int, String> _absensiMap = {}; // Maps user_id to status ('hadir' or 'off') for the selected date
   bool _isLoading = true;
   String _searchQuery = "";
 
@@ -120,6 +121,30 @@ class _PresencePageState extends State<PresencePage> {
     }
   }
 
+  Color _getRoleBgColor(String? role) {
+    final r = (role ?? '').toLowerCase();
+    if (r.contains('stylist') || r.contains('hair')) {
+      return const Color(0xFFE0F2FE); // light blue
+    } else if (r.contains('beautician')) {
+      return const Color(0xFFFCE7F3); // light pink
+    } else if (r.contains('therapist')) {
+      return const Color(0xFFD1FAE5); // light green
+    }
+    return const Color(0xFFF1F5F9);
+  }
+
+  Color _getRoleTextColor(String? role) {
+    final r = (role ?? '').toLowerCase();
+    if (r.contains('stylist') || r.contains('hair')) {
+      return const Color(0xFF0369A1); // blue
+    } else if (r.contains('beautician')) {
+      return const Color(0xFFBE185D); // pink
+    } else if (r.contains('therapist')) {
+      return const Color(0xFF047857); // green
+    }
+    return const Color(0xFF475569);
+  }
+
   @override
   Widget build(BuildContext context) {
     final filteredStaffs = _staffs.where((staff) {
@@ -134,20 +159,23 @@ class _PresencePageState extends State<PresencePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Premium Elegant Header
+            // Premium Header (Unboxed, Sleek back icon, cohesive title color)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20.0, 20.0, 20.0, 8.0),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: primaryColor,
-                      size: 28,
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 12.0, top: 4.0, bottom: 4.0),
+                      child: Icon(
+                        Icons.arrow_back_ios_new_rounded,
+                        color: darkText,
+                        size: 22,
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 16),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -155,12 +183,13 @@ class _PresencePageState extends State<PresencePage> {
                         Text(
                           "Presensi Karyawan",
                           style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: primaryColor,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.6,
+                            color: darkText,
                           ),
                         ),
+                        const SizedBox(height: 2),
                         Text(
                           "Kelola kehadiran & jadwal masuk hari ini",
                           style: TextStyle(
@@ -176,29 +205,29 @@ class _PresencePageState extends State<PresencePage> {
               ),
             ),
 
-            // Premium Search Bar
+            // Premium Sleek Search Bar
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 16),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white,
                   borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.01),
+                      color: Colors.black.withOpacity(0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
                   ],
-                  border: Border.all(color: const Color(0xFFF1F5F9)),
                 ),
                 child: TextField(
                   onChanged: (value) => setState(() => _searchQuery = value),
-                  style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: Color(0xFF1E293B)),
+                  style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: darkText),
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.search_rounded, color: primaryColor, size: 20),
-                    hintText: "Cari nama stylist...",
-                    hintStyle: TextStyle(color: mutedText.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
+                    hintText: "Cari nama karyawan...",
+                    hintStyle: TextStyle(color: mutedText.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w500),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
@@ -206,17 +235,19 @@ class _PresencePageState extends State<PresencePage> {
               ),
             ),
 
-            // Date Selector (Horizontal Glow Cards)
+            // Premium Date Timeline
             SizedBox(
-              height: 90,
+              height: 82,
               child: ListView.separated(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 24.0),
                 scrollDirection: Axis.horizontal,
                 itemCount: _dates.length,
-                separatorBuilder: (context, _) => const SizedBox(width: 12),
+                separatorBuilder: (context, _) => const SizedBox(width: 10),
                 itemBuilder: (context, index) {
                   final isSelected = index == _selectedDateIndex;
                   final d = _dates[index];
+                  final isToday = DateFormat('yyyyMMdd').format(d) == DateFormat('yyyyMMdd').format(DateTime.now());
+                  
                   const dayNames = [
                     'Sen',
                     'Sel',
@@ -236,8 +267,7 @@ class _PresencePageState extends State<PresencePage> {
                     },
                     child: AnimatedContainer(
                       duration: const Duration(milliseconds: 200),
-                      width: 65,
-                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      width: 60,
                       decoration: BoxDecoration(
                         gradient: isSelected
                             ? LinearGradient(
@@ -247,22 +277,25 @@ class _PresencePageState extends State<PresencePage> {
                               )
                             : null,
                         color: isSelected ? null : Colors.white,
-                        borderRadius: BorderRadius.circular(18),
+                        borderRadius: BorderRadius.circular(16),
                         border: isSelected
                             ? null
-                            : Border.all(color: const Color(0xFFF1F5F9)),
+                            : Border.all(
+                                color: isToday ? primaryColor.withOpacity(0.3) : const Color(0xFFE2E8F0),
+                                width: isToday ? 1.5 : 1.0,
+                              ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: primaryColor.withOpacity(0.35),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 6),
+                                  color: primaryColor.withOpacity(0.3),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
                                 ),
                               ]
                             : [
                                 BoxShadow(
                                   color: Colors.black.withOpacity(0.01),
-                                  blurRadius: 5,
+                                  blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
                               ],
@@ -273,18 +306,18 @@ class _PresencePageState extends State<PresencePage> {
                           Text(
                             dayNames[d.weekday - 1],
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 11,
                               fontWeight: FontWeight.bold,
                               color: isSelected ? Colors.white70 : mutedText,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 3),
                           Text(
                             d.day.toString(),
                             style: TextStyle(
-                              fontSize: 20,
-                              fontWeight: FontWeight.w900,
-                              color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: isSelected ? Colors.white : darkText,
                             ),
                           ),
                         ],
@@ -294,9 +327,9 @@ class _PresencePageState extends State<PresencePage> {
                 },
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 16),
 
-            // Staff Presence List (Premium Cards)
+            // Karyawan List Section
             Expanded(
               child: _isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -305,7 +338,7 @@ class _PresencePageState extends State<PresencePage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.people_outline_rounded, color: mutedText.withOpacity(0.5), size: 48),
+                              Icon(Icons.people_outline_rounded, color: mutedText.withOpacity(0.4), size: 48),
                               const SizedBox(height: 12),
                               Text(
                                 "Karyawan tidak ditemukan",
@@ -315,126 +348,116 @@ class _PresencePageState extends State<PresencePage> {
                           ),
                         )
                       : ListView.separated(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24.0,
-                            vertical: 12.0,
-                          ),
+                          padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 24),
                           physics: const BouncingScrollPhysics(),
                           itemCount: filteredStaffs.length,
-                          separatorBuilder: (context, index) => const SizedBox(height: 16),
+                          separatorBuilder: (context, index) => const SizedBox(height: 12),
                           itemBuilder: (context, index) {
                             final staff = filteredStaffs[index];
                             final status = _absensiMap[staff['id']] ?? 'hadir';
                             final isAktif = status != 'off';
 
                             return Container(
-                              padding: const EdgeInsets.all(16),
+                              padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
                                 color: Colors.white,
-                                borderRadius: BorderRadius.circular(20),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: const Color(0xFFF1F5F9)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
-                                    blurRadius: 15,
-                                    offset: const Offset(0, 8),
+                                    color: Colors.black.withOpacity(0.015),
+                                    blurRadius: 10,
+                                    offset: const Offset(0, 4),
                                   ),
                                 ],
-                                border: Border.all(color: const Color(0xFFF8FAFC)),
                               ),
                               child: Row(
                                 children: [
-                                  // Sleek Avatar with Active Dot
+                                  // Rounded Avatar with Status Badge
                                   Stack(
+                                    clipBehavior: Clip.none,
                                     children: [
                                       Container(
-                                        width: 58,
-                                        height: 58,
+                                        width: 52,
+                                        height: 52,
                                         decoration: BoxDecoration(
-                                          borderRadius: BorderRadius.circular(16),
-                                          color: const Color(0xFFF1F5F9),
+                                          borderRadius: BorderRadius.circular(14),
+                                          color: const Color(0xFFF8FAFC),
+                                          border: Border.all(color: const Color(0xFFE2E8F0)),
                                           image: staff['avatar'] != null && staff['avatar'].toString().isNotEmpty
                                               ? DecorationImage(
                                                   image: NetworkImage(staff['avatar']),
                                                   fit: BoxFit.cover,
                                                 )
                                               : null,
-                                          boxShadow: [
-                                            BoxShadow(
-                                              color: Colors.black.withOpacity(0.04),
-                                              blurRadius: 8,
-                                              offset: const Offset(0, 2),
-                                            ),
-                                          ],
                                         ),
                                         child: staff['avatar'] == null || staff['avatar'].toString().isEmpty
-                                            ? const Icon(
+                                            ? Icon(
                                                 Icons.person_rounded,
-                                                color: Color(0xFF94A3B8),
-                                                size: 32,
+                                                color: mutedText.withOpacity(0.6),
+                                                size: 26,
                                               )
                                             : null,
                                       ),
                                       Positioned(
-                                        right: -2,
-                                        bottom: -2,
+                                        right: -3,
+                                        bottom: -3,
                                         child: Container(
-                                          width: 16,
-                                          height: 16,
+                                          width: 15,
+                                          height: 15,
                                           decoration: BoxDecoration(
                                             color: isAktif ? const Color(0xFF10B981) : const Color(0xFFEF4444),
                                             shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 3),
+                                            border: Border.all(color: Colors.white, width: 2),
                                           ),
                                         ),
                                       ),
                                     ],
                                   ),
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: 14),
 
-                                  // Employee Info Details
+                                  // Name and Category Details
                                   Expanded(
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           staff['name'] ?? '-',
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.w800,
-                                            fontSize: 16,
-                                            color: Color(0xFF1E293B),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 15,
+                                            color: darkText,
                                           ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                        const SizedBox(height: 6),
+                                        const SizedBox(height: 5),
                                         Row(
                                           children: [
-                                            // Role tag
+                                            // Dynamic Styled Role Tag
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF1F5F9),
+                                                color: _getRoleBgColor(staff['role']),
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Text(
                                                 (staff['role'] ?? 'Stylist').toUpperCase(),
-                                                style: const TextStyle(
-                                                  fontSize: 9,
-                                                  fontWeight: FontWeight.w900,
-                                                  color: Color(0xFF64748B),
+                                                style: TextStyle(
+                                                  fontSize: 8.5,
+                                                  fontWeight: FontWeight.w800,
+                                                  color: _getRoleTextColor(staff['role']),
                                                   letterSpacing: 0.5,
                                                 ),
                                               ),
                                             ),
-                                            const SizedBox(width: 8),
-                                            // Status tag
+                                            const SizedBox(width: 6),
+                                            // Custom Status Indicator
                                             Container(
-                                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                                               decoration: BoxDecoration(
                                                 color: isAktif ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
                                                 borderRadius: BorderRadius.circular(6),
-                                                border: Border.all(
-                                                  color: isAktif ? const Color(0xFFA7F3D0) : const Color(0xFFFCA5A5),
-                                                  width: 1,
-                                                ),
                                               ),
                                               child: Row(
                                                 mainAxisSize: MainAxisSize.min,
@@ -442,14 +465,14 @@ class _PresencePageState extends State<PresencePage> {
                                                   Icon(
                                                     isAktif ? Icons.check_circle_rounded : Icons.cancel_rounded,
                                                     color: isAktif ? const Color(0xFF059669) : const Color(0xFFDC2626),
-                                                    size: 11,
+                                                    size: 10,
                                                   ),
-                                                  const SizedBox(width: 4),
+                                                  const SizedBox(width: 3),
                                                   Text(
                                                     isAktif ? "Hadir" : "Libur",
                                                     style: TextStyle(
-                                                      fontSize: 9,
-                                                      fontWeight: FontWeight.w900,
+                                                      fontSize: 8.5,
+                                                      fontWeight: FontWeight.w800,
                                                       color: isAktif ? const Color(0xFF059669) : const Color(0xFFDC2626),
                                                     ),
                                                   ),
@@ -462,24 +485,23 @@ class _PresencePageState extends State<PresencePage> {
                                     ),
                                   ),
 
-                                  // Custom Premium Segmented Slide Switcher
+                                  // Sleek IN/OUT Switcher Button
                                   Container(
-                                    height: 38,
-                                    width: 112,
+                                    height: 36,
+                                    width: 108,
                                     decoration: BoxDecoration(
                                       color: const Color(0xFFF1F5F9),
-                                      borderRadius: BorderRadius.circular(20),
+                                      borderRadius: BorderRadius.circular(18),
                                     ),
                                     child: Stack(
                                       children: [
-                                        // Sliding selection indicator
                                         AnimatedAlign(
-                                          duration: const Duration(milliseconds: 240),
-                                          curve: Curves.easeOutBack,
+                                          duration: const Duration(milliseconds: 200),
+                                          curve: Curves.easeInOut,
                                           alignment: isAktif ? Alignment.centerLeft : Alignment.centerRight,
                                           child: Container(
-                                            width: 52,
-                                            height: 32,
+                                            width: 50,
+                                            height: 30,
                                             margin: const EdgeInsets.symmetric(horizontal: 3, vertical: 3),
                                             decoration: BoxDecoration(
                                               gradient: LinearGradient(
@@ -489,19 +511,18 @@ class _PresencePageState extends State<PresencePage> {
                                                 begin: Alignment.topLeft,
                                                 end: Alignment.bottomRight,
                                               ),
-                                              borderRadius: BorderRadius.circular(17),
+                                              borderRadius: BorderRadius.circular(15),
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: (isAktif ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                                      .withOpacity(0.3),
-                                                  blurRadius: 6,
+                                                      .withOpacity(0.25),
+                                                  blurRadius: 5,
                                                   offset: const Offset(0, 2),
                                                 )
                                               ],
                                             ),
                                           ),
                                         ),
-                                        // Interactive switch segments
                                         Row(
                                           children: [
                                             Expanded(
@@ -512,7 +533,7 @@ class _PresencePageState extends State<PresencePage> {
                                                   child: Text(
                                                     "IN",
                                                     style: TextStyle(
-                                                      fontSize: 11,
+                                                      fontSize: 10,
                                                       fontWeight: FontWeight.w900,
                                                       color: isAktif ? Colors.white : const Color(0xFF94A3B8),
                                                     ),
@@ -528,7 +549,7 @@ class _PresencePageState extends State<PresencePage> {
                                                   child: Text(
                                                     "OUT",
                                                     style: TextStyle(
-                                                      fontSize: 11,
+                                                      fontSize: 10,
                                                       fontWeight: FontWeight.w900,
                                                       color: !isAktif ? Colors.white : const Color(0xFF94A3B8),
                                                     ),

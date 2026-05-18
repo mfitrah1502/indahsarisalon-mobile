@@ -199,34 +199,59 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
                           else if (spend >= 1000000) { tier = 'Silver'; tc = const Color(0xFF94A3B8); } // silver
                           
-                          if (tier == 'Reguler') {
-                             bool isCc = customer['is_colour_circle'] == true;
-                             if (isCc) {
-                               DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
-                               if (exp != null && exp.isAfter(DateTime.now())) {
-                                  tier = 'Colour Circle';
-                                  tc = const Color(0xFFD660A1);
-                               }
-                             }
+                          bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
+                          if (isCc) {
+                            DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
+                            if (exp != null && exp.isBefore(DateTime.now())) {
+                              if (spend < 1500000) {
+                                isCc = false;
+                              }
+                            }
                           }
-                          if (tier == 'Reguler') return const SizedBox.shrink();
 
-                          return Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: tc.withOpacity(0.1),
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(color: tc.withOpacity(0.5)),
-                            ),
-                            child: Text(
-                              tier,
-                              style: TextStyle(
-                                fontSize: 9,
-                                fontWeight: FontWeight.bold,
-                                letterSpacing: 0.5,
-                                color: tc,
-                              ),
-                            ),
+                          return Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (tier != 'Reguler') ...[
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: tc.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: tc.withOpacity(0.5)),
+                                  ),
+                                  child: Text(
+                                    tier,
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                      color: tc,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              if (isCc) ...[
+                                if (tier != 'Reguler') const SizedBox(width: 4),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: const Color(0xFFD660A1).withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(6),
+                                    border: Border.all(color: const Color(0xFFD660A1).withOpacity(0.5)),
+                                  ),
+                                  child: const Text(
+                                    'Colour Circle',
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.bold,
+                                      letterSpacing: 0.5,
+                                      color: Color(0xFFD660A1),
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ],
                           );
                         }
                       ),

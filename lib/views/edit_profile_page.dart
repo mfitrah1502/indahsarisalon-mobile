@@ -35,6 +35,64 @@ class _EditProfilePageState extends State<EditProfilePage> {
   final TextEditingController _lastEducationController =
       TextEditingController();
 
+  // Owner custom profile fields
+  final TextEditingController _tentangController = TextEditingController();
+  final TextEditingController _nomorStrController = TextEditingController();
+  final TextEditingController _nomorSipController = TextEditingController();
+  final TextEditingController _tempatPraktikController = TextEditingController();
+  final TextEditingController _tahunMulaiPraktikController = TextEditingController();
+  final TextEditingController _pendidikan1Controller = TextEditingController();
+  final TextEditingController _pendidikan2Controller = TextEditingController();
+  final TextEditingController _pendidikan3Controller = TextEditingController();
+  final TextEditingController _pengalaman1Controller = TextEditingController();
+  final TextEditingController _pengalaman2Controller = TextEditingController();
+  final TextEditingController _pengalaman3Controller = TextEditingController();
+  final TextEditingController _pengalaman4Controller = TextEditingController();
+  final TextEditingController _pengalaman5Controller = TextEditingController();
+  final TextEditingController _keanggotaan1Controller = TextEditingController();
+  final TextEditingController _keanggotaan2Controller = TextEditingController();
+  final TextEditingController _sertifikasi1Controller = TextEditingController();
+  final TextEditingController _sertifikasi2Controller = TextEditingController();
+  final TextEditingController _sertifikasi3Controller = TextEditingController();
+  final TextEditingController _sertifikasi4Controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _fullNameController.dispose();
+    _nicknameController.dispose();
+    _usernameController.dispose();
+    _emailController.dispose();
+    _phoneController.dispose();
+    _addressController.dispose();
+    _birthPlaceController.dispose();
+    _emergencyContactController.dispose();
+    _bankAccountNameController.dispose();
+    _bankAccountNumberController.dispose();
+    _lastEducationController.dispose();
+    
+    _tentangController.dispose();
+    _nomorStrController.dispose();
+    _nomorSipController.dispose();
+    _tempatPraktikController.dispose();
+    _tahunMulaiPraktikController.dispose();
+    _pendidikan1Controller.dispose();
+    _pendidikan2Controller.dispose();
+    _pendidikan3Controller.dispose();
+    _pengalaman1Controller.dispose();
+    _pengalaman2Controller.dispose();
+    _pengalaman3Controller.dispose();
+    _pengalaman4Controller.dispose();
+    _pengalaman5Controller.dispose();
+    _keanggotaan1Controller.dispose();
+    _keanggotaan2Controller.dispose();
+    _sertifikasi1Controller.dispose();
+    _sertifikasi2Controller.dispose();
+    _sertifikasi3Controller.dispose();
+    _sertifikasi4Controller.dispose();
+    
+    super.dispose();
+  }
+
   DateTime? _selectedBirthDate;
   String? _selectedGender;
 
@@ -76,6 +134,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
           _bankAccountNumberController.text = data['bank_account_number'] ?? '';
           _lastEducationController.text = data['last_education'] ?? '';
 
+          // Parse owner profile JSON data
+          final ownerProfile = data['owner_profile'] as Map<String, dynamic>? ?? {};
+          _tentangController.text = ownerProfile['tentang'] ?? '';
+          _nomorStrController.text = ownerProfile['nomor_str'] ?? ownerProfile['kredensial'] ?? '';
+          _nomorSipController.text = ownerProfile['nomor_sip'] ?? ownerProfile['izin_praktek'] ?? '';
+          _tempatPraktikController.text = ownerProfile['tempat_praktik'] ?? ownerProfile['layanan_utama'] ?? '';
+          _tahunMulaiPraktikController.text = ownerProfile['tahun_mulai_praktik'] ?? ownerProfile['lokasi_praktik'] ?? '';
+          _pendidikan1Controller.text = ownerProfile['pendidikan_1'] ?? '';
+          _pendidikan2Controller.text = ownerProfile['pendidikan_2'] ?? '';
+          _pendidikan3Controller.text = ownerProfile['pendidikan_3'] ?? '';
+          _pengalaman1Controller.text = ownerProfile['pengalaman_1'] ?? '';
+          _pengalaman2Controller.text = ownerProfile['pengalaman_2'] ?? '';
+          _pengalaman3Controller.text = ownerProfile['pengalaman_3'] ?? '';
+          _pengalaman4Controller.text = ownerProfile['pengalaman_4'] ?? '';
+          _pengalaman5Controller.text = ownerProfile['pengalaman_5'] ?? '';
+          _keanggotaan1Controller.text = ownerProfile['keanggotaan_1'] ?? '';
+          _keanggotaan2Controller.text = ownerProfile['keanggotaan_2'] ?? '';
+          _sertifikasi1Controller.text = ownerProfile['sertifikasi_1'] ?? '';
+          _sertifikasi2Controller.text = ownerProfile['sertifikasi_2'] ?? '';
+          _sertifikasi3Controller.text = ownerProfile['sertifikasi_3'] ?? '';
+          _sertifikasi4Controller.text = ownerProfile['sertifikasi_4'] ?? '';
+
           if (data['birth_date'] != null) {
             _selectedBirthDate = DateTime.parse(data['birth_date']);
           }
@@ -97,6 +177,28 @@ class _EditProfilePageState extends State<EditProfilePage> {
       final userId = AppSession.userId;
       if (userId == null) return;
 
+      final Map<String, dynamic> ownerProfileData = {
+        'tentang': _tentangController.text,
+        'nomor_str': _nomorStrController.text,
+        'nomor_sip': _nomorSipController.text,
+        'tempat_praktik': _tempatPraktikController.text,
+        'tahun_mulai_praktik': _tahunMulaiPraktikController.text,
+        'pendidikan_1': _pendidikan1Controller.text,
+        'pendidikan_2': _pendidikan2Controller.text,
+        'pendidikan_3': _pendidikan3Controller.text,
+        'pengalaman_1': _pengalaman1Controller.text,
+        'pengalaman_2': _pengalaman2Controller.text,
+        'pengalaman_3': _pengalaman3Controller.text,
+        'pengalaman_4': _pengalaman4Controller.text,
+        'pengalaman_5': _pengalaman5Controller.text,
+        'keanggotaan_1': _keanggotaan1Controller.text,
+        'keanggotaan_2': _keanggotaan2Controller.text,
+        'sertifikasi_1': _sertifikasi1Controller.text,
+        'sertifikasi_2': _sertifikasi2Controller.text,
+        'sertifikasi_3': _sertifikasi3Controller.text,
+        'sertifikasi_4': _sertifikasi4Controller.text,
+      };
+
       await Supabase.instance.client
           .from('users')
           .update({
@@ -113,6 +215,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
             'bank_account_name': _bankAccountNameController.text,
             'bank_account_number': _bankAccountNumberController.text,
             'last_education': _lastEducationController.text,
+            if (AppSession.userRole?.toLowerCase() == 'owner') 'owner_profile': ownerProfileData,
             if (_avatarUrl != null) 'avatar': _avatarUrl,
           })
           .eq('id', userId);
@@ -321,11 +424,91 @@ class _EditProfilePageState extends State<EditProfilePage> {
                           if (AppSession.userRole?.toLowerCase() == 'owner') ...[
                             _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
                             const SizedBox(height: 20),
+                            _buildInputField('ABOUT ME (TENTANG)'.tr, _tentangController, Icons.info_outline, maxLines: 3),
+                            const SizedBox(height: 20),
                             _buildInputField('USERNAME'.tr, _usernameController, Icons.alternate_email),
                             const SizedBox(height: 20),
                             _buildInputField('EMAIL ADDRESS'.tr, _emailController, Icons.email_outlined),
                             const SizedBox(height: 20),
                             _buildInputField('PHONE NUMBER'.tr, _phoneController, Icons.phone_outlined),
+                            
+                             // 2. Kredensial & Izin Praktek
+                             _buildSectionCard(
+                               title: 'KREDENSIAL & IZIN PRAKTEK'.tr,
+                               icon: Icons.assignment_ind_outlined,
+                               children: [
+                                 _buildInputField('NOMOR STR'.tr, _nomorStrController, Icons.badge_outlined),
+                                 const SizedBox(height: 20),
+                                 _buildInputField('NOMOR SIP'.tr, _nomorSipController, Icons.verified_user_outlined),
+                               ],
+                             ),
+                             
+                             // 3. Informasi Praktik
+                             _buildSectionCard(
+                               title: 'INFORMASI PRAKTIK'.tr,
+                               icon: Icons.business_outlined,
+                               children: [
+                                 _buildInputField('TEMPAT PRAKTIK'.tr, _tempatPraktikController, Icons.map_outlined),
+                                 const SizedBox(height: 20),
+                                 _buildInputField('TAHUN MULAI PRAKTIK'.tr, _tahunMulaiPraktikController, Icons.calendar_today_outlined),
+                               ],
+                             ),
+                            
+                            // 4. Pendidikan (3 fields)
+                            _buildSectionCard(
+                              title: 'PENDIDIKAN'.tr,
+                              icon: Icons.school_outlined,
+                              children: [
+                                _buildInputField('PENDIDIKAN 1 (SARJANA/DIPLOMA)'.tr, _pendidikan1Controller, Icons.school_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENDIDIKAN 2 (MAGISTER/SPESIALISASI)'.tr, _pendidikan2Controller, Icons.history_edu_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENDIDIKAN 3 (PELATIHAN LAIN)'.tr, _pendidikan3Controller, Icons.workspace_premium_outlined),
+                              ],
+                            ),
+                            
+                            // 5. Pengalaman (5 fields)
+                            _buildSectionCard(
+                              title: 'PENGALAMAN KERJA'.tr,
+                              icon: Icons.work_history_outlined,
+                              children: [
+                                _buildInputField('PENGALAMAN 1 (TERBARU)'.tr, _pengalaman1Controller, Icons.work_outline),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENGALAMAN 2'.tr, _pengalaman2Controller, Icons.work_outline),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENGALAMAN 3'.tr, _pengalaman3Controller, Icons.work_outline),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENGALAMAN 4'.tr, _pengalaman4Controller, Icons.work_outline),
+                                const SizedBox(height: 20),
+                                _buildInputField('PENGALAMAN 5'.tr, _pengalaman5Controller, Icons.work_outline),
+                              ],
+                            ),
+                            
+                            // 6. Keanggotaan (2 fields)
+                            _buildSectionCard(
+                              title: 'KEANGGOTAAN PROFESI'.tr,
+                              icon: Icons.groups_outlined,
+                              children: [
+                                _buildInputField('ORGANISASI / KEANGGOTAAN 1'.tr, _keanggotaan1Controller, Icons.card_membership_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('ORGANISASI / KEANGGOTAAN 2'.tr, _keanggotaan2Controller, Icons.groups_outlined),
+                              ],
+                            ),
+                            
+                            // 7. Sertifikasi (4 fields)
+                            _buildSectionCard(
+                              title: 'SERTIFIKASI PROFESIONAL'.tr,
+                              icon: Icons.verified_outlined,
+                              children: [
+                                _buildInputField('SERTIFIKASI 1 (TERBARU)'.tr, _sertifikasi1Controller, Icons.bookmark_added_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('SERTIFIKASI 2'.tr, _sertifikasi2Controller, Icons.bookmark_added_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('SERTIFIKASI 3'.tr, _sertifikasi3Controller, Icons.bookmark_added_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('SERTIFIKASI 4'.tr, _sertifikasi4Controller, Icons.bookmark_added_outlined),
+                              ],
+                            ),
                           ] else ...[
                             // Field lengkap untuk admin atau peran lainnya
                             _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
@@ -629,6 +812,68 @@ class _EditProfilePageState extends State<EditProfilePage> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildSectionCard({
+    required String title,
+    required IconData icon,
+    required List<Widget> children,
+  }) {
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(top: 24),
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.02),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        border: Border.all(
+          color: const Color(0xFFE2E8F0).withOpacity(0.6),
+          width: 1,
+        ),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  icon,
+                  color: primaryColor,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Text(
+                  title,
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.bold,
+                    color: primaryColor,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          ...children,
+        ],
+      ),
     );
   }
 }

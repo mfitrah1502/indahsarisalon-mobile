@@ -21,7 +21,7 @@ class BookingListPage extends StatefulWidget {
 class _BookingListPageState extends State<BookingListPage> {
   final Color primaryColor = const Color(0xFFD660A1);
   final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
+  final Color scaffoldBg = const Color(0xFFF8FAFC);
   final Color mutedText = const Color(0xFF64748B);
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
@@ -122,26 +122,33 @@ class _BookingListPageState extends State<BookingListPage> {
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'berhasil': return const Color(0xFF16A34A);
-      case 'dibatalkan': return const Color(0xFFDC2626);
+      case 'berhasil': return const Color(0xFF059669);
+      case 'dibatalkan': return const Color(0xFFE11D48);
       default: return const Color(0xFFEA580C); // pending/upcoming
     }
   }
 
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
-      case 'berhasil': return const Color(0xFFDCFCE7);
-      case 'dibatalkan': return const Color(0xFFFEE2E2);
+      case 'berhasil': return const Color(0xFFD1FAE5);
+      case 'dibatalkan': return const Color(0xFFFFE4E6);
       default: return const Color(0xFFFFEDD5);
     }
   }
 
-  String _formatDateTime(String raw) {
+  String _formatDateOnly(String raw) {
     try {
       final dt = DateTime.parse(raw).toLocal();
-      final date = DateFormat('d MMM yyyy').format(dt);
-      final time = DateFormat('HH:mm').format(dt);
-      return "$date • $time";
+      return DateFormat('d MMM yyyy').format(dt);
+    } catch (_) {
+      return raw;
+    }
+  }
+
+  String _formatTimeOnly(String raw) {
+    try {
+      final dt = DateTime.parse(raw).toLocal();
+      return DateFormat('HH:mm').format(dt);
     } catch (_) {
       return raw;
     }
@@ -156,59 +163,100 @@ class _BookingListPageState extends State<BookingListPage> {
       body: SafeArea(
         child: Column(
           children: [
-            // Header
-            Padding(
+            Container(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
-              child: Row(
-                children: [
-                  GestureDetector(
-                    onTap: () => Navigator.pushAndRemoveUntil(
-                      context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
-                  ),
-                  Expanded(
-                    child: Center(
-                      child: Text(
-                        "Booking List".tr, 
-                        style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold)
+              child: SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    Column(
+                      mainAxisSize: MainAxisSize.min,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Booking List".tr, 
+                          style: TextStyle(
+                            color: primaryColor, 
+                            fontSize: 22, 
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: 0.5,
+                          )
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Manage your appointments".tr,
+                          style: TextStyle(
+                            color: mutedText,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Positioned(
+                      left: 0,
+                      child: GestureDetector(
+                        onTap: _fetchBookings,
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))
+                            ],
+                          ),
+                          child: Icon(Icons.refresh_rounded, color: primaryColor, size: 20),
+                        ),
                       ),
                     ),
-                  ),
-                  // Actions Right
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      GestureDetector(
-                        onTap: _fetchBookings,
-                        child: Icon(Icons.refresh, color: primaryColor, size: 24),
-                      ),
-                      const SizedBox(width: 12),
-                      GestureDetector(
+                    Positioned(
+                      right: 0,
+                      child: GestureDetector(
                         onTap: _bookings.isEmpty ? null : _deleteAllBookings,
-                        child: Icon(Icons.delete_outline, color: _bookings.isEmpty ? Colors.grey : Colors.red, size: 24),
+                        child: Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: _bookings.isEmpty ? const Color(0xFFF1F5F9) : const Color(0xFFFFF1F2),
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              if (_bookings.isNotEmpty)
+                                BoxShadow(color: Colors.red.withValues(alpha: 0.1), blurRadius: 10, offset: const Offset(0, 2))
+                            ],
+                          ),
+                          child: Icon(Icons.delete_outline_rounded, color: _bookings.isEmpty ? Colors.grey : const Color(0xFFE11D48), size: 20),
+                        ),
                       ),
-                    ],
-                  ),
-                ],
+                    ),
+                  ],
+                ),
               ),
             ),
             
-            // Search Bar
+            // Modern Search Bar
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 16.0),
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                  boxShadow: [
+                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
+                  ],
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: _filterBookings,
+                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
                   decoration: InputDecoration(
-                    icon: const Icon(Icons.search, color: Color(0xFF64748B)),
+                    icon: Icon(Icons.search_rounded, color: primaryColor.withValues(alpha: 0.6), size: 22),
                     hintText: 'Search by Name or Stylist...'.tr,
+                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w400),
                     border: InputBorder.none,
                   ),
                 ),
@@ -219,42 +267,67 @@ class _BookingListPageState extends State<BookingListPage> {
               child: Stack(
                 children: [
                   if (_loading)
-                    const Center(child: CircularProgressIndicator())
+                    Center(child: CircularProgressIndicator(color: primaryColor))
                   else
                     SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
                       padding: const EdgeInsets.symmetric(horizontal: 24.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const SizedBox(height: 4),
-                          Text(
-                            "SCHEDULE OVERVIEW".tr,
-                            style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText),
-                          ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              Text(
-                                "Your Appointments".tr,
-                                style: TextStyle(color: primaryColor, fontSize: 26, fontWeight: FontWeight.w900),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    "SCHEDULE OVERVIEW".tr,
+                                    style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: primaryColor),
+                                  ),
+                                  const SizedBox(height: 6),
+                                  Text(
+                                    "Your Appointments".tr,
+                                    style: const TextStyle(color: Color(0xFF1E293B), fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                                  ),
+                                ],
                               ),
-                              Text("${_filteredBookings.length}${" total".tr}", style: TextStyle(color: mutedText, fontSize: 13)),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: primaryColor.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                child: Text(
+                                  "${_filteredBookings.length}${" total".tr}", 
+                                  style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)
+                                ),
+                              ),
                             ],
                           ),
-                          const SizedBox(height: 20),
+                          const SizedBox(height: 24),
 
                           if (_filteredBookings.isEmpty)
                             Center(
                               child: Padding(
-                                padding: const EdgeInsets.only(top: 80.0),
+                                padding: const EdgeInsets.only(top: 60.0),
                                 child: Column(
                                   children: [
-                                    Icon(Icons.calendar_today_outlined, size: 56, color: const Color(0xFFCBD5E1)),
-                                    const SizedBox(height: 16),
-                                    Text("No bookings yet.".tr, style: TextStyle(color: mutedText, fontSize: 16)),
+                                    Container(
+                                      padding: const EdgeInsets.all(24),
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        shape: BoxShape.circle,
+                                        boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 20)],
+                                      ),
+                                      child: Icon(Icons.event_busy_rounded, size: 56, color: primaryColor.withValues(alpha: 0.4)),
+                                    ),
+                                    const SizedBox(height: 20),
+                                    Text("No bookings yet.".tr, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.w700)),
                                     const SizedBox(height: 8),
-                                    Text("Press the + button to create a new booking.".tr, style: TextStyle(color: mutedText, fontSize: 13)),
+                                    Text("Press the + button to create a new booking.".tr, style: TextStyle(color: mutedText, fontSize: 14)),
                                   ],
                                 ),
                               ),
@@ -265,24 +338,24 @@ class _BookingListPageState extends State<BookingListPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Padding(
-                                    padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+                                    padding: const EdgeInsets.only(top: 8.0, bottom: 16.0),
                                     child: Row(
                                       children: [
                                         Container(
-                                          width: 4,
-                                          height: 14,
+                                          width: 8,
+                                          height: 8,
                                           decoration: BoxDecoration(
                                             color: primaryColor,
-                                            borderRadius: BorderRadius.circular(2),
+                                            shape: BoxShape.circle,
                                           ),
                                         ),
-                                        const SizedBox(width: 8),
+                                        const SizedBox(width: 10),
                                         Text(
                                           entry.key,
-                                          style: TextStyle(
-                                            fontSize: 14,
+                                          style: const TextStyle(
+                                            fontSize: 15,
                                             fontWeight: FontWeight.w800,
-                                            color: primaryColor,
+                                            color: Color(0xFF334155),
                                             letterSpacing: 0.2,
                                           ),
                                         ),
@@ -306,27 +379,41 @@ class _BookingListPageState extends State<BookingListPage> {
                                           ).then((_) => _fetchBookings()); // Refresh on return
                                         },
                                         child: Container(
-                                          padding: const EdgeInsets.all(16),
+                                          padding: const EdgeInsets.all(18),
                                           decoration: BoxDecoration(
                                             color: Colors.white,
-                                            borderRadius: BorderRadius.circular(16),
+                                            borderRadius: BorderRadius.circular(20),
+                                            border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
                                             boxShadow: [
-                                              BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4)),
+                                              BoxShadow(color: primaryColor.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 6)),
                                             ],
                                           ),
                                           child: Column(
                                             children: [
                                               Row(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment: CrossAxisAlignment.center,
                                                 children: [
                                                   // Stylist avatar
                                                   Container(
-                                                    width: 50, height: 50,
+                                                    width: 54, height: 54,
                                                     decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(12),
-                                                      color: const Color(0xFFE4F0FA),
+                                                      borderRadius: BorderRadius.circular(16),
+                                                      gradient: LinearGradient(
+                                                        begin: Alignment.topLeft,
+                                                        end: Alignment.bottomRight,
+                                                        colors: [
+                                                          primaryColor.withValues(alpha: 0.1),
+                                                          primaryColor.withValues(alpha: 0.02),
+                                                        ]
+                                                      ),
+                                                      border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
                                                     ),
-                                                    child: Icon(Icons.person, color: primaryColor, size: 28),
+                                                    child: Center(
+                                                      child: Text(
+                                                        booking.customerName != '-' ? booking.customerName[0].toUpperCase() : "C",
+                                                        style: TextStyle(color: primaryColor, fontSize: 24, fontWeight: FontWeight.w800),
+                                                      ),
+                                                    ),
                                                   ),
                                                   const SizedBox(width: 16),
                                                   Expanded(
@@ -335,63 +422,95 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       children: [
                                                         Text(
                                                           booking.customerName != '-' ? booking.customerName : "Customer".tr,
-                                                          style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: primaryColor),
+                                                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
                                                         ),
-                                                        const SizedBox(height: 2),
+                                                        const SizedBox(height: 4),
                                                         Text(
                                                           serviceLabel,
-                                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF334155)),
+                                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF475569)),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
                                                         ),
-                                                        const SizedBox(height: 2),
-                                                        Text(
-                                                          "${"with ".tr}${booking.stylist}",
-                                                          style: TextStyle(fontSize: 12, color: mutedText),
+                                                        const SizedBox(height: 4),
+                                                        Row(
+                                                          children: [
+                                                            Icon(Icons.content_cut_rounded, size: 12, color: mutedText),
+                                                            const SizedBox(width: 4),
+                                                            Text(
+                                                              booking.stylist,
+                                                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w500, color: mutedText),
+                                                            ),
+                                                          ],
                                                         ),
                                                       ],
                                                     ),
                                                   ),
-                                                  const SizedBox(width: 8),
-                                                  Container(
-                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                                                    decoration: BoxDecoration(
-                                                      color: _statusBg(status),
-                                                      borderRadius: BorderRadius.circular(20),
-                                                    ),
-                                                    child: Text(
-                                                      status.toUpperCase(),
-                                                      style: TextStyle(
-                                                        fontSize: 9,
-                                                        fontWeight: FontWeight.w900,
-                                                        letterSpacing: 0.5,
-                                                        color: _statusColor(status),
-                                                      ),
-                                                    ),
-                                                  ),
                                                 ],
                                               ),
-                                              const SizedBox(height: 14),
-                                              const Divider(color: Color(0xFFF1F5F9), height: 1),
-                                              const SizedBox(height: 14),
+                                              const SizedBox(height: 16),
+                                              const Divider(color: Color(0xFFF1F5F9), height: 1, thickness: 1.5),
+                                              const SizedBox(height: 16),
                                               Row(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                                 children: [
                                                   Row(
                                                     children: [
-                                                      Icon(Icons.calendar_today_outlined, size: 13, color: mutedText),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        _formatDateTime(booking.datetime),
-                                                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFF334155)),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFFF8FAFC),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.calendar_month_rounded, size: 12, color: primaryColor),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              _formatDateOnly(booking.datetime),
+                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                                                            ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                      const SizedBox(width: 8),
+                                                      Container(
+                                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                                        decoration: BoxDecoration(
+                                                          color: const Color(0xFFF8FAFC),
+                                                          borderRadius: BorderRadius.circular(6),
+                                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                                        ),
+                                                        child: Row(
+                                                          children: [
+                                                            Icon(Icons.access_time_rounded, size: 12, color: primaryColor),
+                                                            const SizedBox(width: 6),
+                                                            Text(
+                                                              _formatTimeOnly(booking.datetime),
+                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                                                            ),
+                                                          ],
+                                                        ),
                                                       ),
                                                     ],
                                                   ),
-                                                  Text(
-                                                    _currency.format(booking.totalPrice.toDouble()),
-                                                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w900, color: primaryColor),
+                                                  Container(
+                                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                                    decoration: BoxDecoration(
+                                                      color: _statusBg(status),
+                                                      borderRadius: BorderRadius.circular(8),
+                                                    ),
+                                                    child: Text(
+                                                      status.toUpperCase(),
+                                                      style: TextStyle(
+                                                        fontSize: 10,
+                                                        fontWeight: FontWeight.w900,
+                                                        letterSpacing: 0.5,
+                                                        color: _statusColor(status),
+                                                      ),
+                                                    ),
                                                   ),
                                                 ],
                                               ),
@@ -409,7 +528,7 @@ class _BookingListPageState extends State<BookingListPage> {
                       ),
                     ),
 
-                  // FAB - New Booking
+                  // Floating Action Button - New Booking
                   Positioned(
                     bottom: 24,
                     right: 24,
@@ -421,15 +540,19 @@ class _BookingListPageState extends State<BookingListPage> {
                         ).then((_) => _fetchBookings()); // Auto-refresh after booking
                       },
                       child: Container(
-                        width: 56, height: 56,
+                        width: 60, height: 60,
                         decoration: BoxDecoration(
-                          color: primaryColor,
-                          borderRadius: BorderRadius.circular(16),
+                          gradient: LinearGradient(
+                            colors: [primaryColor, buttonColor],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
                           boxShadow: [
-                            BoxShadow(color: primaryColor.withOpacity(0.3), blurRadius: 10, offset: const Offset(0, 5)),
+                            BoxShadow(color: primaryColor.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8)),
                           ],
                         ),
-                        child: const Icon(Icons.add, color: Colors.white, size: 28),
+                        child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
                       ),
                     ),
                   ),
@@ -442,8 +565,8 @@ class _BookingListPageState extends State<BookingListPage> {
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, -8))],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: SafeArea(
@@ -452,10 +575,10 @@ class _BookingListPageState extends State<BookingListPage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(0, "HOME", Icons.home_filled),
-              _buildNavItem(1, "BOOKING", Icons.calendar_today),
+              _buildNavItem(1, "BOOKING", Icons.calendar_month_rounded),
               _buildNavItem(2, "SERVICES", Icons.content_cut_rounded),
               _buildNavItem(3, "REPORT", Icons.bar_chart_rounded),
-              _buildNavItem(4, "SETTINGS", Icons.settings_outlined),
+              _buildNavItem(4, "SETTINGS", Icons.settings_rounded),
             ],
           ),
         ),
@@ -476,11 +599,29 @@ class _BookingListPageState extends State<BookingListPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
+          Icon(icon, color: isSelected ? primaryColor : const Color(0xFF94A3B8), size: 28),
           const SizedBox(height: 6),
-          Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
+          Text(
+            label, 
+            style: TextStyle(
+              fontSize: 10, 
+              fontWeight: FontWeight.w800, 
+              color: isSelected ? primaryColor : const Color(0xFF94A3B8), 
+              letterSpacing: 0.5
+            )
+          ),
+          const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isSelected ? primaryColor : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
         ],
       ),
     );
   }
 }
+

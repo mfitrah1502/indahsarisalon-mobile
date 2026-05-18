@@ -11,6 +11,7 @@ import 'report_page.dart';
 import 'payment_details_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class BookingPage extends StatefulWidget {
   final DateTime selectedDate;
@@ -113,9 +114,40 @@ class _BookingPageState extends State<BookingPage> {
       _nameCtrl.text = widget.selectedServices[0]['customer_name'] ?? '';
       _phoneCtrl.text = widget.selectedServices[0]['customer_phone'] ?? '';
       _emailCtrl.text = widget.selectedServices[0]['customer_email'] ?? '';
+    } else {
+      _fetchLoggedInCustomerProfile();
     }
 
     _fetchAvailableTimes();
+  }
+
+  Future<void> _fetchLoggedInCustomerProfile() async {
+    if (AppSession.userId != null) {
+      try {
+        final res = await Supabase.instance.client
+            .from('users')
+            .select('name, email, phone, is_colour_circle, colour_circle_expired_at')
+            .eq('id', AppSession.userId!)
+            .single();
+
+        if (mounted) {
+          setState(() {
+            if (_nameCtrl.text.isEmpty) _nameCtrl.text = res['name'] ?? '';
+            if (_emailCtrl.text.isEmpty) _emailCtrl.text = res['email'] ?? '';
+            if (_phoneCtrl.text.isEmpty) _phoneCtrl.text = res['phone'] ?? '';
+
+            bool isCc = res['is_colour_circle'] == true;
+            DateTime? exp = res['colour_circle_expired_at'] != null
+                ? DateTime.tryParse(res['colour_circle_expired_at'])
+                : null;
+            _isColourCircleApplied = isCc && (exp == null || exp.isAfter(DateTime.now()));
+            _recalculatePrice();
+          });
+        }
+      } catch (e) {
+        debugPrint('Error fetching logged in profile: $e');
+      }
+    }
   }
 
   void _recalculatePrice() {
@@ -232,40 +264,63 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
+    final Color cardBg = Colors.white;
+    final Color darkText = const Color(0xFF0F172A);
+
     return Scaffold(
-      backgroundColor: scaffoldBg,
+      backgroundColor: const Color(0xFFFAFAFC),
       body: SafeArea(
         child: Column(
           children: [
-            // Header
+            // Premium Header
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 20.0,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
               child: Row(
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(
-                      Icons.arrow_back,
-                      color: primaryColor,
-                      size: 28,
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.02),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 20),
                     ),
                   ),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 28.0),
-                        child: Text(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
                           "Pilih Jadwal",
                           style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.5,
+                            color: darkText,
                           ),
                         ),
-                      ),
+                        const SizedBox(height: 2),
+                        Text(
+                          "Lengkapi data & waktu kunjungan",
+                          style: TextStyle(
+                            fontSize: 13,
+                            fontWeight: FontWeight.w500,
+                            color: mutedText,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -275,47 +330,47 @@ class _BookingPageState extends State<BookingPage> {
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                physics: const BouncingScrollPhysics(),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Info Band
+                    // Premium Info Card
                     Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 16,
-                        vertical: 14,
-                      ),
+                      padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        border: Border.all(color: Colors.white, width: 2),
+                        boxShadow: [
+                          BoxShadow(
+                            color: const Color(0xFFCBD5E1).withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
                       ),
                       child: Row(
                         children: [
                           Container(
-                            width: 44,
-                            height: 44,
+                            width: 54,
+                            height: 54,
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(12),
-                              color: const Color(0xFFE4F0FA),
-                              image:
-                                  widget.stylistAvatar != null &&
-                                      widget.stylistAvatar!.isNotEmpty
+                              borderRadius: BorderRadius.circular(16),
+                              color: const Color(0xFFF1F5F9),
+                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              image: widget.stylistAvatar != null && widget.stylistAvatar!.isNotEmpty
                                   ? DecorationImage(
-                                      image: NetworkImage(
-                                        widget.stylistAvatar!,
-                                      ),
+                                      image: NetworkImage(widget.stylistAvatar!),
                                       fit: BoxFit.cover,
                                     )
                                   : null,
                             ),
-                            child:
-                                widget.stylistAvatar == null ||
-                                    widget.stylistAvatar!.isEmpty
-                                ? Icon(
-                                    Icons.person,
-                                    color: primaryColor,
-                                    size: 24,
-                                  )
+                            child: widget.stylistAvatar == null || widget.stylistAvatar!.isEmpty
+                                ? Icon(Icons.person_rounded, color: primaryColor, size: 28)
                                 : null,
                           ),
                           const SizedBox(width: 16),
@@ -323,55 +378,61 @@ class _BookingPageState extends State<BookingPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(
-                                  "STYLIST",
-                                  style: TextStyle(
-                                    fontSize: 10,
-                                    fontWeight: FontWeight.bold,
-                                    letterSpacing: 1.0,
-                                    color: mutedText,
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: primaryColor.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    "STYLIST",
+                                    style: TextStyle(
+                                      fontSize: 9,
+                                      fontWeight: FontWeight.w900,
+                                      letterSpacing: 0.8,
+                                      color: primaryColor,
+                                    ),
                                   ),
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 6),
                                 Text(
                                   widget.stylistName,
                                   style: TextStyle(
-                                    fontSize: 14,
+                                    fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: primaryColor,
+                                    color: darkText,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              Text(
-                                "DURASI",
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.0,
-                                  color: mutedText,
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFF8FAFC),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(color: const Color(0xFFF1F5F9)),
+                            ),
+                            child: Column(
+                              children: [
+                                Icon(Icons.schedule_rounded, size: 18, color: mutedText),
+                                const SizedBox(height: 4),
+                                Text(
+                                  "${_effectiveDuration}m",
+                                  style: TextStyle(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.w800,
+                                    color: darkText,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: 2),
-                              Text(
-                                "$_effectiveDuration Menit",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: primaryColor,
-                                ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 32),
 
                     // Form Data Diri
                     Row(
@@ -381,12 +442,13 @@ class _BookingPageState extends State<BookingPage> {
                           "Informasi Pelanggan",
                           style: TextStyle(
                             fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: primaryColor,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                            color: darkText,
                           ),
                         ),
-                        TextButton.icon(
-                          onPressed: () async {
+                        GestureDetector(
+                          onTap: () async {
                             final result = await Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -395,35 +457,41 @@ class _BookingPageState extends State<BookingPage> {
                                 ),
                               ),
                             );
-                            if (result != null &&
-                                result is Map<String, dynamic>) {
+                            if (result != null && result is Map<String, dynamic>) {
                               setState(() {
                                 _nameCtrl.text = result['name'] ?? '';
                                 _phoneCtrl.text = result['phone'] ?? '';
                                 _emailCtrl.text = result['email'] ?? '';
 
                                 bool isCc = result['is_colour_circle'] == true;
-                                DateTime? exp =
-                                    result['colour_circle_expired_at'] != null
-                                    ? DateTime.tryParse(
-                                        result['colour_circle_expired_at'],
-                                      )
+                                DateTime? exp = result['colour_circle_expired_at'] != null
+                                    ? DateTime.tryParse(result['colour_circle_expired_at'])
                                     : null;
-                                _isColourCircleApplied =
-                                    isCc &&
-                                    exp != null &&
-                                    exp.isAfter(DateTime.now());
+                                _isColourCircleApplied = isCc && exp != null && exp.isAfter(DateTime.now());
                                 _recalculatePrice();
                               });
                             }
                           },
-                          icon: const Icon(Icons.person_add_alt_1, size: 18),
-                          label: const Text("Dari Daftar"),
-                          style: TextButton.styleFrom(
-                            foregroundColor: primaryColor,
-                            textStyle: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13,
+                          behavior: HitTestBehavior.opaque,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: buttonColor.withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(Icons.contact_phone_rounded, size: 14, color: buttonColor),
+                                const SizedBox(width: 4),
+                                Text(
+                                  "Dari Kontak",
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w800,
+                                    color: buttonColor,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ),
@@ -434,100 +502,33 @@ class _BookingPageState extends State<BookingPage> {
                       key: _formKey,
                       child: Column(
                         children: [
-                          TextFormField(
+                          _buildTextField(
                             controller: _nameCtrl,
-                            decoration: InputDecoration(
-                              labelText: "Nama Lengkap",
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.person_outline,
-                                color: mutedText,
-                              ),
-                            ),
-                            validator: (v) {
-                              if (v == null || v.trim().isEmpty)
-                                return "Nama harus diisi";
-                              return null;
-                            },
+                            label: "Nama Lengkap",
+                            icon: Icons.person_rounded,
+                            validator: (v) => v == null || v.trim().isEmpty ? "Nama harus diisi" : null,
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
+                          const SizedBox(height: 14),
+                          _buildTextField(
                             controller: _phoneCtrl,
-                            decoration: InputDecoration(
-                              labelText: "Nomor WhatsApp / HP",
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.phone_outlined,
-                                color: mutedText,
-                              ),
-                            ),
+                            label: "Nomor WhatsApp / HP",
+                            icon: Icons.phone_rounded,
                             keyboardType: TextInputType.phone,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
-                                return "Nomor HP harus diisi";
-                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim()))
-                                return "Nomor telpon harus berupa angka";
+                              if (v == null || v.trim().isEmpty) return "Nomor HP harus diisi";
+                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) return "Nomor telpon harus berupa angka";
                               return null;
                             },
                           ),
-                          const SizedBox(height: 12),
-                          TextFormField(
+                          const SizedBox(height: 14),
+                          _buildTextField(
                             controller: _emailCtrl,
-                            decoration: InputDecoration(
-                              labelText: "Email",
-                              filled: true,
-                              fillColor: Colors.white,
-                              border: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              enabledBorder: OutlineInputBorder(
-                                borderRadius: BorderRadius.circular(12),
-                                borderSide: const BorderSide(
-                                  color: Color(0xFFE2E8F0),
-                                ),
-                              ),
-                              prefixIcon: Icon(
-                                Icons.email_outlined,
-                                color: mutedText,
-                              ),
-                            ),
+                            label: "Email",
+                            icon: Icons.email_rounded,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty)
-                                return "Email harus diisi";
-                              if (!RegExp(
-                                r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$',
-                              ).hasMatch(v.trim()))
-                                return "Format email tidak valid";
+                              if (v == null || v.trim().isEmpty) return "Email harus diisi";
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return "Format email tidak valid";
                               return null;
                             },
                           ),
@@ -535,58 +536,49 @@ class _BookingPageState extends State<BookingPage> {
                       ),
                     ),
 
-                    const SizedBox(height: 28),
+                    const SizedBox(height: 36),
 
                     // Select Time
                     Text(
-                      "Pilih Waktu Kunjungan",
+                      "Waktu Kunjungan",
                       style: TextStyle(
                         fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: primaryColor,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                        color: darkText,
                       ),
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 6),
                     Text(
                       "Pilih waktu yang paling sesuai untuk kamu",
-                      style: TextStyle(fontSize: 13, color: mutedText),
+                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: mutedText),
                     ),
                     const SizedBox(height: 24),
 
                     if (_loadingTimes)
-                      const Center(
+                      Center(
                         child: Padding(
-                          padding: EdgeInsets.all(24.0),
-                          child: CircularProgressIndicator(),
+                          padding: const EdgeInsets.all(32.0),
+                          child: CircularProgressIndicator(color: primaryColor),
                         ),
                       )
                     else if (_times.isEmpty)
                       Container(
                         width: double.infinity,
-                        padding: const EdgeInsets.symmetric(
-                          vertical: 24,
-                          horizontal: 16,
-                        ),
+                        padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                         decoration: BoxDecoration(
                           color: const Color(0xFFFEF2F2),
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                           border: Border.all(color: const Color(0xFFFECACA)),
                         ),
                         child: Column(
                           children: [
-                            Icon(
-                              Icons.event_busy,
-                              color: const Color(0xFFEF4444),
-                              size: 32,
-                            ),
+                            const Icon(Icons.event_busy_rounded, color: Color(0xFFEF4444), size: 36),
                             const SizedBox(height: 12),
-                            Text(
+                            const Text(
                               "Tidak ada jadwal yang tersedia atau waktu tidak cukup untuk durasi treatment yang kamu pilih.",
                               textAlign: TextAlign.center,
-                              style: TextStyle(
-                                color: const Color(0xFF991B1B),
-                                fontSize: 13,
-                              ),
+                              style: TextStyle(color: Color(0xFF991B1B), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
                             ),
                           ],
                         ),
@@ -596,38 +588,18 @@ class _BookingPageState extends State<BookingPage> {
                         children: [
                           _buildTimeSection(
                             "Pagi",
-                            Icons.wb_sunny_outlined,
-                            _times
-                                .asMap()
-                                .entries
-                                .where(
-                                  (e) => int.parse(e.value.split(':')[0]) < 12,
-                                )
-                                .toList(),
+                            Icons.wb_twilight_rounded,
+                            _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) < 12).toList(),
                           ),
                           _buildTimeSection(
                             "Siang",
-                            Icons.wb_sunny,
-                            _times
-                                .asMap()
-                                .entries
-                                .where(
-                                  (e) =>
-                                      int.parse(e.value.split(':')[0]) >= 12 &&
-                                      int.parse(e.value.split(':')[0]) < 15,
-                                )
-                                .toList(),
+                            Icons.wb_sunny_rounded,
+                            _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 12 && int.parse(e.value.split(':')[0]) < 15).toList(),
                           ),
                           _buildTimeSection(
                             "Sore",
-                            Icons.wb_twilight,
-                            _times
-                                .asMap()
-                                .entries
-                                .where(
-                                  (e) => int.parse(e.value.split(':')[0]) >= 15,
-                                )
-                                .toList(),
+                            Icons.nights_stay_rounded,
+                            _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 15).toList(),
                           ),
                         ],
                       ),
@@ -637,101 +609,96 @@ class _BookingPageState extends State<BookingPage> {
                     // Continue Button
                     SizedBox(
                       width: double.infinity,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: buttonColor,
-                          disabledBackgroundColor: const Color(0xFFCBD5E1),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          padding: const EdgeInsets.symmetric(vertical: 18),
-                          elevation: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16),
+                          boxShadow: _selectedTimeIndex == -1
+                              ? []
+                              : [
+                                  BoxShadow(
+                                    color: buttonColor.withOpacity(0.3),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 6),
+                                  ),
+                                ],
                         ),
-                        onPressed: _selectedTimeIndex == -1
-                            ? null
-                            : () async {
-                                if (_formKey.currentState!.validate()) {
-                                  final time = _times[_selectedTimeIndex];
-                                  final dateStr = DateFormat(
-                                    'yyyy-MM-dd',
-                                  ).format(widget.selectedDate);
-                                  final reservationDatetime =
-                                      "$dateStr $time:00";
+                        child: ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: buttonColor,
+                            disabledBackgroundColor: const Color(0xFFCBD5E1),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 18),
+                            elevation: 0,
+                          ),
+                          onPressed: _selectedTimeIndex == -1
+                              ? null
+                              : () async {
+                                  if (_formKey.currentState!.validate()) {
+                                    final time = _times[_selectedTimeIndex];
+                                    final dateStr = DateFormat('yyyy-MM-dd').format(widget.selectedDate);
+                                    final reservationDatetime = "$dateStr $time:00";
 
-                                  if (widget.isRescheduling &&
-                                      widget.rescheduleBookingId != null) {
-                                    // HANDLE RESCHEDULE
-                                    setState(() => _loadingTimes = true);
-                                    try {
-                                      await Supabase.instance.client
-                                          .from('bookings')
-                                          .update({
-                                            'reservation_datetime':
-                                                reservationDatetime,
-                                            'customer_name': _nameCtrl.text,
-                                            'customer_phone': _phoneCtrl.text,
-                                            'customer_email': _emailCtrl.text,
-                                          })
-                                          .eq(
-                                            'id',
-                                            widget.rescheduleBookingId!,
+                                    if (widget.isRescheduling && widget.rescheduleBookingId != null) {
+                                      setState(() => _loadingTimes = true);
+                                      try {
+                                        await Supabase.instance.client
+                                            .from('bookings')
+                                            .update({
+                                              'reservation_datetime': reservationDatetime,
+                                              'customer_name': _nameCtrl.text,
+                                              'customer_phone': _phoneCtrl.text,
+                                              'customer_email': _emailCtrl.text,
+                                            })
+                                            .eq('id', widget.rescheduleBookingId!);
+
+                                        if (mounted) {
+                                          PopupHelper.showSuccess(
+                                            context,
+                                            "Jadwal berhasil diubah!",
+                                            onConfirm: () {
+                                              Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(builder: (_) => const BookingListPage()),
+                                                (route) => false,
+                                              );
+                                            },
                                           );
-
-                                      if (mounted) {
-                                        PopupHelper.showSuccess(
-                                          context,
-                                          "Jadwal berhasil diubah!",
-                                          onConfirm: () {
-                                            Navigator.pushAndRemoveUntil(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (_) =>
-                                                    const BookingListPage(),
-                                              ),
-                                              (route) => false,
-                                            );
-                                          },
-                                        );
+                                        }
+                                      } catch (e) {
+                                        if (mounted) {
+                                          PopupHelper.showError(context, "Gagal mengubah jadwal: $e");
+                                          setState(() => _loadingTimes = false);
+                                        }
                                       }
-                                    } catch (e) {
-                                      if (mounted) {
-                                        PopupHelper.showError(
-                                          context,
-                                          "Gagal mengubah jadwal: $e",
-                                        );
-                                        setState(() => _loadingTimes = false);
-                                      }
+                                    } else {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (context) => PaymentDetailsPage(
+                                            reservationDatetime: reservationDatetime,
+                                            stylistId: widget.stylistId,
+                                            stylistName: widget.stylistName,
+                                            totalPrice: _finalTotalPrice,
+                                            customerName: _nameCtrl.text,
+                                            customerPhone: _phoneCtrl.text,
+                                            customerEmail: _emailCtrl.text,
+                                            selectedServices: _finalServices,
+                                          ),
+                                        ),
+                                      );
                                     }
-                                  } else {
-                                    // NORMAL BOOKING
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(
-                                        builder: (context) =>
-                                            PaymentDetailsPage(
-                                              reservationDatetime:
-                                                  reservationDatetime,
-                                              stylistId: widget.stylistId,
-                                              stylistName: widget.stylistName,
-                                              totalPrice: _finalTotalPrice,
-                                              customerName: _nameCtrl.text,
-                                              customerPhone: _phoneCtrl.text,
-                                              customerEmail: _emailCtrl.text,
-                                              selectedServices: _finalServices,
-                                            ),
-                                      ),
-                                    );
                                   }
-                                }
-                              },
-                        child: Text(
-                          _selectedTimeIndex == -1
-                              ? "Pilih Waktu"
-                              : "Lanjut ke Pembayaran",
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
+                                },
+                          child: Text(
+                            _selectedTimeIndex == -1 ? "Pilih Waktu" : "Lanjut ke Pembayaran",
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.white,
+                              letterSpacing: 0.5,
+                            ),
                           ),
                         ),
                       ),
@@ -750,9 +717,9 @@ class _BookingPageState extends State<BookingPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
-              blurRadius: 20,
-              offset: const Offset(0, -5),
+              color: Colors.black.withOpacity(0.04),
+              blurRadius: 24,
+              offset: const Offset(0, -8),
             ),
           ],
         ),
@@ -763,10 +730,10 @@ class _BookingPageState extends State<BookingPage> {
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
               _buildNavItem(0, "HOME", Icons.home_filled),
-              _buildNavItem(1, "BOOKING", Icons.calendar_today),
+              _buildNavItem(1, "BOOKING", Icons.calendar_today_rounded),
               _buildNavItem(2, "SERVICES", Icons.content_cut_rounded),
               _buildNavItem(3, "REPORT", Icons.bar_chart_rounded),
-              _buildNavItem(4, "SETTINGS", Icons.settings_outlined),
+              _buildNavItem(4, "SETTINGS", Icons.settings_rounded),
             ],
           ),
         ),
@@ -774,11 +741,46 @@ class _BookingPageState extends State<BookingPage> {
     );
   }
 
-  Widget _buildTimeSection(
-    String title,
-    IconData icon,
-    List<MapEntry<int, String>> slots,
-  ) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String label,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      decoration: InputDecoration(
+        labelText: label,
+        labelStyle: TextStyle(color: mutedText, fontWeight: FontWeight.w500, fontSize: 14),
+        filled: true,
+        fillColor: Colors.white,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: BorderSide(color: primaryColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(16),
+          borderSide: const BorderSide(color: Color(0xFFEF4444)),
+        ),
+        prefixIcon: Icon(icon, color: mutedText.withOpacity(0.7), size: 22),
+      ),
+      keyboardType: keyboardType,
+      validator: validator,
+    );
+  }
+
+  Widget _buildTimeSection(String title, IconData icon, List<MapEntry<int, String>> slots) {
     if (slots.isEmpty) return const SizedBox.shrink();
 
     return Column(
@@ -786,22 +788,29 @@ class _BookingPageState extends State<BookingPage> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 20, color: primaryColor),
-            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: primaryColor.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(icon, size: 16, color: primaryColor),
+            ),
+            const SizedBox(width: 10),
             Text(
               title,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
-                fontWeight: FontWeight.bold,
-                color: primaryColor,
+                fontWeight: FontWeight.w800,
+                color: Color(0xFF0F172A),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 14),
         Wrap(
-          spacing: 10,
-          runSpacing: 10,
+          spacing: 12,
+          runSpacing: 12,
           children: slots.map((entry) {
             final index = entry.key;
             final time = entry.value;
@@ -810,28 +819,25 @@ class _BookingPageState extends State<BookingPage> {
               onTap: () => setState(() => _selectedTimeIndex = index),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 200),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 12,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
                   color: isSelected ? primaryColor : Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   border: Border.all(
                     color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
-                    width: 1.5,
+                    width: isSelected ? 0 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: primaryColor.withOpacity(0.3),
-                            blurRadius: 8,
+                            color: primaryColor.withOpacity(0.35),
+                            blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withOpacity(0.015),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -840,7 +846,7 @@ class _BookingPageState extends State<BookingPage> {
                 child: Text(
                   time,
                   style: TextStyle(
-                    fontWeight: FontWeight.bold,
+                    fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     fontSize: 14,
                     color: isSelected ? Colors.white : const Color(0xFF475569),
                   ),
@@ -849,7 +855,7 @@ class _BookingPageState extends State<BookingPage> {
             );
           }).toList(),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 28),
       ],
     );
   }
@@ -857,54 +863,38 @@ class _BookingPageState extends State<BookingPage> {
   Widget _buildNavItem(int index, String label, IconData icon) {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
+      behavior: HitTestBehavior.opaque,
       onTap: () {
         if (index == 0) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const HomePage()),
-            (r) => false,
-          );
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
         } else if (index == 1) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const BookingListPage()),
-            (r) => false,
-          );
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
         } else if (index == 2) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const ManageServicesPage()),
-            (r) => false,
-          );
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
         } else if (index == 3) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const ReportPage()),
-            (r) => false,
-          );
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
         } else if (index == 4) {
-          Navigator.pushAndRemoveUntil(
-            context,
-            MaterialPageRoute(builder: (_) => const SettingsPage()),
-            (r) => false,
-          );
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
         }
       },
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
-          const SizedBox(height: 6),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w800,
-              color: isSelected ? primaryColor : mutedText,
-              letterSpacing: 0.5,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, color: isSelected ? primaryColor : mutedText.withOpacity(0.5), size: 24),
+            const SizedBox(height: 4),
+            Text(
+              label,
+              style: TextStyle(
+                fontSize: 10,
+                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
+                color: isSelected ? primaryColor : mutedText.withOpacity(0.5),
+                letterSpacing: 0.5,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

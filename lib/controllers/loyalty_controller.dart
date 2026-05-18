@@ -73,11 +73,19 @@ class LoyaltyController {
 
       final bool upgraded = tierRank(newTier) > tierRank(oldTier);
 
-      await _supabase.from('users').update({
+      final updates = <String, dynamic>{
         'total_spend':         newSpend,
         'membership_tier':     newTier,
         'last_transaction_at': DateTime.now().toIso8601String(),
-      }).eq('id', custId);
+      };
+
+      // Auto-assign Colour Circle if spend >= 1,500,000
+      if (newSpend >= 1500000 && userRow['is_colour_circle'] != true) {
+        updates['is_colour_circle'] = true;
+        updates['colour_circle_expired_at'] = DateTime.now().add(const Duration(days: 365 * 2)).toIso8601String();
+      }
+
+      await _supabase.from('users').update(updates).eq('id', custId);
 
       // Update session if it's the current user
       if (userId == AppSession.userId || custId == AppSession.userId) {
