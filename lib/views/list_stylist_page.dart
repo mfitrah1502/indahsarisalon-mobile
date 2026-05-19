@@ -332,7 +332,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                               if (mounted) {
                                                 PopupHelper.showError(
                                                   context,
-                                                  'Gagal menghapus stylist: $e',
+                                                  'Failed to delete stylist: $e',
                                                 );
                                               }
                                             }
@@ -490,7 +490,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                 setModalState(() => isUploading = false);
                 debugPrint("Error uploading image: $e");
                 if (mounted) {
-                  PopupHelper.showError(context, "Gagal upload foto: $e");
+                  PopupHelper.showError(context, "Failed to upload photo: $e");
                 }
               }
             }
@@ -564,7 +564,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                         ),
                         Text(
-                          isEdit ? "Update Karyawan" : "Add Karyawan",
+                          isEdit ? "Update Staff" : "Add Staff",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -744,14 +744,14 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           const SizedBox(height: 32),
 
                           // Form Details
-                          _buildTextFieldLabel("NAMA LENGKAP"),
+                          _buildTextFieldLabel("FULL NAME"),
                           _buildTextField(
                             "e.g. Julianne Smith",
                             nameController,
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("NAMA PANGGILAN"),
+                          _buildTextFieldLabel("NICKNAME"),
                           _buildTextField("e.g. Julie", nicknameController),
                           const SizedBox(height: 20),
 
@@ -760,7 +760,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("TEMPAT LAHIR"),
+                                    _buildTextFieldLabel("PLACE OF BIRTH"),
                                     _buildTextField(
                                       "e.g. Jakarta",
                                       birthPlaceController,
@@ -772,7 +772,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("TANGGAL LAHIR"),
+                                    _buildTextFieldLabel("DATE OF BIRTH"),
                                     _buildDatePickerField(
                                       selectedBirthDate == null
                                           ? "Select Date"
@@ -786,40 +786,36 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("JENIS KELAMIN"),
+                          _buildTextFieldLabel("GENDER"),
                           Row(
                             children: [
                               _buildChoiceChip(
-                                "Laki-laki",
-                                selectedGender == "Laki-laki",
+                                "Male",
+                                selectedGender == "Male",
                                 (val) {
-                                  setModalState(
-                                    () => selectedGender = "Laki-laki",
-                                  );
+                                  setModalState(() => selectedGender = "Male");
                                 },
                               ),
                               const SizedBox(width: 12),
                               _buildChoiceChip(
-                                "Perempuan",
-                                selectedGender == "Perempuan",
+                                "Female",
+                                selectedGender == "Female",
                                 (val) {
-                                  setModalState(
-                                    () => selectedGender = "Perempuan",
-                                  );
+                                  setModalState(() => selectedGender = "Female");
                                 },
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("ALAMAT"),
+                          _buildTextFieldLabel("ADDRESS"),
                           _buildTextField(
                             "e.g. Jl. Melati No. 12",
                             addressController,
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("NOMOR HP AKTIF"),
+                          _buildTextFieldLabel("PHONE NUMBER"),
                           _buildTextField(
                             "e.g. 08123456789",
                             phoneController,
@@ -840,9 +836,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("JABATAN"),
+                                    _buildTextFieldLabel("POSITION"),
                                     _buildDropdownField(
-                                      selectedPosition ?? "Select Jabatan",
+                                      selectedPosition ?? "Select Position",
                                       [
                                         "Client Relationship Manager",
                                         "Senior Hair Technician Specialist",
@@ -865,7 +861,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("DIVISI"),
+                                    _buildTextFieldLabel("DIVISION"),
                                     _buildDropdownField(
                                       (selectedDivision == null || selectedDivision == "") ? "-" : selectedDivision!,
                                       ["-", "hair", "beauty"],
@@ -887,7 +883,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("TANGGAL MASUK"),
+                                    _buildTextFieldLabel("JOIN DATE"),
                                     _buildDatePickerField(
                                       selectedJoinDate == null
                                           ? "Select Date"
@@ -901,7 +897,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("STATUS KERJA"),
+                                    _buildTextFieldLabel("EMPLOYMENT STATUS"),
                                     _buildDropdownField(
                                       selectedEmploymentStatus ??
                                           "Select Status",
@@ -919,7 +915,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("KONTAK DARURAT (NAMA & NO HP)"),
+                          _buildTextFieldLabel("EMERGENCY CONTACT (NAME & PHONE)"),
                           _buildTextField(
                             "e.g. Budi (08123456789)",
                             emergencyContactController,
@@ -931,7 +927,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("NAMA REKENING"),
+                                    _buildTextFieldLabel("BANK ACCOUNT NAME"),
                                     _buildTextField(
                                       "e.g. Julianne Smith",
                                       bankAccountNameController,
@@ -943,7 +939,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               Expanded(
                                 child: Column(
                                   children: [
-                                    _buildTextFieldLabel("NOMOR REKENING"),
+                                    _buildTextFieldLabel("BANK ACCOUNT NUMBER"),
                                     _buildTextField(
                                       "e.g. 1234567890",
                                       bankAccountNumberController,
@@ -956,7 +952,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("PENDIDIKAN TERAKHIR"),
+                          _buildTextFieldLabel("LAST EDUCATION"),
                           _buildTextField(
                             "e.g. SMK Kecantikan",
                             lastEducationController,

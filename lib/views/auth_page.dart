@@ -4,7 +4,6 @@ import 'home_page.dart';
 import 'forgot_password_page.dart';
 import '../utils/popup_helper.dart';
 import '../app_session.dart';
-import '../utils/translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 class AuthPage extends StatefulWidget {
   const AuthPage({super.key});
@@ -36,12 +35,12 @@ class _AuthPageState extends State<AuthPage> {
       if (success) {
         // Berhasil login
         if (AppSession.userRole == 'owner' || AppSession.userRole == 'admin') {
-          AppTranslations.currentLanguage = 'English';
+
           final prefs = await SharedPreferences.getInstance();
           await prefs.setString('language', 'English');
         }
 
-        PopupHelper.showSuccess(context, "Login berhasil!", onConfirm: () {
+        PopupHelper.showSuccess(context, "Login successful!", onConfirm: () {
           Navigator.pushReplacement(
             context,
             MaterialPageRoute(builder: (context) => const HomePage()),
@@ -49,7 +48,7 @@ class _AuthPageState extends State<AuthPage> {
         });
       } else {
         // Gagal login
-        PopupHelper.showError(context, "Username atau password salah");
+        PopupHelper.showError(context, "Invalid username or password");
       }
     } catch (e) {
       if (!mounted) return;
@@ -309,7 +308,7 @@ class _AuthPageState extends State<AuthPage> {
                           ),
                           onPressed: () {
                             if (username.text.isEmpty || password.text.isEmpty) {
-                              PopupHelper.showError(context, "Isi semua field");
+                              PopupHelper.showError(context, "Please Fill In All Fields");
                               return;
                             }
                             login();

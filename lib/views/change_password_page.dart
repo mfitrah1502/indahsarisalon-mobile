@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../app_session.dart';
-import '../utils/translations.dart';
 import '../utils/popup_helper.dart';
 
 class ChangePasswordPage extends StatefulWidget {
@@ -41,17 +40,17 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     final confirmPass = confirmController.text;
 
     if (currentPass.isEmpty || newPass.isEmpty || confirmPass.isEmpty) {
-      PopupHelper.showError(context, 'Please fill all fields'.tr);
+      PopupHelper.showError(context, 'Please fill all fields');
       return;
     }
 
     if (newPass != confirmPass) {
-      PopupHelper.showError(context, 'New passwords do not match'.tr);
+      PopupHelper.showError(context, 'New passwords do not match');
       return;
     }
 
     if (newPass.length < 8) {
-      PopupHelper.showError(context, 'Password must be at least 8 characters'.tr);
+      PopupHelper.showError(context, 'Password must be at least 8 characters');
       return;
     }
 
@@ -71,7 +70,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       final isCurrentCorrect = BCrypt.checkpw(currentPass, userData['password']);
       if (!isCurrentCorrect) {
         setState(() => _isLoading = false);
-        PopupHelper.showError(context, 'Current password is incorrect'.tr);
+        PopupHelper.showError(context, 'Current password is incorrect');
         return;
       }
 
@@ -90,13 +89,13 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
       } catch (_) {}
 
       if (mounted) {
-        PopupHelper.showSuccess(context, 'Password successfully updated!'.tr, onConfirm: () {
+        PopupHelper.showSuccess(context, 'Password successfully updated!', onConfirm: () {
           Navigator.pop(context);
         });
       }
     } catch (e) {
       if (mounted) {
-        PopupHelper.showError(context, 'Error updating password: ${e.toString()}'.tr);
+        PopupHelper.showError(context, 'Error updating password: ${e.toString()}');
       }
     } finally {
       if (mounted) {
@@ -131,7 +130,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     ),
                     const SizedBox(width: 16),
                     Text(
-                      "Change Password".tr,
+                      "Change Password",
                       style: TextStyle(
                         color: currentMainText,
                         fontSize: 24,
@@ -143,14 +142,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 
                 const SizedBox(height: 32),
                 Text(
-                  "Create a new strong password that you don't use for other websites.".tr,
+                  "Create a new strong password that you don't use for other websites.",
                   style: TextStyle(color: mutedText, fontSize: 15, height: 1.4),
                 ),
                 const SizedBox(height: 32),
 
                 // Form
                 _buildPasswordField(
-                  "CURRENT PASSWORD".tr, 
+                  "CURRENT PASSWORD", 
                   currentPasswordController, 
                   _showCurrent, 
                   () => setState(() => _showCurrent = !_showCurrent),
@@ -158,7 +157,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 ),
                 const SizedBox(height: 24),
                 _buildPasswordField(
-                  "NEW PASSWORD".tr, 
+                  "NEW PASSWORD", 
                   newPasswordController, 
                   _showNew, 
                   () => setState(() => _showNew = !_showNew),
@@ -166,7 +165,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                 ),
                 const SizedBox(height: 24),
                 _buildPasswordField(
-                  "CONFIRM NEW PASSWORD".tr, 
+                  "CONFIRM NEW PASSWORD", 
                   confirmController, 
                   _showConfirm, 
                   () => setState(() => _showConfirm = !_showConfirm),
@@ -190,7 +189,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                     child: _isLoading 
                       ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
                       : Text(
-                      "Update Password".tr,
+                      "Update Password",
                       style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),

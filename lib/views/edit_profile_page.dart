@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import '../app_session.dart';
-import '../utils/translations.dart';
 import '../utils/popup_helper.dart';
 
 class EditProfilePage extends StatefulWidget {
@@ -228,7 +227,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       if (mounted) {
         PopupHelper.showSuccess(
           context,
-          "Profile updated successfully!".tr,
+          "Profile updated successfully!",
           onConfirm: () {
             Navigator.pop(context, true); // Return true to indicate update
           },
@@ -237,7 +236,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       debugPrint("Error updating profile: $e");
       if (mounted) {
-        PopupHelper.showError(context, "Failed to update profile".tr);
+        PopupHelper.showError(context, "Failed to update profile");
         setState(() => _saving = false);
       }
     }
@@ -257,7 +256,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
     } catch (e) {
       debugPrint("Error picking image: $e");
       if (mounted) {
-        PopupHelper.showError(context, "Failed to pick image".tr);
+        PopupHelper.showError(context, "Failed to pick image");
       }
     }
   }
@@ -291,7 +290,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       debugPrint("Error uploading image: $e");
       if (mounted) {
         setState(() => _uploadingImage = false);
-        PopupHelper.showError(context, "Failed to upload image".tr);
+        PopupHelper.showError(context, "Failed to upload image");
       }
     }
   }
@@ -323,7 +322,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                         ),
                         const SizedBox(width: 16),
                         Text(
-                          "Edit Profile".tr,
+                          "Edit Profile",
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 18,
@@ -422,128 +421,128 @@ class _EditProfilePageState extends State<EditProfilePage> {
 
                           // Forms - menampilkan field sesuai peran pengguna
                           if (AppSession.userRole?.toLowerCase() == 'owner') ...[
-                            _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
+                            _buildInputField('FULL NAME', _fullNameController, Icons.person_outline),
                             const SizedBox(height: 20),
-                            _buildInputField('ABOUT ME (TENTANG)'.tr, _tentangController, Icons.info_outline, maxLines: 3),
+                            _buildInputField('ABOUT ME', _tentangController, Icons.info_outline, maxLines: 3),
                             const SizedBox(height: 20),
-                            _buildInputField('USERNAME'.tr, _usernameController, Icons.alternate_email),
+                            _buildInputField('USERNAME', _usernameController, Icons.alternate_email),
                             const SizedBox(height: 20),
-                            _buildInputField('EMAIL ADDRESS'.tr, _emailController, Icons.email_outlined),
+                            _buildInputField('EMAIL ADDRESS', _emailController, Icons.email_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('PHONE NUMBER'.tr, _phoneController, Icons.phone_outlined),
+                            _buildInputField('PHONE NUMBER', _phoneController, Icons.phone_outlined),
                             
-                             // 2. Kredensial & Izin Praktek
-                             _buildSectionCard(
-                               title: 'KREDENSIAL & IZIN PRAKTEK'.tr,
-                               icon: Icons.assignment_ind_outlined,
-                               children: [
-                                 _buildInputField('NOMOR STR'.tr, _nomorStrController, Icons.badge_outlined),
-                                 const SizedBox(height: 20),
-                                 _buildInputField('NOMOR SIP'.tr, _nomorSipController, Icons.verified_user_outlined),
-                               ],
-                             ),
-                             
-                             // 3. Informasi Praktik
-                             _buildSectionCard(
-                               title: 'INFORMASI PRAKTIK'.tr,
-                               icon: Icons.business_outlined,
-                               children: [
-                                 _buildInputField('TEMPAT PRAKTIK'.tr, _tempatPraktikController, Icons.map_outlined),
-                                 const SizedBox(height: 20),
-                                 _buildInputField('TAHUN MULAI PRAKTIK'.tr, _tahunMulaiPraktikController, Icons.calendar_today_outlined),
-                               ],
-                             ),
-                            
-                            // 4. Pendidikan (3 fields)
+                            // 2. Credentials & Practice Permit
                             _buildSectionCard(
-                              title: 'PENDIDIKAN'.tr,
+                              title: 'CREDENTIALS & LICENSE TO PRACTICE',
+                              icon: Icons.assignment_ind_outlined,
+                              children: [
+                                _buildInputField('STR NUMBER (CREDENTIALS)', _nomorStrController, Icons.badge_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('SIP NUMBER (PRACTICE PERMIT)', _nomorSipController, Icons.verified_user_outlined),
+                              ],
+                            ),
+                            
+                            // 3. Practice Information
+                            _buildSectionCard(
+                              title: 'PRACTICE INFORMATION',
+                              icon: Icons.business_outlined,
+                              children: [
+                                _buildInputField('PRACTICE PLACE', _tempatPraktikController, Icons.map_outlined),
+                                const SizedBox(height: 20),
+                                _buildInputField('YEAR OF STARTING PRACTICE', _tahunMulaiPraktikController, Icons.calendar_today_outlined),
+                              ],
+                            ),
+                            
+                            // 4. Education
+                            _buildSectionCard(
+                              title: 'EDUCATION',
                               icon: Icons.school_outlined,
                               children: [
-                                _buildInputField('PENDIDIKAN 1 (SARJANA/DIPLOMA)'.tr, _pendidikan1Controller, Icons.school_outlined),
+                                _buildInputField('EDUCATION 1 (BACHELOR/DIPLOMA)', _pendidikan1Controller, Icons.school_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENDIDIKAN 2 (MAGISTER/SPESIALISASI)'.tr, _pendidikan2Controller, Icons.history_edu_outlined),
+                                _buildInputField('EDUCATION 2 (MASTER/SPECIALIZATION)', _pendidikan2Controller, Icons.history_edu_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENDIDIKAN 3 (PELATIHAN LAIN)'.tr, _pendidikan3Controller, Icons.workspace_premium_outlined),
+                                _buildInputField('EDUCATION 3 (OTHER TRAINING)', _pendidikan3Controller, Icons.workspace_premium_outlined),
                               ],
                             ),
                             
-                            // 5. Pengalaman (5 fields)
+                            // 5. Work Experience
                             _buildSectionCard(
-                              title: 'PENGALAMAN KERJA'.tr,
+                              title: 'WORK EXPERIENCE',
                               icon: Icons.work_history_outlined,
                               children: [
-                                _buildInputField('PENGALAMAN 1 (TERBARU)'.tr, _pengalaman1Controller, Icons.work_outline),
+                                _buildInputField('EXPERIENCE 1 (LATEST)', _pengalaman1Controller, Icons.work_outline),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENGALAMAN 2'.tr, _pengalaman2Controller, Icons.work_outline),
+                                _buildInputField('EXPERIENCE 2', _pengalaman2Controller, Icons.work_outline),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENGALAMAN 3'.tr, _pengalaman3Controller, Icons.work_outline),
+                                _buildInputField('EXPERIENCE 3', _pengalaman3Controller, Icons.work_outline),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENGALAMAN 4'.tr, _pengalaman4Controller, Icons.work_outline),
+                                _buildInputField('EXPERIENCE 4', _pengalaman4Controller, Icons.work_outline),
                                 const SizedBox(height: 20),
-                                _buildInputField('PENGALAMAN 5'.tr, _pengalaman5Controller, Icons.work_outline),
+                                _buildInputField('EXPERIENCE 5', _pengalaman5Controller, Icons.work_outline),
                               ],
                             ),
                             
-                            // 6. Keanggotaan (2 fields)
+                            // 6. Professional Membership
                             _buildSectionCard(
-                              title: 'KEANGGOTAAN PROFESI'.tr,
+                              title: 'PROFESSIONAL MEMBERSHIP',
                               icon: Icons.groups_outlined,
                               children: [
-                                _buildInputField('ORGANISASI / KEANGGOTAAN 1'.tr, _keanggotaan1Controller, Icons.card_membership_outlined),
+                                _buildInputField('ORGANIZATION / MEMBERSHIP 1', _keanggotaan1Controller, Icons.card_membership_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('ORGANISASI / KEANGGOTAAN 2'.tr, _keanggotaan2Controller, Icons.groups_outlined),
+                                _buildInputField('ORGANIZATION / MEMBERSHIP 2', _keanggotaan2Controller, Icons.groups_outlined),
                               ],
                             ),
                             
-                            // 7. Sertifikasi (4 fields)
+                            // 7. Professional Certification
                             _buildSectionCard(
-                              title: 'SERTIFIKASI PROFESIONAL'.tr,
+                              title: 'PROFESSIONAL CERTIFICATION',
                               icon: Icons.verified_outlined,
                               children: [
-                                _buildInputField('SERTIFIKASI 1 (TERBARU)'.tr, _sertifikasi1Controller, Icons.bookmark_added_outlined),
+                                _buildInputField('CERTIFICATION 1 (LATEST)', _sertifikasi1Controller, Icons.bookmark_added_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('SERTIFIKASI 2'.tr, _sertifikasi2Controller, Icons.bookmark_added_outlined),
+                                _buildInputField('CERTIFICATION 2', _sertifikasi2Controller, Icons.bookmark_added_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('SERTIFIKASI 3'.tr, _sertifikasi3Controller, Icons.bookmark_added_outlined),
+                                _buildInputField('CERTIFICATION 3', _sertifikasi3Controller, Icons.bookmark_added_outlined),
                                 const SizedBox(height: 20),
-                                _buildInputField('SERTIFIKASI 4'.tr, _sertifikasi4Controller, Icons.bookmark_added_outlined),
+                                _buildInputField('CERTIFICATION 4', _sertifikasi4Controller, Icons.bookmark_added_outlined),
                               ],
                             ),
                           ] else ...[
-                            // Field lengkap untuk admin atau peran lainnya
-                            _buildInputField('FULL NAME'.tr, _fullNameController, Icons.person_outline),
+                            // Full fields for admin or other roles
+                            _buildInputField('FULL NAME', _fullNameController, Icons.person_outline),
                             const SizedBox(height: 20),
-                            _buildInputField('NAMA PANGGILAN'.tr, _nicknameController, Icons.face_outlined),
+                            _buildInputField('NICKNAME', _nicknameController, Icons.face_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('USERNAME'.tr, _usernameController, Icons.alternate_email),
+                            _buildInputField('USERNAME', _usernameController, Icons.alternate_email),
                             const SizedBox(height: 20),
-                            _buildInputField('EMAIL ADDRESS'.tr, _emailController, Icons.email_outlined),
+                            _buildInputField('EMAIL ADDRESS', _emailController, Icons.email_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('PHONE NUMBER'.tr, _phoneController, Icons.phone_outlined),
+                            _buildInputField('PHONE NUMBER', _phoneController, Icons.phone_outlined),
                             const SizedBox(height: 20),
                             Row(
                               children: [
                                 Expanded(
-                                  child: _buildInputField('TEMPAT LAHIR'.tr, _birthPlaceController, Icons.location_city),
+                                  child: _buildInputField('PLACE OF BIRTH', _birthPlaceController, Icons.location_city),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
-                                  child: _buildDatePickerField('TANGGAL LAHIR'.tr, _selectedBirthDate),
+                                  child: _buildDatePickerField('DATE OF BIRTH', _selectedBirthDate),
                                 ),
                               ],
                             ),
                             const SizedBox(height: 20),
                             _buildGenderField(),
                             const SizedBox(height: 20),
-                            _buildInputField('HOME ADDRESS'.tr, _addressController, Icons.location_on_outlined, maxLines: 2),
+                            _buildInputField('HOME ADDRESS', _addressController, Icons.location_on_outlined, maxLines: 2),
                             const SizedBox(height: 20),
-                            _buildInputField('KONTAK DARURAT'.tr, _emergencyContactController, Icons.contact_emergency_outlined),
+                            _buildInputField('EMERGENCY CONTACT', _emergencyContactController, Icons.contact_emergency_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('NAMA REKENING'.tr, _bankAccountNameController, Icons.account_balance_wallet_outlined),
+                            _buildInputField('BANK ACCOUNT NAME', _bankAccountNameController, Icons.account_balance_wallet_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('NOMOR REKENING'.tr, _bankAccountNumberController, Icons.numbers_outlined),
+                            _buildInputField('BANK ACCOUNT NUMBER', _bankAccountNumberController, Icons.numbers_outlined),
                             const SizedBox(height: 20),
-                            _buildInputField('PENDIDIKAN TERAKHIR'.tr, _lastEducationController, Icons.school_outlined),
+                            _buildInputField('LAST EDUCATION', _lastEducationController, Icons.school_outlined),
                           ],
 
                           const SizedBox(height: 48),
@@ -574,7 +573,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                                       ),
                                     )
                                   : Text(
-                                      "Save Changes".tr,
+                                      "Save Changes",
                                       style: TextStyle(
                                         fontSize: 16,
                                         fontWeight: FontWeight.bold,
@@ -600,17 +599,17 @@ class _EditProfilePageState extends State<EditProfilePage> {
                               onPressed: () {
                                 PopupHelper.showConfirm(
                                   context,
-                                  title: "Discard Changes?".tr,
+                                  title: "Discard Changes?",
                                   message:
                                       "Are you sure you want to discard your changes?"
-                                          .tr,
+                                          ,
                                   onConfirm: () {
                                     Navigator.pop(context);
                                   },
                                 );
                               },
                               child: Text(
-                                "DISCARD CHANGES".tr,
+                                "DISCARD CHANGES",
                                 style: TextStyle(
                                   fontSize: 13,
                                   fontWeight: FontWeight.bold,
@@ -658,7 +657,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
                 Expanded(
                   child: Text(
                     date == null
-                        ? "Pilih Tanggal"
+                        ? "Select Date"
                         : "${date.day}/${date.month}/${date.year}",
                     style: TextStyle(
                       fontSize: 15,
@@ -687,7 +686,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "JENIS KELAMIN".tr,
+          "GENDER",
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.bold,
@@ -698,13 +697,13 @@ class _EditProfilePageState extends State<EditProfilePage> {
         const SizedBox(height: 8),
         Row(
           children: [
-            _buildChoiceChip("Laki-laki", _selectedGender == "Laki-laki", (
+            _buildChoiceChip("Male", _selectedGender == "Laki-laki", (
               val,
             ) {
               setState(() => _selectedGender = "Laki-laki");
             }),
             const SizedBox(width: 12),
-            _buildChoiceChip("Perempuan", _selectedGender == "Perempuan", (
+            _buildChoiceChip("Female", _selectedGender == "Perempuan", (
               val,
             ) {
               setState(() => _selectedGender = "Perempuan");

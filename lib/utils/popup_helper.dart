@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'translations.dart';
 
 class PopupHelper {
   static void showSuccess(BuildContext context, String message, {VoidCallback? onConfirm}) {
@@ -8,7 +7,7 @@ class PopupHelper {
       barrierDismissible: false,
       builder: (context) => _buildDialog(
         context,
-        title: "Success".tr,
+        title: "Success",
         message: message,
         icon: Icons.check_circle_outline,
         color: const Color(0xFFD660A1),
@@ -22,7 +21,7 @@ class PopupHelper {
       context: context,
       builder: (context) => _buildDialog(
         context,
-        title: "Error".tr,
+        title: "Error",
         message: message,
         icon: Icons.error_outline,
         color: const Color(0xFFEF4444),
@@ -36,7 +35,7 @@ class PopupHelper {
       context: context,
       builder: (context) => _buildDialog(
         context,
-        title: "Info".tr,
+        title: "Info",
         message: message,
         icon: Icons.info_outline,
         color: const Color(0xFF3B82F6),
@@ -128,7 +127,7 @@ class PopupHelper {
                       ),
                     ),
                     child: Text(
-                      cancelText ?? "Batal".tr,
+                      cancelText ?? "Cancel",
                       style: const TextStyle(color: color, fontWeight: FontWeight.bold),
                     ),
                   ),
@@ -150,7 +149,7 @@ class PopupHelper {
                       elevation: 0,
                     ),
                     child: Text(
-                      confirmText ?? "Ya".tr,
+                      confirmText ?? "Yes",
                       style: const TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),

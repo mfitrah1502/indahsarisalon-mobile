@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:intl/intl.dart';
 
 class BookingController {
   /// Mendapatkan list jam yang tersedia (contoh: ["09:00", "09:15", ...])
@@ -241,6 +242,7 @@ class BookingController {
           .select('id')
           .eq('role', 'pelanggan')
           .eq('phone', customerPhone)
+          .limit(1)
           .maybeSingle();
         if (q != null && q['id'] != null) {
           await supabase.from('users').update({
@@ -252,10 +254,22 @@ class BookingController {
     }
 
     try {
+      String formattedDt = reservationDatetime;
+      try {
+        final dt = DateTime.parse(reservationDatetime).toLocal();
+        final date = DateFormat('d MMMM yyyy', 'en').format(dt);
+        final time = DateFormat('HH:mm').format(dt);
+        formattedDt = "$date at $time WIB";
+      } catch (_) {
+        if (reservationDatetime.length >= 16) {
+          formattedDt = reservationDatetime.substring(0, 16).replaceAll('T', ' ');
+        }
+      }
+
       await supabase.from('notifikasi').insert({
         'user_id': userId,
-        'title': 'Booking Berhasil',
-        'message': 'Booking untuk jadwal ${reservationDatetime.substring(0, 16)} telah berhasil dibuat.',
+        'title': 'Booking Success',
+        'message': 'Booking for schedule $formattedDt has been successfully created.',
         'booking_id': bookingId,
       });
     } catch (e) {

@@ -8,7 +8,6 @@ import 'select_services_page.dart';
 import 'booking_details_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
-import '../utils/translations.dart';
 import '../utils/popup_helper.dart';
 
 class BookingListPage extends StatefulWidget {
@@ -69,11 +68,11 @@ class _BookingListPageState extends State<BookingListPage> {
 
       String groupKey;
       if (itemDate == today) {
-        groupKey = "Today".tr;
+        groupKey = "Today";
       } else if (itemDate == yesterday) {
-        groupKey = "Yesterday".tr;
+        groupKey = "Yesterday";
       } else {
-        groupKey = DateFormat('EEEE, d MMMM yyyy', 'id').format(itemDate);
+        groupKey = DateFormat('EEEE, d MMMM yyyy', 'en').format(itemDate);
       }
 
       if (!groups.containsKey(groupKey)) {
@@ -105,8 +104,8 @@ class _BookingListPageState extends State<BookingListPage> {
   Future<void> _deleteAllBookings() async {
     PopupHelper.showConfirm(
       context,
-      title: "Delete All Bookings?".tr,
-      message: "This action will permanently delete all bookings from the database. Continue?".tr,
+      title: "Delete All Bookings?",
+      message: "This action will permanently delete all bookings from the database. Continue?",
       onConfirm: () async {
         setState(() => _loading = true);
         try {
@@ -122,17 +121,40 @@ class _BookingListPageState extends State<BookingListPage> {
 
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
-      case 'berhasil': return const Color(0xFF059669);
-      case 'dibatalkan': return const Color(0xFFE11D48);
-      default: return const Color(0xFFEA580C); // pending/upcoming
+      case 'berhasil':
+      case 'success':
+        return const Color(0xFF059669);
+      case 'dibatalkan':
+      case 'cancelled':
+        return const Color(0xFFE11D48);
+      default:
+        return const Color(0xFFEA580C); // pending/upcoming
     }
   }
 
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
-      case 'berhasil': return const Color(0xFFD1FAE5);
-      case 'dibatalkan': return const Color(0xFFFFE4E6);
-      default: return const Color(0xFFFFEDD5);
+      case 'berhasil':
+      case 'success':
+        return const Color(0xFFD1FAE5);
+      case 'dibatalkan':
+      case 'cancelled':
+        return const Color(0xFFFFE4E6);
+      default:
+        return const Color(0xFFFFEDD5);
+    }
+  }
+
+  String _statusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'berhasil':
+      case 'success':
+        return 'SUCCESS';
+      case 'dibatalkan':
+      case 'cancelled':
+        return 'CANCELLED';
+      default:
+        return 'PENDING';
     }
   }
 
@@ -177,7 +199,7 @@ class _BookingListPageState extends State<BookingListPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          "Booking List".tr, 
+                          "Booking List", 
                           style: TextStyle(
                             color: primaryColor, 
                             fontSize: 22, 
@@ -187,7 +209,7 @@ class _BookingListPageState extends State<BookingListPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Manage your appointments".tr,
+                          "Manage your appointments",
                           style: TextStyle(
                             color: mutedText,
                             fontSize: 12,
@@ -255,7 +277,7 @@ class _BookingListPageState extends State<BookingListPage> {
                   style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
                   decoration: InputDecoration(
                     icon: Icon(Icons.search_rounded, color: primaryColor.withValues(alpha: 0.6), size: 22),
-                    hintText: 'Search by Name or Stylist...'.tr,
+                    hintText: 'Search by Name or Stylist...',
                     hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w400),
                     border: InputBorder.none,
                   ),
@@ -284,12 +306,12 @@ class _BookingListPageState extends State<BookingListPage> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "SCHEDULE OVERVIEW".tr,
+                                    "SCHEDULE OVERVIEW",
                                     style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800, letterSpacing: 1.5, color: primaryColor),
                                   ),
                                   const SizedBox(height: 6),
                                   Text(
-                                    "Your Appointments".tr,
+                                    "Your Appointments",
                                     style: const TextStyle(color: Color(0xFF1E293B), fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                                   ),
                                 ],
@@ -301,7 +323,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                   borderRadius: BorderRadius.circular(20),
                                 ),
                                 child: Text(
-                                  "${_filteredBookings.length}${" total".tr}", 
+                                  "${_filteredBookings.length} total", 
                                   style: TextStyle(color: primaryColor, fontSize: 12, fontWeight: FontWeight.bold)
                                 ),
                               ),
@@ -325,9 +347,9 @@ class _BookingListPageState extends State<BookingListPage> {
                                       child: Icon(Icons.event_busy_rounded, size: 56, color: primaryColor.withValues(alpha: 0.4)),
                                     ),
                                     const SizedBox(height: 20),
-                                    Text("No bookings yet.".tr, style: const TextStyle(color: Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.w700)),
+                                    Text("No bookings yet.", style: const TextStyle(color: Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.w700)),
                                     const SizedBox(height: 8),
-                                    Text("Press the + button to create a new booking.".tr, style: TextStyle(color: mutedText, fontSize: 14)),
+                                    Text("Press the + button to create a new booking.", style: TextStyle(color: mutedText, fontSize: 14)),
                                   ],
                                 ),
                               ),
@@ -365,7 +387,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                   ...entry.value.map((booking) {
                                     final status = booking.status;
                                     final services = booking.services;
-                                    final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2}${" others".tr}" : "");
+                                    final serviceLabel = services.take(2).join(", ") + (services.length > 2 ? " +${services.length - 2}${" others"}" : "");
 
                                     return Padding(
                                       padding: const EdgeInsets.only(bottom: 16.0),
@@ -421,7 +443,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       crossAxisAlignment: CrossAxisAlignment.start,
                                                       children: [
                                                         Text(
-                                                          booking.customerName != '-' ? booking.customerName : "Customer".tr,
+                                                          booking.customerName != '-' ? booking.customerName : "Customer",
                                                           style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
@@ -503,7 +525,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       borderRadius: BorderRadius.circular(8),
                                                     ),
                                                     child: Text(
-                                                      status.toUpperCase(),
+                                                      _statusText(status),
                                                       style: TextStyle(
                                                         fontSize: 10,
                                                         fontWeight: FontWeight.w900,

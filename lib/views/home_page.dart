@@ -20,7 +20,6 @@ import 'edit_profile_page.dart';
 import 'customer_list_page.dart';
 import '../app_session.dart';
 import 'package:url_launcher/url_launcher.dart';
-import '../utils/translations.dart';
 import 'promo_list_page.dart';
 import '../utils/popup_helper.dart';
 import '../utils/loyalty_constants.dart';
@@ -160,9 +159,9 @@ class _HomePageState extends State<HomePage> {
   }
 
   String formatIncrease(num percentage) {
-    if (percentage > 0) return "+${percentage.toStringAsFixed(1)}${" vs yesterday".tr}";
-    if (percentage < 0) return "${percentage.toStringAsFixed(1)}${" vs yesterday".tr}";
-    return "Same as yesterday".tr;
+    if (percentage > 0) return "+${percentage.toStringAsFixed(1)}${" vs yesterday"}";
+    if (percentage < 0) return "${percentage.toStringAsFixed(1)}${" vs yesterday"}";
+    return "Same as yesterday";
   }
 
   void _navigateToReport() {
@@ -251,7 +250,7 @@ class _HomePageState extends State<HomePage> {
                           const SizedBox(width: 16),
                           Expanded(
                             child: Text(
-                              "${"Hello,".tr} ${AppSession.userName}!",
+                              "${"Hello,"} ${AppSession.userName}!",
                               style: TextStyle(
                                 color: primaryColor,
                                 fontSize: 20,
@@ -325,8 +324,8 @@ class _HomePageState extends State<HomePage> {
                   stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
                   builder: (context, snapshot) {
                     final now = snapshot.data ?? DateTime.now();
-                    final dayFormat = DateFormat('EEEE', AppTranslations.currentLanguage == 'Indonesia' ? 'id_ID' : 'en_US');
-                    final dateFormat = DateFormat('d MMMM yyyy', AppTranslations.currentLanguage == 'Indonesia' ? 'id_ID' : 'en_US');
+                    final dayFormat = DateFormat('EEEE', 'en_US');
+                    final dateFormat = DateFormat('d MMMM yyyy', 'en_US');
                     final timeFormat = DateFormat('HH:mm');
 
                     return Container(
@@ -398,7 +397,7 @@ class _HomePageState extends State<HomePage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "SPECIAL OFFERS".tr,
+                        "SPECIAL OFFERS",
                         style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
                       ),
                       GestureDetector(
@@ -406,7 +405,7 @@ class _HomePageState extends State<HomePage> {
                           Navigator.push(context, MaterialPageRoute(builder: (_) => const PromoListPage()));
                         },
                         child: Text(
-                          "See All".tr,
+                          "See All",
                           style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
                         ),
                       ),
@@ -481,7 +480,7 @@ class _HomePageState extends State<HomePage> {
 
                 // Title Section
                 Text(
-                  "${"TODAY, ".tr}$todayFormatted",
+                  "${"TODAY, "}$todayFormatted",
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.bold,
@@ -491,7 +490,7 @@ class _HomePageState extends State<HomePage> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Daily Overview".tr,
+                  "Daily Overview",
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.w900,
@@ -509,7 +508,7 @@ class _HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: _navigateToBooking,
                     child: _buildStatCard(
-                      title: "TOTAL BOOKINGS TODAY".tr,
+                      title: "TOTAL BOOKINGS TODAY",
                       value: "$todayBookings",
                       increase: formatIncrease(bookingsIncrease),
                       iconData: Icons.calendar_today_rounded,
@@ -522,7 +521,7 @@ class _HomePageState extends State<HomePage> {
                     GestureDetector(
                       onTap: _navigateToReport,
                       child: _buildStatCard(
-                        title: "TODAY'S REVENUE".tr,
+                        title: "TODAY'S REVENUE",
                         value: formatCurrency(todayRevenue),
                         increase: formatIncrease(revenueIncrease),
                         iconData: Icons.payments_outlined,
@@ -535,7 +534,7 @@ class _HomePageState extends State<HomePage> {
                   GestureDetector(
                     onTap: _navigateToCustomers,
                     child: _buildStatCard(
-                      title: "NUMBER OF CUSTOMERS".tr,
+                      title: "NUMBER OF CUSTOMERS",
                       value: "$todayCustomers",
                       increase: formatIncrease(customersIncrease),
                       iconData: Icons.people_outline_rounded,
@@ -548,9 +547,9 @@ class _HomePageState extends State<HomePage> {
                     GestureDetector(
                       onTap: _navigateToPresence,
                       child: _buildPresenceStatCard(
-                        title: "STYLIST AKTIF HARI INI".tr,
+                        title: "ACTIVE STYLISTS TODAY",
                         value: "$activeStaffToday",
-                        subtitle: "Kelola kehadiran staff".tr,
+                        subtitle: "Manage staff presence",
                         iconData: Icons.badge_outlined,
                       ),
                     ),
@@ -636,13 +635,13 @@ class _HomePageState extends State<HomePage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                        child: Text("Promo".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    "Get this service only for:".tr,
+                    "Get this service only for:",
                     style: TextStyle(color: mutedText, fontSize: 14),
                   ),
                   const SizedBox(height: 4),
@@ -653,7 +652,7 @@ class _HomePageState extends State<HomePage> {
                   if (promo.description != null && promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
-                      "Included Treatments:".tr,
+                      "Included Treatments:",
                       style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 4),
@@ -670,7 +669,7 @@ class _HomePageState extends State<HomePage> {
                       Icon(Icons.access_time, size: 16, color: mutedText),
                       const SizedBox(width: 8),
                       Text(
-                        "${"Valid until: ".tr}${DateFormat('dd MMM yyyy').format(promo.endAt)}",
+                        "${"Valid until: "}${DateFormat('dd MMM yyyy').format(promo.endAt)}",
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                     ],
@@ -688,7 +687,7 @@ class _HomePageState extends State<HomePage> {
                       ),
                       onPressed: () => _broadcastToWhatsAppGroup(promo),
                       icon: const Icon(Icons.forum_rounded),
-                      label: Text("Broadcast ke Grup WhatsApp".tr, style: const TextStyle(fontWeight: FontWeight.bold)),
+                      label: Text("Broadcast ke Grup WhatsApp", style: const TextStyle(fontWeight: FontWeight.bold)),
                     ),
                   ),
                 ],
@@ -753,7 +752,7 @@ class _HomePageState extends State<HomePage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text("Berhasil menyiapkan share. Buka grup ${targetLabel}?"),
+                content: Text("Successfully prepared share. Open group ${targetLabel}?"),
                 action: SnackBarAction(
                   label: "BUKA",
                   onPressed: () => launchUrl(Uri.parse(groupLink), mode: LaunchMode.externalApplication),
@@ -768,7 +767,7 @@ class _HomePageState extends State<HomePage> {
       debugPrint("Error broadcasting: $e");
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
-        PopupHelper.showInfo(context, "Gagal sharing langsung. Pesan disalin ke clipboard.");
+        PopupHelper.showInfo(context, "Failed direct sharing. Message copied to clipboard.");
       }
     }
   }
@@ -825,7 +824,7 @@ class _HomePageState extends State<HomePage> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      "staff".tr,
+                      "staff",
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.bold,

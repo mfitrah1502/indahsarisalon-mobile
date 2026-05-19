@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import '../models/promo_model.dart';
 import '../controllers/home_controller.dart';
 import 'package:intl/intl.dart';
-import '../utils/translations.dart';
 import '../app_session.dart';
 
 class PromoListPage extends StatefulWidget {
@@ -91,17 +90,17 @@ class _PromoListPageState extends State<PromoListPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                        child: Text("Promo".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                        child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 16),
-                  Text("Get this service only for:".tr, style: TextStyle(color: mutedText, fontSize: 14)),
+                  Text("Get this service only for:", style: TextStyle(color: mutedText, fontSize: 14)),
                   const SizedBox(height: 4),
                   Text(formatCurrency(promo.price), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)),
                   if (promo.description != null && promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
-                    Text("Included Treatments:".tr, style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold)),
+                    Text("Included Treatments:", style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
                     Text(promo.description!, style: const TextStyle(fontSize: 14, color: Colors.black87)),
                   ],
@@ -113,7 +112,7 @@ class _PromoListPageState extends State<PromoListPage> {
                       Icon(Icons.access_time, size: 16, color: mutedText),
                       const SizedBox(width: 8),
                       Text(
-                        "${"Valid until: ".tr}${DateFormat('dd MMM yyyy').format(promo.endAt)}",
+                        "${"Valid until: "}${DateFormat('dd MMM yyyy').format(promo.endAt)}",
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                     ],
@@ -145,7 +144,7 @@ class _PromoListPageState extends State<PromoListPage> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    "All Promos".tr,
+                    "All Promos",
                     style: TextStyle(
                       color: primaryColor,
                       fontSize: 24,
@@ -159,7 +158,7 @@ class _PromoListPageState extends State<PromoListPage> {
               child: _loading
                   ? const Center(child: CircularProgressIndicator())
                   : _promos.isEmpty
-                      ? Center(child: Text("No active promos".tr, style: TextStyle(color: mutedText)))
+                      ? Center(child: Text("No active promos", style: TextStyle(color: mutedText)))
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                           itemCount: _promos.length,

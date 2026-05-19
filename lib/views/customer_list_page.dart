@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import '../controllers/user_controller.dart';
 import 'package:intl/intl.dart';
-import '../utils/translations.dart';
 import 'customer_booking_history_page.dart';
 import '../utils/popup_helper.dart';
 
@@ -53,7 +52,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     }
   }
 
-  String _selectedTier = 'Semua';
+  String _selectedTier = 'All';
 
   void _filter() {
     final q = _searchController.text.toLowerCase();
@@ -308,8 +307,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
 
     final confirm = await PopupHelper.showConfirm(
       context,
-      title: "Delete Customer?".tr,
-      message: "${"Are you sure you want to delete ".tr}${_selectedKeys.length}${" selected customers? All related booking data will also be deleted.".tr}",
+      title: "Delete Customer?",
+      message: "${"Are you sure you want to delete "}${_selectedKeys.length}${" selected customers? All related booking data will also be deleted."}",
     );
 
     if (confirm != true) return;
@@ -324,7 +323,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
       await _userController.deleteCustomers(customersToDelete);
       
       if (mounted) {
-        PopupHelper.showSuccess(context, "Customer data cleared successfully".tr);
+        PopupHelper.showSuccess(context, "Customer data cleared successfully");
         setState(() {
           _isSelectionActive = false;
           _selectedKeys.clear();
@@ -334,7 +333,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
     } catch (e) {
       debugPrint("Error deleting customers: $e");
       if (mounted) {
-        PopupHelper.showError(context, "Failed to delete some customer data.".tr);
+        PopupHelper.showError(context, "Failed to delete some customer data.");
         setState(() => _loading = false);
       }
     }
@@ -368,8 +367,8 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   Expanded(
                     child: Text(
                       _isSelectionActive 
-                        ? "${_selectedKeys.length}${" Selected".tr}" 
-                        : (widget.isSelectionMode ? "Select Customer".tr : "Customer List".tr),
+                        ? "${_selectedKeys.length}${" Selected"}" 
+                        : (widget.isSelectionMode ? "Select Customer" : "Customer List"),
                       style: TextStyle(
                         color: primaryColor,
                         fontSize: 18,
@@ -385,7 +384,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         )
                       : TextButton(
                           onPressed: () => setState(() => _isSelectionActive = true),
-                          child: Text("Select".tr, style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
+                          child: Text("Select", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold)),
                         ),
                 ],
               ),
@@ -409,7 +408,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         onChanged: (v) => _filter(),
                         decoration: InputDecoration(
                           icon: Icon(Icons.search, color: Color(0xFF64748B)),
-                          hintText: 'Search name or phone number...'.tr,
+                          hintText: 'Search name or phone number...',
                           border: InputBorder.none,
                         ),
                       ),
@@ -430,7 +429,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         alignment: Alignment.center,
                         children: [
                            const Icon(Icons.tune, color: Color(0xFF64748B), size: 24),
-                           if (_selectedTier != 'Semua')
+                           if (_selectedTier != 'All')
                              Positioned(
                                right: -2,
                                top: -2,
@@ -450,7 +449,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         });
                       },
                       itemBuilder: (BuildContext context) {
-                        return ['Semua', 'Platinum', 'Gold', 'Silver'].map((String choice) {
+                        return ['All', 'Platinum', 'Gold', 'Silver'].map((String choice) {
                           return PopupMenuItem<String>(
                             value: choice,
                             child: Row(
@@ -480,7 +479,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   : _filteredCustomers.isEmpty
                       ? Center(
                           child: Text(
-                            "No customer data yet".tr,
+                            "No customer data yet",
                             style: TextStyle(color: mutedText, fontSize: 16),
                           ),
                         )

@@ -50,7 +50,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
     } catch (e) {
       debugPrint("Error picking image: $e");
       if (mounted) {
-        PopupHelper.showError(context, "Gagal mengambil gambar: $e");
+        PopupHelper.showError(context, "Failed to capture image: $e");
       }
     }
   }
@@ -98,7 +98,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
   }
 
   String _formatDateTime(DateTime? date, TimeOfDay? time) {
-    if (date == null || time == null) return "Pilih Waktu";
+    if (date == null || time == null) return "Select Time";
     final dt = DateTime(date.year, date.month, date.day, time.hour, time.minute);
     return DateFormat('dd MMM yyyy, HH:mm').format(dt);
   }
@@ -127,7 +127,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
         } catch (uploadError) {
           debugPrint("Upload process failed: $uploadError");
           if (mounted) {
-            PopupHelper.showError(context, "Gagal upload gambar: $uploadError. Pastikan bucket 'treatments' sudah ada.");
+            PopupHelper.showError(context, "Failed to upload image: $uploadError. Pastikan bucket 'treatments' sudah ada.");
           }
         }
       }
@@ -216,7 +216,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
     } catch (e) {
       debugPrint("Error saving promo: $e");
       if (mounted) {
-        PopupHelper.showError(context, "Gagal menyimpan promo: $e");
+        PopupHelper.showError(context, "Failed to save promo: $e");
         setState(() => _loading = false);
       }
     }
@@ -240,7 +240,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    "Tambah Promo Baru",
+                    "Add New Promo",
                     style: TextStyle(
                       color: primaryColor,
                       fontSize: 18,
@@ -285,7 +285,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                                 children: [
                                   Icon(Icons.add_photo_alternate_outlined, color: primaryColor, size: 40),
                                   const SizedBox(height: 8),
-                                  Text("Klik untuk upload banner", style: TextStyle(color: mutedText, fontSize: 13)),
+                                  Text("Tap to upload banner", style: TextStyle(color: mutedText, fontSize: 13)),
                                 ],
                               ),
                         ),
@@ -295,17 +295,17 @@ class _AddPromoPageState extends State<AddPromoPage> {
                     const SizedBox(height: 24),
 
                     // Inputs
-                    _fieldLabel("JUDUL PROMO"),
+                    _fieldLabel("PROMO TITLE"),
                     const SizedBox(height: 8),
                     _textField(controller: _titleController, hint: "e.g. Ramadhan Sale 50%"),
 
                     const SizedBox(height: 20),
-                    _fieldLabel("ISI TREATMENT (BUNDLING)"),
+                    _fieldLabel("TREATMENT CONTENT (BUNDLING)"),
                     const SizedBox(height: 8),
                     _textField(controller: _descriptionController, hint: "e.g. Haircut + Creambath + Wash", maxLines: 3),
 
                     const SizedBox(height: 20),
-                    _fieldLabel("HARGA PROMO (RP)"),
+                    _fieldLabel("PROMO PRICE (RP)"),
                     const SizedBox(height: 8),
                     _textField(controller: _priceController, hint: "99000", numeric: true),
 
@@ -364,8 +364,8 @@ class _AddPromoPageState extends State<AddPromoPage> {
                           icon: Icon(Icons.groups_outlined, color: primaryColor),
                           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
                           items: [
-                            DropdownMenuItem(value: 'general', child: Text("Semua (General)")),
-                            DropdownMenuItem(value: 'community', child: Text("Komunitas (Grup Awal)")),
+                            DropdownMenuItem(value: 'general', child: Text("All (General)")),
+                            DropdownMenuItem(value: 'community', child: Text("Community (Initial Group)")),
                             DropdownMenuItem(value: 'silver', child: Text("Silver Member")),
                             DropdownMenuItem(value: 'gold', child: Text("Gold Member")),
                             DropdownMenuItem(value: 'platinum', child: Text("Platinum Member")),
@@ -395,8 +395,8 @@ class _AddPromoPageState extends State<AddPromoPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text("Status Promo", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-                                Text("Aktfkan agar muncul di halaman promo", style: TextStyle(color: mutedText, fontSize: 12)),
+                                const Text("Promo Status", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                Text("Turn on to make the promo visible on the promo page", style: TextStyle(color: mutedText, fontSize: 12)),
                               ],
                             ),
                           ),
@@ -425,7 +425,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                         onPressed: _loading ? null : _savePromo,
                         child: _loading 
                           ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
-                          : const Text("Buat Promo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          : const Text("Create Promo", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
                       ),
                     ),
                     const SizedBox(height: 32),
@@ -471,7 +471,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
           children: [
             Icon(icon, size: 18, color: primaryColor),
             const SizedBox(width: 8),
-            Expanded(child: Text(text, style: TextStyle(color: text == "Pilih Waktu" ? mutedText : Colors.black, fontSize: 13, fontWeight: FontWeight.w600))),
+            Expanded(child: Text(text, style: TextStyle(color: text == "Select Time" ? mutedText : Colors.black, fontSize: 13, fontWeight: FontWeight.w600))),
           ],
         ),
       ),

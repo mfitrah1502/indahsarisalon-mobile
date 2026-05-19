@@ -3,7 +3,6 @@ import '../models/booking_list_model.dart';
 import '../controllers/booking_list_controller.dart';
 import 'package:intl/intl.dart';
 import 'booking_details_page.dart';
-import '../utils/translations.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/loyalty_constants.dart';
 
@@ -160,8 +159,10 @@ class _CustomerBookingHistoryPageState
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'berhasil':
+      case 'success':
         return const Color(0xFF16A34A);
       case 'dibatalkan':
+      case 'cancelled':
         return const Color(0xFFDC2626);
       default:
         return const Color(0xFFEA580C);
@@ -171,11 +172,26 @@ class _CustomerBookingHistoryPageState
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
       case 'berhasil':
+      case 'success':
         return const Color(0xFFDCFCE7);
       case 'dibatalkan':
+      case 'cancelled':
         return const Color(0xFFFEE2E2);
       default:
         return const Color(0xFFFFEDD5);
+    }
+  }
+
+  String _statusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'berhasil':
+      case 'success':
+        return 'SUCCESS';
+      case 'dibatalkan':
+      case 'cancelled':
+        return 'CANCELLED';
+      default:
+        return 'PENDING';
     }
   }
 
@@ -224,7 +240,7 @@ class _CustomerBookingHistoryPageState
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Booking History'.tr,
+                          'Booking History',
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 18,
@@ -329,7 +345,7 @@ class _CustomerBookingHistoryPageState
                   : _bookings.isEmpty
                   ? Center(
                       child: Text(
-                        'No booking history for this customer.'.tr,
+                        'No booking history for this customer.',
                         style: TextStyle(color: mutedText),
                       ),
                     )
@@ -346,7 +362,7 @@ class _CustomerBookingHistoryPageState
                         final serviceLabel =
                             services.take(2).join(', ') +
                             (services.length > 2
-                                ? ' +${services.length - 2}${'  others'.tr}'
+                                ? ' +${services.length - 2}${'  others'}'
                                 : '');
 
                         return Padding(
@@ -414,7 +430,7 @@ class _CustomerBookingHistoryPageState
                                             ),
                                             const SizedBox(height: 2),
                                             Text(
-                                              '${'with '.tr}${booking.stylist}',
+                                              '${'with '}${booking.stylist}',
                                               style: TextStyle(
                                                 fontSize: 12,
                                                 color: mutedText,
@@ -436,7 +452,7 @@ class _CustomerBookingHistoryPageState
                                           ),
                                         ),
                                         child: Text(
-                                          status.toUpperCase(),
+                                          _statusText(status),
                                           style: TextStyle(
                                             fontSize: 9,
                                             fontWeight: FontWeight.w900,

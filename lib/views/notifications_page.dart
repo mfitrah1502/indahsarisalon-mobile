@@ -118,6 +118,53 @@ class _NotificationsPageState extends State<NotificationsPage> {
     }
   }
 
+  String _translateNotificationTitle(String title) {
+    final t = title.trim();
+    if (t == 'Status Booking Diperbarui') return 'Booking Status Updated';
+    if (t == 'Booking Berhasil') return 'Booking Success';
+    return t;
+  }
+
+  String _formatNotificationMessage(String message) {
+    final regex = RegExp(r'\d{4}-\d{2}-\d{2}[T ]\d{2}:\d{2}(:\d{2})?');
+    String formatted = message.replaceAllMapped(regex, (match) {
+      try {
+        final raw = match.group(0)!;
+        final dt = DateTime.parse(raw).toLocal();
+        final date = DateFormat('d MMMM yyyy', 'en').format(dt);
+        final time = DateFormat('HH:mm').format(dt);
+        return "$date at $time WIB";
+      } catch (_) {
+        return match.group(0)!;
+      }
+    });
+
+    formatted = formatted
+        .replaceAll('Booking dengan jadwal', 'Booking schedule')
+        .replaceAll('Booking untuk jadwal', 'Booking for schedule')
+        .replaceAll('telah berhasil dibuat.', 'has been successfully created.')
+        .replaceAll('statusnya Telah Selesai.', 'status is Completed.')
+        .replaceAll('statusnya Telah Dibatalkan.', 'status is Cancelled.')
+        .replaceAll('statusnya success.', 'status is Success.')
+        .replaceAll('statusnya cancelled.', 'status is Cancelled.')
+        .replaceAll(' jam ', ' at ')
+        .replaceAll(' statusnya ', ' status is ')
+        .replaceAll('Januari', 'January')
+        .replaceAll('Februari', 'February')
+        .replaceAll('Maret', 'March')
+        .replaceAll('April', 'April')
+        .replaceAll('Mei', 'May')
+        .replaceAll('Juni', 'June')
+        .replaceAll('Juli', 'July')
+        .replaceAll('Agustus', 'August')
+        .replaceAll('September', 'September')
+        .replaceAll('Oktober', 'October')
+        .replaceAll('November', 'November')
+        .replaceAll('Desember', 'December');
+
+    return formatted;
+  }
+
   IconData _getIconForTitle(String title) {
     final t = title.toLowerCase();
     if (t.contains("booking")) return Icons.calendar_today_outlined;
@@ -170,12 +217,12 @@ class _NotificationsPageState extends State<NotificationsPage> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        PopupHelper.showError(context, "Gagal membuka WhatsApp.");
+        PopupHelper.showError(context, "Failed to open WhatsApp.");
       }
     } catch (e) {
       if (mounted) {
         Navigator.pop(context);
-        PopupHelper.showError(context, "Gagal mengirim reminder: $e");
+        PopupHelper.showError(context, "Failed to send reminder: $e");
       }
     }
   }
@@ -272,9 +319,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             const SizedBox(height: 16),
                             for (var notif in todayNotifications) ...[
                               _buildNotificationCard(
-                                title: notif['title'],
+                                title: _translateNotificationTitle(notif['title']),
                                 timeText: _getTimeAgo(DateTime.parse(notif['created_at']).toLocal()),
-                                description: notif['message'],
+                                description: _formatNotificationMessage(notif['message']),
                                 iconData: _getIconForTitle(notif['title']),
                                 iconBgColor: const Color(0xFFE4F0F9),
                                 iconColor: primaryColor,
@@ -300,9 +347,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                             const SizedBox(height: 16),
                             for (var notif in earlierNotifications) ...[
                               _buildNotificationCard(
-                                title: notif['title'],
+                                title: _translateNotificationTitle(notif['title']),
                                 timeText: _getTimeAgo(DateTime.parse(notif['created_at']).toLocal()),
-                                description: notif['message'],
+                                description: _formatNotificationMessage(notif['message']),
                                 iconData: _getIconForTitle(notif['title']),
                                 iconBgColor: const Color(0xFFDEE3E8),
                                 iconColor: const Color(0xFF5A6A7D),
@@ -489,7 +536,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                           ),
                           onPressed: () => _sendWhatsAppReminder(bookingId),
                           icon: const Icon(Icons.chat, size: 16),
-                          label: const Text("Reminder WA", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                          label: const Text("WhatsApp Reminder", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(width: 8),

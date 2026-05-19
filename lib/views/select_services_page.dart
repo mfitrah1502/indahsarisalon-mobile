@@ -11,7 +11,6 @@ import 'booking_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
-import '../utils/translations.dart';
 
 class SelectServicesPage extends StatefulWidget {
   const SelectServicesPage({super.key});
@@ -265,7 +264,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             Icon(Icons.warning_amber_rounded, color: primaryColor, size: 28),
             const SizedBox(width: 10),
             Text(
-              "Role Mismatch".tr,
+              "Role Mismatch",
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.bold,
@@ -284,7 +283,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text(
-              "Close".tr,
+              "Close",
               style: TextStyle(
                 color: primaryColor,
                 fontWeight: FontWeight.bold,
@@ -297,23 +296,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
   }
 
   String _getStylistConflictMessage(String stylistName, String stylistRole, String requiredRoles) {
-    if (AppTranslations.currentLanguage == 'Indonesia') {
-      return "Konflik Stylist: Anda memilih $stylistName ($stylistRole), sedangkan layanan ini membutuhkan $requiredRoles. Silakan ganti stylist atau pesan layanan ini secara terpisah.";
-    }
     return "Stylist Conflict: You selected $stylistName ($stylistRole), but this service requires a $requiredRoles. Please change the stylist or book this service separately.";
   }
 
   String _getRoleConflictMessage(String newServiceRoles) {
-    if (AppTranslations.currentLanguage == 'Indonesia') {
-      return "Konflik Jabatan: Layanan ini membutuhkan $newServiceRoles, yang tidak cocok dengan layanan terpilih lainnya. Silakan pesan layanan dengan jabatan berbeda secara terpisah.";
-    }
     return "Role Conflict: This service requires a $newServiceRoles, which conflicts with other selected services. Please book services requiring different roles separately.";
   }
 
   String _getStylistConflictForServiceMessage(String stylistName, String stylistRole, String serviceName, String requiredRoles) {
-    if (AppTranslations.currentLanguage == 'Indonesia') {
-      return "Konflik Stylist: $stylistName ($stylistRole) tidak memiliki kualifikasi untuk melakukan $serviceName yang membutuhkan $requiredRoles. Silakan pilih stylist lain atau pesan layanan ini secara terpisah.";
-    }
     return "Stylist Conflict: $stylistName ($stylistRole) is not qualified to perform $serviceName which requires a $requiredRoles. Please select a qualified stylist or book this service separately.";
   }
 
@@ -461,14 +451,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    "Choose or adjust service price".tr,
+                    "Choose or adjust service price",
                     style: TextStyle(color: mutedText, fontSize: 13),
                   ),
                   const SizedBox(height: 20),
 
                   if (basePrice > 0) ...[
                     Text(
-                      "STANDARD PRICE".tr,
+                      "STANDARD PRICE",
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -523,7 +513,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                   ],
 
                   Text(
-                    "MANUAL PRICE INPUT".tr,
+                    "MANUAL PRICE INPUT",
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.bold,
@@ -600,7 +590,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         Navigator.pop(ctx);
                       },
                       child: Text(
-                        "Add to Booking".tr,
+                        "Add to Booking",
                         style: const TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
@@ -636,7 +626,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
               ),
               child: Center(
                 child: Text(
-                  "New Booking".tr,
+                  "New Booking",
                   style: TextStyle(
                     color: primaryColor,
                     fontSize: 18,
@@ -656,7 +646,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       children: [
                         // Select Date
                         Text(
-                          "Select Date".tr,
+                          "Select Date",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -734,7 +724,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
                             Text(
-                              "Pilih Stylist",
+                              "Select Stylist",
                               style: TextStyle(
                                 fontSize: 18,
                                 fontWeight: FontWeight.bold,
@@ -742,7 +732,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               ),
                             ),
                             Text(
-                              "${_filteredStylists.length} tersedia",
+                              "${_filteredStylists.length} available",
                               style: TextStyle(fontSize: 13, color: mutedText),
                             ),
                           ],
@@ -755,7 +745,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                           child: ListView(
                             scrollDirection: Axis.horizontal,
                             children: [
-                              _buildStaffCategoryChip('All', 'Semua Staff', Icons.people_outline),
+                              _buildStaffCategoryChip('All', 'All Staff', Icons.people_outline),
                               const SizedBox(width: 8),
                               _buildStaffCategoryChip('hairstylist', 'Hair Stylist', Icons.content_cut),
                               const SizedBox(width: 8),
@@ -784,7 +774,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
-                              "Belum ada staff di kategori ini.".tr,
+                              "No stylists registered yet.",
                               textAlign: TextAlign.center,
                               style: TextStyle(color: mutedText, fontSize: 14),
                             ),
@@ -903,7 +893,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         const SizedBox(height: 28),
 
                         Text(
-                          "Select Service".tr,
+                          "Select Service",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -933,7 +923,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   size: 20,
                                 ),
                               ),
-                              hintText: "Search services...".tr,
+                              hintText: "Search services...",
                               hintStyle: TextStyle(
                                 color: mutedText,
                                 fontSize: 14,
@@ -1014,7 +1004,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(32.0),
                               child: Text(
-                                "No services found.".tr,
+                                "No services found.",
                                 style: TextStyle(color: mutedText),
                               ),
                             ),
@@ -1136,8 +1126,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                               const SizedBox(width: 4),
                                               Text(
                                                 dur > 0
-                                                    ? "$dur${" Minutes".tr}"
-                                                    : "- Minutes".tr,
+                                                    ? "$dur${" Minutes"}"
+                                                    : "- Minutes",
                                                 style: TextStyle(
                                                   color: mutedText,
                                                   fontSize: 12,
@@ -1278,7 +1268,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "${selected.length}${" services selected".tr}",
+                                      "${selected.length}${" services selected"}",
                                       style: TextStyle(
                                         color: mutedText,
                                         fontSize: 13,
@@ -1375,8 +1365,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                     },
                               child: Text(
                                 _selectedStylistIndex == -1
-                                    ? "Select Stylist Above".tr
-                                    : "Continue to Schedule".tr,
+                                    ? "Select Stylist Above"
+                                    : "Continue to Schedule",
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
@@ -1517,7 +1507,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             ),
             const SizedBox(width: 6),
             Text(
-              label.tr,
+              label,
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,

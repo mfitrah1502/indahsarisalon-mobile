@@ -163,7 +163,7 @@ class ServiceController {
     String? imageUrl,
   }) async {
     // Get or create category
-    final catResult = await _supabase.from('categories').select('id').eq('name', category).maybeSingle();
+    final catResult = await _supabase.from('categories').select('id').eq('name', category).limit(1).maybeSingle();
     int catId;
     if (catResult != null) {
       catId = catResult['id'];
@@ -191,7 +191,7 @@ class ServiceController {
     } else {
       // Get or create treatment
       final treatmentResult = await _supabase.from('treatments')
-          .select('id').eq('name', treatmentName).eq('category_id', catId).maybeSingle();
+          .select('id').eq('name', treatmentName).eq('category_id', catId).limit(1).maybeSingle();
       int treatmentId;
       if (treatmentResult != null) {
         treatmentId = treatmentResult['id'];

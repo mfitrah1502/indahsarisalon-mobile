@@ -5,6 +5,16 @@ import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
 
 class ReceiptPage extends StatelessWidget {
+  String _translatePaymentMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'tunai':
+        return 'Cash';
+      case 'transfer':
+        return 'Bank Transfer';
+      default:
+        return method;
+    }
+  }
   final String transactionId;
   final DateTime transactionDate;
   final List<Map<String, dynamic>> services;
@@ -112,7 +122,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'No. Struk',
+                      'Receipt No.',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -125,11 +135,11 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Tanggal',
+                      'Date',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
-                      DateFormat('dd MMM yyyy', 'id').format(transactionDate),
+                      DateFormat('dd MMM yyyy', 'en').format(transactionDate),
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                   ],
@@ -138,11 +148,11 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Jam',
+                      'Time',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
-                      '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
+                      '${DateFormat('HH:mm', 'en').format(transactionDate)} WIB',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                   ],
@@ -201,8 +211,8 @@ class ReceiptPage extends StatelessWidget {
                     children: [
                       pw.Text(
                         discountPercentage > 0
-                            ? 'Diskon (${discountPercentage.toInt()}%)'
-                            : 'Diskon',
+                            ? 'Discount (${discountPercentage.toInt()}%)'
+                            : 'Discount',
                         style: pw.TextStyle(font: regularFont, fontSize: 10),
                       ),
                       pw.Text(
@@ -232,7 +242,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Bayar ($paymentMethod)',
+                      'Paid (${_translatePaymentMethod(paymentMethod)})',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -245,7 +255,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Kembalian',
+                      'Change',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -259,7 +269,7 @@ class ReceiptPage extends StatelessWidget {
                 pw.SizedBox(height: 15),
                 pw.Center(
                   child: pw.Text(
-                    'Terima Kasih Telah Menggunakan\nLayanan di Indah Sari Salon',
+                    'Thank you for choosing\nIndah Sari Salon',
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       font: regularFont,
@@ -283,7 +293,7 @@ class ReceiptPage extends StatelessWidget {
       backgroundColor: const Color(0xFFF5F5F5),
       appBar: AppBar(
         title: const Text(
-          'Struk Pembayaran',
+          'Receipt',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
@@ -330,14 +340,14 @@ class ReceiptPage extends StatelessWidget {
                       const SizedBox(height: 20),
                       const DashedDivider(),
                       const SizedBox(height: 16),
-                      _buildInfoRow('No. Struk', transactionId),
+                      _buildInfoRow('Receipt No.', transactionId),
                       _buildInfoRow(
-                        'Tanggal',
-                        DateFormat('dd MMM yyyy', 'id').format(transactionDate),
+                        'Date',
+                        DateFormat('dd MMM yyyy', 'en').format(transactionDate),
                       ),
                       _buildInfoRow(
-                        'Jam',
-                        '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
+                        'Time',
+                        '${DateFormat('HH:mm', 'en').format(transactionDate)} WIB',
                       ),
                       const SizedBox(height: 16),
                       const DashedDivider(),
@@ -356,8 +366,8 @@ class ReceiptPage extends StatelessWidget {
                       if (effectiveDiscountAmount > 0)
                         _buildSummaryRow(
                           discountPercentage > 0
-                              ? 'Diskon (${discountPercentage.toInt()}%)'
-                              : 'Diskon',
+                              ? 'Discount (${discountPercentage.toInt()}%)'
+                              : 'Discount',
                           -effectiveDiscountAmount,
                           currencyFormat,
                           color: Colors.orange[800],
@@ -373,16 +383,16 @@ class ReceiptPage extends StatelessWidget {
                       const DashedDivider(),
                       const SizedBox(height: 16),
                       _buildSummaryRow(
-                        'Bayar ($paymentMethod)',
+                        'Paid (${_translatePaymentMethod(paymentMethod)})',
                         amountPaid,
                         currencyFormat,
                       ),
-                      _buildSummaryRow('Kembalian', change, currencyFormat),
+                      _buildSummaryRow('Change', change, currencyFormat),
                       const SizedBox(height: 20),
                       const DashedDivider(),
                       const SizedBox(height: 24),
                       const Text(
-                        'Terima Kasih Telah Menggunakan\nLayanan di Indah Sari Salon',
+                        'Thank you for choosing\nIndah Sari Salon',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -404,7 +414,7 @@ class ReceiptPage extends StatelessWidget {
                           onPressed: _printReceipt,
                           icon: const Icon(Icons.print, color: Colors.white),
                           label: const Text(
-                            "Cetak Struk",
+                            "Print Receipt",
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

@@ -13,7 +13,6 @@ import 'home_page.dart';
 import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'settings_page.dart';
-import '../utils/translations.dart';
 import '../utils/pdf_report_helper.dart';
 import '../utils/popup_helper.dart';
 
@@ -155,7 +154,7 @@ class _ReportPageState extends State<ReportPage> {
                 ),
                 child: Center(
                   child: Text(
-                    filter.tr,
+                    filter,
                     style: TextStyle(
                       color: isSelected ? primaryColor : mutedText,
                       fontWeight: isSelected
@@ -176,7 +175,7 @@ class _ReportPageState extends State<ReportPage> {
   Future<void> _showAddExpenseDialog() async {
     final nameCtrl = TextEditingController();
     final amountCtrl = TextEditingController();
-    String category = 'gaji karyawan';
+    String category = 'employee_salary';
 
     await showDialog(
       context: context,
@@ -188,7 +187,7 @@ class _ReportPageState extends State<ReportPage> {
                 borderRadius: BorderRadius.circular(16),
               ),
               title: const Text(
-                "Tambah Pengeluaran",
+                "Add Expense",
                 style: TextStyle(fontWeight: FontWeight.bold),
               ),
               content: Column(
@@ -197,8 +196,8 @@ class _ReportPageState extends State<ReportPage> {
                   TextField(
                     controller: nameCtrl,
                     decoration: InputDecoration(
-                      labelText: "Nama Pengeluaran",
-                      hintText: "Contoh: Listrik, Gaji Budi",
+                      labelText: "Expense Name",
+                      hintText: "Example: Electricity, Budi's Salary",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -208,15 +207,15 @@ class _ReportPageState extends State<ReportPage> {
                   DropdownButtonFormField<String>(
                     value: category,
                     decoration: InputDecoration(
-                      labelText: "Kategori",
+                      labelText: "Category",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
                     ),
                     items: const [
                       DropdownMenuItem(
-                        value: "gaji karyawan",
-                        child: Text("Gaji Karyawan"),
+                        value: "employee_salary",
+                        child: Text("Employee Salary"),
                       ),
                       DropdownMenuItem(
                         value: "maintenance",
@@ -233,7 +232,7 @@ class _ReportPageState extends State<ReportPage> {
                     controller: amountCtrl,
                     keyboardType: TextInputType.number,
                     decoration: InputDecoration(
-                      labelText: "Jumlah (Rp)",
+                      labelText: "Amount (Rp)",
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -244,7 +243,7 @@ class _ReportPageState extends State<ReportPage> {
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: Text("Batal", style: TextStyle(color: mutedText)),
+                  child: Text("Cancel", style: TextStyle(color: mutedText)),
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -268,19 +267,19 @@ class _ReportPageState extends State<ReportPage> {
                         _fetchData();
                         PopupHelper.showSuccess(
                           context,
-                          "Pengeluaran berhasil ditambahkan",
+                          "Expense added successfully",
                         );
                       } catch (e) {
                         debugPrint("Error adding expense: $e");
                         if (!context.mounted) return;
-                        PopupHelper.showError(context, "Gagal: $e");
+                        PopupHelper.showError(context, "Failed: $e");
                       }
                     } else {
-                      PopupHelper.showError(context, "Harap isi semua field");
+                      PopupHelper.showError(context, "Please fill in all fields");
                     }
                   },
                   child: const Text(
-                    "Simpan",
+                    "Save",
                     style: TextStyle(color: Colors.white),
                   ),
                 ),
@@ -314,11 +313,11 @@ class _ReportPageState extends State<ReportPage> {
 
       await Printing.sharePdf(bytes: bytes, filename: fileName);
 
-      PopupHelper.showInfo(context, "PDF Report ready to share/save".tr);
+      PopupHelper.showInfo(context, "PDF Report ready to share/save");
     } catch (e) {
       debugPrint("Error exporting pdf: $e");
       if (!context.mounted) return;
-      PopupHelper.showError(context, "Gagal mengunduh report PDF: $e");
+      PopupHelper.showError(context, "Failed to download PDF report: $e");
     }
   }
 
@@ -494,7 +493,7 @@ class _ReportPageState extends State<ReportPage> {
                     Expanded(
                       child: Center(
                         child: Text(
-                          "Report".tr,
+                          "Report",
                           style: TextStyle(
                             color: primaryColor,
                             fontSize: 18,
@@ -522,7 +521,7 @@ class _ReportPageState extends State<ReportPage> {
                         size: 20,
                       ),
                       label: Text(
-                        "ADD EXPENSE".tr,
+                        "ADD EXPENSE",
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.bold,
@@ -578,7 +577,7 @@ class _ReportPageState extends State<ReportPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "Total Income".tr,
+                                          "Total Income",
                                           style: TextStyle(
                                             color: mutedText,
                                             fontSize: 13,
@@ -637,7 +636,7 @@ class _ReportPageState extends State<ReportPage> {
                                           MainAxisAlignment.center,
                                       children: [
                                         Text(
-                                          "Expenses".tr,
+                                          "Expenses",
                                           style: TextStyle(
                                             color: mutedText,
                                             fontSize: 13,
@@ -673,7 +672,7 @@ class _ReportPageState extends State<ReportPage> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        "Sales Report".tr,
+                        "Sales Report",
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
@@ -681,7 +680,7 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                       ),
                       Text(
-                        "More >".tr,
+                        "More >",
                         style: const TextStyle(
                           fontSize: 14,
                           color: Colors.redAccent,
@@ -712,7 +711,7 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        "Income".tr,
+                        "Income",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -730,7 +729,7 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        "Expenses".tr,
+                        "Expenses",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,
@@ -748,7 +747,7 @@ class _ReportPageState extends State<ReportPage> {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        "Profit".tr,
+                        "Profit",
                         style: TextStyle(
                           fontSize: 12,
                           color: Colors.grey.shade700,

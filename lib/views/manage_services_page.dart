@@ -13,7 +13,6 @@ import 'booking_list_page.dart';
 import 'settings_page.dart';
 import 'report_page.dart';
 import 'add_promo_page.dart';
-import '../utils/translations.dart';
 import '../utils/popup_helper.dart';
 
 class ManageServicesPage extends StatefulWidget {
@@ -86,18 +85,18 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   Future<void> _deleteService(ServiceModel service) async {
     PopupHelper.showConfirm(
       context,
-      title: "Delete Service".tr,
+      title: "Delete Service",
       message:
-          "${"Are you sure you want to delete".tr} \"${service.displayName}\"?",
+          "${"Are you sure you want to delete"} \"${service.displayName}\"?",
       onConfirm: () async {
         try {
           await _serviceController.deleteService(service.tdId);
           _fetchAll();
         } catch (e) {
-          String errorMsg = "Gagal menghapus: $e";
+          String errorMsg = "Failed to delete: $e";
           if (e.toString().contains("violates foreign key constraint")) {
             errorMsg =
-                "Layanan ini tidak bisa dihapus karena sudah memiliki riwayat booking. Silakan hubungi admin untuk menonaktifkannya melalui database.";
+                "This service cannot be deleted because it has booking history. Please contact admin to disable it via database.";
           }
           if (mounted) PopupHelper.showError(context, errorMsg);
         }
@@ -134,7 +133,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      "Edit Promo".tr,
+                      "Edit Promo",
                       style: TextStyle(
                         color: primaryColor,
                         fontSize: 20,
@@ -235,7 +234,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           _fetchAll();
                         },
                         child: Text(
-                          "Simpan Perubahan".tr,
+                          "Save Changes",
                           style: const TextStyle(
                             color: Colors.white,
                             fontWeight: FontWeight.bold,
@@ -249,7 +248,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       child: TextButton(
                         onPressed: () => Navigator.pop(ctx),
                         child: Text(
-                          "Batal".tr,
+                          "Cancel",
                           style: TextStyle(
                             color: primaryColor,
                             fontWeight: FontWeight.bold,
@@ -390,7 +389,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        isEdit ? "Edit Service".tr : "Add New Service".tr,
+                        isEdit ? "Edit Service" : "Add New Service",
                         style: TextStyle(
                           color: primaryColor,
                           fontSize: 20,
@@ -400,8 +399,8 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       const SizedBox(height: 4),
                       Text(
                         isEdit
-                            ? "Update service details".tr
-                            : "Create new service for clients".tr,
+                            ? "Update service details"
+                            : "Create new service for clients",
                         style: TextStyle(color: mutedText, fontSize: 13),
                       ),
                       const SizedBox(height: 24),
@@ -420,7 +419,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             debugPrint("Error picking image: $e");
                             PopupHelper.showError(
                               context,
-                              "Gagal mengambil gambar: $e",
+                              "Failed to capture image: $e",
                             );
                           }
                         },
@@ -461,7 +460,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                       ),
                                       const SizedBox(height: 8),
                                       Text(
-                                        "Add Service Photo".tr,
+                                        "Add Service Photo",
                                         style: TextStyle(
                                           color: mutedText,
                                           fontSize: 12,
@@ -475,25 +474,25 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       const SizedBox(height: 24),
 
                       // Treatment Name
-                      _fieldLabel("TREATMENT NAME / SERVICE CATEGORY".tr),
+                      _fieldLabel("TREATMENT NAME / SERVICE CATEGORY"),
                       const SizedBox(height: 8),
                       _textField(
                         controller: treatmentController,
-                        hint: "e.g. Grey Hair Colouring".tr,
+                        hint: "e.g. Grey Hair Colouring",
                       ),
 
                       const SizedBox(height: 16),
                       // Detail Name (Variant)
-                      _fieldLabel("DETAIL NAME / VARIANT".tr),
+                      _fieldLabel("DETAIL NAME / VARIANT"),
                       const SizedBox(height: 8),
                       _textField(
                         controller: nameController,
-                        hint: "e.g. Short, Medium, Long (optional)".tr,
+                        hint: "e.g. Short, Medium, Long (optional)",
                       ),
 
                       const SizedBox(height: 16),
                       // Category Dropdown
-                      _fieldLabel("CATEGORY".tr),
+                      _fieldLabel("CATEGORY"),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -534,7 +533,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _fieldLabel("PRICE (Rp)".tr),
+                                _fieldLabel("PRICE (Rp)"),
                                 const SizedBox(height: 8),
                                 _textField(
                                   controller: priceController,
@@ -549,7 +548,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                _fieldLabel("DURATION (MINUTES)".tr),
+                                _fieldLabel("DURATION (MINUTES)"),
                                 const SizedBox(height: 8),
                                 _textField(
                                   controller: durationController,
@@ -605,7 +604,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             );
                           },
                           child: Text(
-                            isEdit ? "Save Changes".tr : "Add Service".tr,
+                            isEdit ? "Save Changes" : "Add Service",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
@@ -620,7 +619,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         child: TextButton(
                           onPressed: () => Navigator.pop(ctx),
                           child: Text(
-                            "Cancel".tr,
+                            "Cancel",
                             style: TextStyle(
                               fontSize: 16,
                               color: primaryColor,
@@ -700,7 +699,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       _fetchAll();
     } catch (e) {
       debugPrint('Error saving service: $e');
-      if (mounted) PopupHelper.showError(context, "Gagal menyimpan: $e");
+      if (mounted) PopupHelper.showError(context, "Failed to save: $e");
     }
   }
 
@@ -721,7 +720,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
               ),
               child: Center(
                 child: Text(
-                  "Manage Services".tr,
+                  "Manage Services",
                   style: TextStyle(
                     color: primaryColor,
                     fontSize: 18,
@@ -758,7 +757,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               size: 20,
                             ),
                           ),
-                          hintText: "Search services...".tr,
+                          hintText: "Search services...",
                           hintStyle: TextStyle(color: mutedText, fontSize: 14),
                           border: InputBorder.none,
                         ),
@@ -830,7 +829,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               Icon(Icons.add, color: Colors.white, size: 20),
                               SizedBox(width: 8),
                               Text(
-                                "Add New Service".tr,
+                                "Add New Service",
                                 style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -875,7 +874,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                "Add Promo".tr,
+                                "Add Promo",
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
@@ -891,7 +890,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
 
                     // Count
                     Text(
-                      "${filtered.length}${" services".tr}",
+                      "${filtered.length}${" services"}",
                       style: TextStyle(
                         fontSize: 13,
                         color: mutedText,
@@ -913,7 +912,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             child: Padding(
                               padding: const EdgeInsets.all(32.0),
                               child: Text(
-                                "No services.".tr,
+                                "No services.",
                                 style: TextStyle(color: mutedText),
                               ),
                             ),
@@ -1006,7 +1005,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                                 ),
                                                 const SizedBox(width: 3),
                                                 Text(
-                                                  "$dur${" min".tr}",
+                                                  "$dur${" min"}",
                                                   style: TextStyle(
                                                     fontSize: 12,
                                                     color: mutedText,

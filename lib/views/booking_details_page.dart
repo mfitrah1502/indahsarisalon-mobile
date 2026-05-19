@@ -7,7 +7,6 @@ import 'booking_list_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
 import '../app_session.dart';
-import '../utils/translations.dart';
 import 'receipt_page.dart';
 import '../utils/popup_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -45,8 +44,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'berhasil':
+      case 'success':
         return const Color(0xFF16A34A);
       case 'dibatalkan':
+      case 'cancelled':
         return const Color(0xFFDC2626);
       default:
         return const Color(0xFFEA580C);
@@ -56,22 +57,48 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   Color _statusBg(String status) {
     switch (status.toLowerCase()) {
       case 'berhasil':
+      case 'success':
         return const Color(0xFFDCFCE7);
       case 'dibatalkan':
+      case 'cancelled':
         return const Color(0xFFFEE2E2);
       default:
         return const Color(0xFFFFEDD5);
     }
   }
 
+  String _statusText(String status) {
+    switch (status.toLowerCase()) {
+      case 'berhasil':
+      case 'success':
+        return 'SUCCESS';
+      case 'dibatalkan':
+      case 'cancelled':
+        return 'CANCELLED';
+      default:
+        return 'PENDING';
+    }
+  }
+
   String _formatDateTime(String raw) {
     try {
       final dt = DateTime.parse(raw).toLocal();
-      final date = DateFormat('EEEE, d MMMM yyyy', 'id').format(dt);
+      final date = DateFormat('EEEE, d MMMM yyyy', 'en').format(dt);
       final time = DateFormat('HH:mm').format(dt);
       return "$date\n$time WIB";
     } catch (_) {
       return raw;
+    }
+  }
+
+  String _translatePaymentMethod(String method) {
+    switch (method.toLowerCase()) {
+      case 'tunai':
+        return 'Cash';
+      case 'transfer':
+        return 'Bank Transfer';
+      default:
+        return method;
     }
   }
 
@@ -83,7 +110,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           .update({'status': newStatus})
           .eq('id', widget.booking['id']);
 
-      if (newStatus.toLowerCase() == 'berhasil') {
+      if (newStatus.toLowerCase() == 'success') {
         final amount = widget.booking['total_price'] ?? 0;
         final result = await LoyaltyController.processBookingCompletion(
           amount: amount as num,
@@ -100,21 +127,29 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       try {
         final userId = AppSession.userId;
         if (userId != null) {
-          String statusText = newStatus.toLowerCase() == 'berhasil'
-              ? 'Telah Selesai'
-              : (newStatus.toLowerCase() == 'dibatalkan'
-                    ? 'Telah Dibatalkan'
+          String statusText = newStatus.toLowerCase() == 'success'
+              ? 'Completed'
+              : (newStatus.toLowerCase() == 'cancelled'
+                    ? 'Cancelled'
                     : newStatus);
+          String formattedDt = widget.booking['datetime'] ?? '';
+          try {
+            final dt = DateTime.parse(formattedDt).toLocal();
+            final date = DateFormat('d MMMM yyyy', 'en').format(dt);
+            final time = DateFormat('HH:mm').format(dt);
+            formattedDt = "$date at $time WIB";
+          } catch (_) {}
+
           await Supabase.instance.client.from('notifikasi').insert({
             'user_id': userId,
-            'title': 'Status Booking Diperbarui',
+            'title': 'Booking Status Updated',
             'message':
-                'Booking dengan jadwal \n${widget.booking['datetime']} statusnya $statusText.',
+                'Booking schedule \n$formattedDt status is $statusText.',
             'booking_id': widget.booking['id'],
           });
         }
       } catch (e) {
-        debugPrint('Gagal mengirim Notifikasi: $e');
+        debugPrint('Failed to send Notification: $e');
       }
 
       if (mounted) {
@@ -127,7 +162,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       debugPrint('Error updating booking: $e');
       if (mounted) {
         setState(() => _updating = false);
-        PopupHelper.showError(context, "Gagal memperbarui: $e");
+        PopupHelper.showError(context, "Failed to update: $e");
       }
     }
   }
@@ -157,7 +192,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           children: [
             Text(
               'Hai $customerName, kamu telah memasuki $tier Member! '
-              'Silakan bergabung ke grup $tier kami yang tersedia.',
+              'Please join our available $tier group.',
               style: const TextStyle(fontSize: 15, height: 1.5),
             ),
             const SizedBox(height: 16),
@@ -182,7 +217,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               Navigator.pop(context);
               Navigator.pop(context, true);
             },
-            child: Text('Nanti Saja'.tr, style: TextStyle(color: mutedText)),
+            child: Text('Nanti Saja', style: TextStyle(color: mutedText)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -217,8 +252,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   Future<void> _cancelBooking() async {
     PopupHelper.showConfirm(
       context,
-      title: "Cancel Booking?".tr,
-      message: "Cancelled bookings cannot be restored.".tr,
+      title: "Cancel Booking?",
+      message: "Cancelled bookings cannot be restored.",
       onConfirm: () async {
         await _updateStatus('dibatalkan');
       },
@@ -313,7 +348,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      PopupHelper.showError(context, "Gagal membuka WhatsApp.");
+      PopupHelper.showError(context, "Failed to open WhatsApp.");
     }
   }
 
@@ -366,8 +401,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   Future<void> _showReceipt() async {
     final TextEditingController amountController = TextEditingController();
 
-    // Get stored payment method
-    final String storedMethod = widget.booking['payment_method'] ?? 'Tunai';
+    final String storedMethod = widget.booking['payment_method'] ?? 'Cash';
+    final bool isCash = storedMethod.toLowerCase() == 'cash' || storedMethod.toLowerCase() == 'tunai';
 
     // Default amount paid = total price
     final totalPrice = (widget.booking['total_price'] as num?)?.toDouble() ?? 0;
@@ -375,44 +410,119 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
     Map<String, dynamic>? result;
 
-    if (storedMethod == 'Tunai') {
+    if (isCash) {
       // For Cash, we still need to know how much they paid to calculate change
-      result = await showDialog<Map<String, dynamic>>(
+       result = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
           title: const Text(
-            'Pembayaran Tunai',
-            style: TextStyle(fontWeight: FontWeight.bold),
+            'Cash Payment',
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 18,
+            ),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('Masukkan jumlah uang yang diterima:'),
+              const Text(
+                'Enter amount received:',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: Color(0xFF64748B),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
               const SizedBox(height: 12),
               TextField(
                 controller: amountController,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                decoration: const InputDecoration(
+                style: const TextStyle(
+                  fontWeight: FontWeight.normal,
+                  fontSize: 16,
+                ),
+                decoration: InputDecoration(
                   prefixText: 'Rp ',
-                  border: OutlineInputBorder(),
-                  labelText: 'Jumlah Bayar',
+                  prefixStyle: TextStyle(
+                    fontWeight: FontWeight.normal,
+                    color: primaryColor,
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: BorderSide(color: primaryColor, width: 2),
+                  ),
+                  labelText: 'Amount Paid',
+                  labelStyle: const TextStyle(fontSize: 13),
                 ),
               ),
             ],
           ),
+          actionsPadding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
           actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Batal'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                final double amt =
-                    double.tryParse(amountController.text) ?? totalPrice;
-                Navigator.pop(context, {'amount': amt, 'method': storedMethod});
-              },
-              child: const Text('Tampilkan Struk'),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: mutedText,
+                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(
+                      'Cancel',
+                      style: TextStyle(
+                        color: mutedText,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: buttonColor,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                    ),
+                    onPressed: () {
+                      final double amt =
+                          double.tryParse(amountController.text) ?? totalPrice;
+                      Navigator.pop(context, {'amount': amt, 'method': storedMethod});
+                    },
+                    child: const Text(
+                      'Show Receipt',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -540,7 +650,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   ),
                   const SizedBox(width: 16),
                   Text(
-                    "Booking Details".tr,
+                    "Booking Details",
                     style: TextStyle(
                       color: primaryColor,
                       fontSize: 20,
@@ -576,7 +686,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                           const SizedBox(width: 8),
                           Text(
-                            "${"Status: ".tr}${_status.toUpperCase()}",
+                            "Status: ${_statusText(_status)}",
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -631,7 +741,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "SERVICES".tr,
+                                  "SERVICES",
                                   style: TextStyle(
                                     fontSize: 11,
                                     fontWeight: FontWeight.bold,
@@ -688,7 +798,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "TIME".tr,
+                                  "TIME",
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -735,7 +845,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
                                 Text(
-                                  "TOTAL / METODE".tr,
+                                  "TOTAL / METODE",
                                   style: TextStyle(
                                     fontSize: 10,
                                     fontWeight: FontWeight.bold,
@@ -754,7 +864,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  widget.booking['payment_method'] ?? 'Tunai',
+                                  _translatePaymentMethod(widget.booking['payment_method'] ?? 'Cash'),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,
@@ -841,7 +951,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            "CUSTOMER INFORMATION".tr,
+                            "CUSTOMER INFORMATION",
                             style: TextStyle(
                               fontSize: 11,
                               fontWeight: FontWeight.bold,
@@ -887,7 +997,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                   booking['customer_phone'] != null &&
                                           booking['customer_phone'] != '-'
                                       ? booking['customer_phone']
-                                      : 'No phone number'.tr,
+                                      : 'No phone number',
                                   style: TextStyle(
                                     fontSize: 14,
                                     color: mutedText,
@@ -934,7 +1044,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               onPressed: _sendWhatsAppReminder,
                               icon: const Icon(Icons.chat, size: 18),
                               label: const Text(
-                                "Reminder WA",
+                                "Whatsapp Reminder",
                                 style: TextStyle(fontSize: 11),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -1016,7 +1126,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                           onPressed: _updating
                               ? null
-                              : () => _updateStatus('berhasil'),
+                              : () => _updateStatus('success'),
                           child: _updating
                               ? const SizedBox(
                                   width: 22,
@@ -1027,7 +1137,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                   ),
                                 )
                               : Text(
-                                  "Mark as Done".tr,
+                                  "Mark as Done",
                                   style: const TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
@@ -1043,7 +1153,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           child: Padding(
                             padding: EdgeInsets.all(8.0),
                             child: Text(
-                              "Cancel Booking".tr,
+                              "Cancel Booking",
                               style: const TextStyle(
                                 color: Color(0xFFDC2626),
                                 fontWeight: FontWeight.bold,
@@ -1061,7 +1171,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Text(
-                          "${"This booking is already ".tr}${_status.toUpperCase()}.",
+                          "This booking is already ${_statusText(_status)}.",
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: _statusColor(_status),
@@ -1069,7 +1179,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           ),
                         ),
                       ),
-                      if (_status.toLowerCase() != 'dibatalkan') ...[
+                      if (_status.toLowerCase() != 'cancelled') ...[
                         const SizedBox(height: 16),
                         SizedBox(
                           width: double.infinity,
@@ -1084,7 +1194,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             onPressed: _showReceipt,
                             icon: Icon(Icons.receipt_long, color: primaryColor),
                             label: Text(
-                              "Lihat Struk",
+                              "View Receipt",
                               style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,

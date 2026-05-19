@@ -122,7 +122,7 @@ class _BookingPageState extends State<BookingPage> {
   }
 
   Future<void> _fetchLoggedInCustomerProfile() async {
-    if (AppSession.userId != null) {
+    if (AppSession.userId != null && AppSession.userRole?.toLowerCase() == 'pelanggan') {
       try {
         final res = await Supabase.instance.client
             .from('users')
@@ -303,7 +303,7 @@ class _BookingPageState extends State<BookingPage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Pilih Jadwal",
+                          "Select Schedule",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -313,7 +313,7 @@ class _BookingPageState extends State<BookingPage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Lengkapi data & waktu kunjungan",
+                          "Complete booking details & time",
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -439,7 +439,7 @@ class _BookingPageState extends State<BookingPage> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          "Informasi Pelanggan",
+                          "Customer Information",
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
@@ -484,7 +484,7 @@ class _BookingPageState extends State<BookingPage> {
                                 Icon(Icons.contact_phone_rounded, size: 14, color: buttonColor),
                                 const SizedBox(width: 4),
                                 Text(
-                                  "Dari Kontak",
+                                  "From Contacts",
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
@@ -504,19 +504,19 @@ class _BookingPageState extends State<BookingPage> {
                         children: [
                           _buildTextField(
                             controller: _nameCtrl,
-                            label: "Nama Lengkap",
+                            label: "Full Name",
                             icon: Icons.person_rounded,
-                            validator: (v) => v == null || v.trim().isEmpty ? "Nama harus diisi" : null,
+                            validator: (v) => v == null || v.trim().isEmpty ? "Name is required" : null,
                           ),
                           const SizedBox(height: 14),
                           _buildTextField(
                             controller: _phoneCtrl,
-                            label: "Nomor WhatsApp / HP",
+                            label: "WhatsApp / Phone Number",
                             icon: Icons.phone_rounded,
                             keyboardType: TextInputType.phone,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return "Nomor HP harus diisi";
-                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) return "Nomor telpon harus berupa angka";
+                              if (v == null || v.trim().isEmpty) return "Phone number is required";
+                              if (!RegExp(r'^[0-9]+$').hasMatch(v.trim())) return "Phone number must be numeric";
                               return null;
                             },
                           ),
@@ -527,8 +527,8 @@ class _BookingPageState extends State<BookingPage> {
                             icon: Icons.email_rounded,
                             keyboardType: TextInputType.emailAddress,
                             validator: (v) {
-                              if (v == null || v.trim().isEmpty) return "Email harus diisi";
-                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return "Format email tidak valid";
+                              if (v == null || v.trim().isEmpty) return "Email is required";
+                              if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v.trim())) return "Email format is invalid";
                               return null;
                             },
                           ),
@@ -540,7 +540,7 @@ class _BookingPageState extends State<BookingPage> {
 
                     // Select Time
                     Text(
-                      "Waktu Kunjungan",
+                      "Select Visit Time",
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
@@ -550,7 +550,7 @@ class _BookingPageState extends State<BookingPage> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "Pilih waktu yang paling sesuai untuk kamu",
+                      "Choose the time that suits you best",
                       style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: mutedText),
                     ),
                     const SizedBox(height: 24),
@@ -576,7 +576,7 @@ class _BookingPageState extends State<BookingPage> {
                             const Icon(Icons.event_busy_rounded, color: Color(0xFFEF4444), size: 36),
                             const SizedBox(height: 12),
                             const Text(
-                              "Tidak ada jadwal yang tersedia atau waktu tidak cukup untuk durasi treatment yang kamu pilih.",
+                              "No available schedule or not enough time for the selected treatment duration.",
                               textAlign: TextAlign.center,
                               style: TextStyle(color: Color(0xFF991B1B), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
                             ),
@@ -587,17 +587,17 @@ class _BookingPageState extends State<BookingPage> {
                       Column(
                         children: [
                           _buildTimeSection(
-                            "Pagi",
+                            "Morning",
                             Icons.wb_twilight_rounded,
                             _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) < 12).toList(),
                           ),
                           _buildTimeSection(
-                            "Siang",
+                            "Afternoon",
                             Icons.wb_sunny_rounded,
                             _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 12 && int.parse(e.value.split(':')[0]) < 15).toList(),
                           ),
                           _buildTimeSection(
-                            "Sore",
+                            "Evening",
                             Icons.nights_stay_rounded,
                             _times.asMap().entries.where((e) => int.parse(e.value.split(':')[0]) >= 15).toList(),
                           ),
@@ -656,7 +656,7 @@ class _BookingPageState extends State<BookingPage> {
                                         if (mounted) {
                                           PopupHelper.showSuccess(
                                             context,
-                                            "Jadwal berhasil diubah!",
+                                            "Schedule has been successfully changed!",
                                             onConfirm: () {
                                               Navigator.pushAndRemoveUntil(
                                                 context,
@@ -668,7 +668,7 @@ class _BookingPageState extends State<BookingPage> {
                                         }
                                       } catch (e) {
                                         if (mounted) {
-                                          PopupHelper.showError(context, "Gagal mengubah jadwal: $e");
+                                          PopupHelper.showError(context, "Failed to reschedule: $e");
                                           setState(() => _loadingTimes = false);
                                         }
                                       }
@@ -692,7 +692,7 @@ class _BookingPageState extends State<BookingPage> {
                                   }
                                 },
                           child: Text(
-                            _selectedTimeIndex == -1 ? "Pilih Waktu" : "Lanjut ke Pembayaran",
+                            _selectedTimeIndex == -1 ? "Select Time" : "Continue to Payment",
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.bold,

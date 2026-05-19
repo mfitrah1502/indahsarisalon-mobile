@@ -50,6 +50,7 @@ class _PresencePageState extends State<PresencePage> {
           .select('id, name, role, avatar, status')
           .eq('type', 'karyawan')
           .neq('role', 'pelanggan')
+          .neq('role', 'owner')
           .eq('status', 'aktif') // Only active employees
           .order('name');
 
@@ -85,10 +86,13 @@ class _PresencePageState extends State<PresencePage> {
       final dateStr =
           "${selectedDate.year}-${selectedDate.month.toString().padLeft(2, '0')}-${selectedDate.day.toString().padLeft(2, '0')}";
 
+      // Standardize status for database compatibility
+      final dbStatus = (newStatus.toLowerCase() == 'present' || newStatus == 'hadir') ? 'hadir' : 'off';
+
       // Update local optimistically
       if (mounted) {
         setState(() {
-          _absensiMap[userId] = newStatus;
+          _absensiMap[userId] = dbStatus;
         });
       }
 
@@ -104,7 +108,7 @@ class _PresencePageState extends State<PresencePage> {
         await Supabase.instance.client
             .from('absensi')
             .update({
-              'status': newStatus,
+              'status': dbStatus,
               'updated_at': DateTime.now().toIso8601String(),
             })
             .eq('id', existing['id']);
@@ -112,7 +116,7 @@ class _PresencePageState extends State<PresencePage> {
         await Supabase.instance.client.from('absensi').insert({
           'user_id': userId,
           'tanggal': dateStr,
-          'status': newStatus,
+          'status': dbStatus,
           'created_at': DateTime.now().toIso8601String(),
         });
       }
@@ -181,7 +185,7 @@ class _PresencePageState extends State<PresencePage> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Presensi Karyawan",
+                          "Staff Attendance  ",
                           style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
@@ -191,7 +195,7 @@ class _PresencePageState extends State<PresencePage> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          "Kelola kehadiran & jadwal masuk hari ini",
+                          "Manage staff attendance & schedule today",
                           style: TextStyle(
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
@@ -226,8 +230,8 @@ class _PresencePageState extends State<PresencePage> {
                   style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600, color: darkText),
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.search_rounded, color: primaryColor, size: 20),
-                    hintText: "Cari nama karyawan...",
-                    hintStyle: TextStyle(color: mutedText.withOpacity(0.6), fontSize: 14, fontWeight: FontWeight.w500),
+                    hintText: "Search staff name...",
+                    hintStyle: TextStyle(color: mutedText.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
@@ -249,13 +253,13 @@ class _PresencePageState extends State<PresencePage> {
                   final isToday = DateFormat('yyyyMMdd').format(d) == DateFormat('yyyyMMdd').format(DateTime.now());
                   
                   const dayNames = [
-                    'Sen',
-                    'Sel',
-                    'Rab',
-                    'Kam',
-                    'Jum',
-                    'Sab',
-                    'Min',
+                    'Mon',
+                    'Tue',
+                    'Wed',
+                    'Thu',
+                    'Fri',
+                    'Sat',
+                    'Sun',
                   ];
 
                   return GestureDetector(
@@ -341,7 +345,7 @@ class _PresencePageState extends State<PresencePage> {
                               Icon(Icons.people_outline_rounded, color: mutedText.withOpacity(0.4), size: 48),
                               const SizedBox(height: 12),
                               Text(
-                                "Karyawan tidak ditemukan",
+                                "Staff not found",
                                 style: TextStyle(color: mutedText, fontWeight: FontWeight.w600, fontSize: 14),
                               ),
                             ],
@@ -469,7 +473,7 @@ class _PresencePageState extends State<PresencePage> {
                                                   ),
                                                   const SizedBox(width: 3),
                                                   Text(
-                                                    isAktif ? "Hadir" : "Libur",
+                                                    isAktif ? "Present" : "Off",
                                                     style: TextStyle(
                                                       fontSize: 8.5,
                                                       fontWeight: FontWeight.w800,
@@ -528,7 +532,7 @@ class _PresencePageState extends State<PresencePage> {
                                             Expanded(
                                               child: GestureDetector(
                                                 behavior: HitTestBehavior.opaque,
-                                                onTap: () => _updateStatus(staff['id'], 'hadir'),
+                                                onTap: () => _updateStatus(staff['id'], 'Present'),
                                                 child: Center(
                                                   child: Text(
                                                     "IN",
@@ -544,7 +548,7 @@ class _PresencePageState extends State<PresencePage> {
                                             Expanded(
                                               child: GestureDetector(
                                                 behavior: HitTestBehavior.opaque,
-                                                onTap: () => _updateStatus(staff['id'], 'off'),
+                                                onTap: () => _updateStatus(staff['id'], 'Off'),
                                                 child: Center(
                                                   child: Text(
                                                     "OUT",

@@ -12,7 +12,6 @@ import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
 import '../controllers/auth_controller.dart';
-import '../utils/translations.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'report_page.dart';
 import '../utils/popup_helper.dart';
@@ -78,7 +77,7 @@ class _SettingsPageState extends State<SettingsPage> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Center(
                 child: Text(
-                  "Settings".tr,
+                  "Settings",
                   style: TextStyle(
                     color: mainTextColor,
                     fontSize: 18,
@@ -152,7 +151,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     const SizedBox(height: 32),
 
                     // MEMBERSHIP SECTION
-                    if (AppSession.userRole?.toLowerCase() != 'owner' && AppSession.userRole?.toLowerCase() != 'admin') ...[
+                    if (AppSession.userRole?.toLowerCase() == 'pelanggan') ...[
                       Text(
                         "MEMBERSHIP",
                         style: TextStyle(
@@ -195,7 +194,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          "Kamu adalah member eksklusif kami.",
+                                          "You are our exclusive member.",
                                           style: TextStyle(color: mutedText, fontSize: 12),
                                         ),
                                       ],
@@ -204,12 +203,12 @@ class _SettingsPageState extends State<SettingsPage> {
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
                                         Text(
-                                          "Belum ada membership",
+                                          "No membership yet",
                                           style: TextStyle(fontWeight: FontWeight.bold, color: mutedText, fontSize: 15),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
-                                          "Lakukan transaksi untuk mendapatkan tier.",
+                                          "Make transactions to earn a tier.",
                                           style: TextStyle(color: mutedText, fontSize: 12),
                                         ),
                                       ],
@@ -228,7 +227,7 @@ class _SettingsPageState extends State<SettingsPage> {
                                     await launchUrl(uri, mode: LaunchMode.externalApplication);
                                   }
                                 },
-                                child: const Text("Grup WA", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                child: const Text("WA Group", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
                               ),
                           ],
                         ),
@@ -238,7 +237,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     // ACCOUNT PREFERENCES
                     Text(
-                      "ACCOUNT PREFERENCES".tr,
+                      "ACCOUNT PREFERENCES",
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -258,7 +257,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _buildSettingTile(
                             icon: Icons.person_outline,
-                            title: "Edit Profile".tr,
+                            title: "Edit Profile",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () async {
@@ -272,7 +271,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (AppSession.userRole == 'owner')
                             _buildSettingTile(
                               icon: Icons.groups_outlined,
-                              title: "Manage Team".tr,
+                              title: "Manage Team",
                               mainTextColor: mainTextColor,
                               iconBoxBg: iconBoxBg,
                               onTap: () {
@@ -284,7 +283,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             ),
                           _buildSettingTile(
                             icon: Icons.lock_outline,
-                            title: "Change Password".tr,
+                            title: "Change Password",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             onTap: () {
@@ -297,7 +296,7 @@ class _SettingsPageState extends State<SettingsPage> {
                           if (AppSession.userRole == 'owner')
                             _buildSettingTile(
                               icon: Icons.person_add_alt,
-                              title: "Add Another Account".tr,
+                              title: "Add Another Account",
                               mainTextColor: mainTextColor,
                               iconBoxBg: iconBoxBg,
                               onTap: () {
@@ -315,7 +314,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
                     // SYSTEM
                     Text(
-                      "SYSTEM".tr,
+                      "SYSTEM",
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
@@ -335,7 +334,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         children: [
                           _buildSettingTile(
                             icon: Icons.dark_mode_outlined,
-                            title: "Dark Mode".tr,
+                            title: "Dark Mode",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
                             trailing: CupertinoSwitch(
@@ -348,27 +347,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               },
                             ),
                           ),
-                          if (AppSession.userRole?.toLowerCase() != 'owner' && AppSession.userRole?.toLowerCase() != 'admin')
-                            _buildSettingTile(
-                              icon: Icons.language,
-                              title: "Language".tr,
-                              mainTextColor: mainTextColor,
-                              iconBoxBg: iconBoxBg,
-                              trailing: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    AppTranslations.currentLanguage,
-                                    style: TextStyle(color: mutedText, fontSize: 13),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(Icons.arrow_forward_ios, size: 14, color: mutedText),
-                                ],
-                              ),
-                              onTap: () {
-                                _showLanguagePicker(context);
-                              },
-                            ),
+
                         ],
                       ),
                     ),
@@ -384,7 +363,7 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       child: _buildSettingTile(
                         icon: Icons.logout,
-                        title: "Logout".tr,
+                        title: "Logout",
                         mainTextColor: mainTextColor,
                         iconBoxBg: iconBoxBg,
                         titleColor: const Color(0xFFEF4444), // Light Red for dark mode / text red
@@ -394,8 +373,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         onTap: () {
                           PopupHelper.showConfirm(
                             context,
-                            title: "Logout".tr,
-                            message: "Are you sure you want to log out?".tr,
+                            title: "Logout",
+                            message: "Are you sure you want to log out?",
                             onConfirm: () async {
                               await AuthController().logout();
                               if (mounted) {
@@ -503,63 +482,6 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _showLanguagePicker(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      backgroundColor: isDarkMode ? const Color(0xFF1E293B) : Colors.white,
-      builder: (ctx) {
-        return Container(
-          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                child: Text(
-                  "Select Language".tr,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: isDarkMode ? Colors.white : const Color(0xFF0F172A),
-                  ),
-                ),
-              ),
-              const SizedBox(height: 16),
-              ListTile(
-                title: Text("English", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: AppTranslations.currentLanguage == 'English' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
-                onTap: () async {
-                  setState(() {
-                    AppTranslations.currentLanguage = 'English';
-                  });
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('language', 'English');
-                  if (mounted) Navigator.pop(ctx);
-                },
-              ),
-              ListTile(
-                title: Text("Indonesia", style: TextStyle(color: isDarkMode ? Colors.white : Colors.black, fontWeight: FontWeight.w500)),
-                trailing: AppTranslations.currentLanguage == 'Indonesia' ? const Icon(Icons.check_circle, color: Color(0xFFD660A1)) : const Icon(Icons.circle_outlined, color: Colors.grey),
-                onTap: () async {
-                  setState(() {
-                    AppTranslations.currentLanguage = 'Indonesia';
-                  });
-                  final prefs = await SharedPreferences.getInstance();
-                  await prefs.setString('language', 'Indonesia');
-                  if (mounted) Navigator.pop(ctx);
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-          ),
-        );
-      },
-    );
-  }
 
   Widget _buildNavItem(int index, String label, IconData icon, [Color? activeNavBgColor, Color? mutedTextColor]) {
     final isSelected = _selectedIndex == index;

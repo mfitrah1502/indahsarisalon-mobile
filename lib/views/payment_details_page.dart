@@ -53,8 +53,8 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   bool _processing = false;
 
   final List<Map<String, dynamic>> _paymentMethods = [
-    {"title": "Tunai", "subtitle": "Bayar langsung di kasir", "icon": Icons.money},
-    {"title": "QRIS", "subtitle": "Scan barcode pembayaran", "icon": Icons.qr_code_scanner},
+    {"title": "Cash", "subtitle": "Pay at cashier", "icon": Icons.money},
+    {"title": "QRIS", "subtitle": "Scan barcode payment", "icon": Icons.qr_code_scanner},
     {"title": "Transfer", "subtitle": "Transfer Bank / E-Wallet", "icon": Icons.account_balance_outlined},
   ];
 
@@ -66,7 +66,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       // Get user_id from current session
       final userId = AppSession.userId;
       if (userId == null) {
-        throw Exception('Sesi tidak ditemukan. Silakan login ulang.');
+        throw Exception('Session not found. Please log in again.');
       }
       
       final String paymentMethod = _paymentMethods[_selectedPaymentIndex]["title"];
@@ -133,7 +133,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     } catch (e) {
       debugPrint('Booking error: $e');
       if (mounted) {
-        PopupHelper.showError(context, "Gagal menyimpan booking: $e");
+        PopupHelper.showError(context, "Failed to save booking: $e");
         setState(() => _processing = false);
       }
     }
@@ -179,7 +179,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       child: Padding(
                         padding: const EdgeInsets.only(right: 44.0),
                         child: Text(
-                          "Detail Pembayaran",
+                          "Payment Details",
                           style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
                         ),
                       ),
@@ -196,7 +196,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Booking Summary Title
-                    Text("RINGKASAN BOOKING", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText)),
+                    Text("BOOKING SUMMARY", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText)),
                     const SizedBox(height: 12),
 
                     // Booking Summary Card
@@ -271,7 +271,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                             Icon(Icons.access_time_outlined, size: 12, color: mutedText),
                                             const SizedBox(width: 4),
                                             Text(
-                                              dur > 0 ? "$dur Menit" : "- Menit",
+                                              dur > 0 ? "$dur Minute" : "- Minute",
                                               style: TextStyle(color: mutedText, fontSize: 11),
                                             ),
                                             if (svc['is_colour_circle_discount'] == true) ...[
@@ -310,7 +310,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                     const SizedBox(height: 28),
 
                     // Payment Method
-                    Text("METODE PEMBAYARAN", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText)),
+                    Text("PAYMENT METHOD", style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: mutedText)),
                     const SizedBox(height: 12),
 
                     Column(
@@ -375,7 +375,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text("TOTAL PEMBAYARAN", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
+                              Text("TOTAL PAYMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                               const SizedBox(height: 4),
                               Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: primaryColor, height: 1.0)),
                             ],
@@ -409,7 +409,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                         onPressed: _processing ? null : _confirmBooking,
                         child: _processing
                             ? const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5))
-                            : const Text("KONFIRMASI BOOKING", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: Colors.white)),
+                            : const Text("CONFIRM BOOKING", style: TextStyle(fontSize: 15, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: Colors.white)),
                       ),
                     ),
                     const SizedBox(height: 32),
