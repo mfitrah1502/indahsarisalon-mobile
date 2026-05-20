@@ -478,18 +478,7 @@ class _ReportPageState extends State<ReportPage> {
               children: [
                 Row(
                   children: [
-                    GestureDetector(
-                      onTap: () => Navigator.pushAndRemoveUntil(
-                        context,
-                        MaterialPageRoute(builder: (_) => const HomePage()),
-                        (r) => false,
-                      ),
-                      child: Icon(
-                        Icons.arrow_back,
-                        color: primaryColor,
-                        size: 28,
-                      ),
-                    ),
+                    const SizedBox.shrink(),
                     Expanded(
                       child: Center(
                         child: Text(
@@ -679,13 +668,7 @@ class _ReportPageState extends State<ReportPage> {
                           color: Colors.black,
                         ),
                       ),
-                      Text(
-                        "More >",
-                        style: const TextStyle(
-                          fontSize: 14,
-                          color: Colors.redAccent,
-                        ),
-                      ),
+                        const SizedBox.shrink(),
                     ],
                   ),
                   const SizedBox(height: 4),

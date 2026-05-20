@@ -143,8 +143,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           await Supabase.instance.client.from('notifikasi').insert({
             'user_id': userId,
             'title': 'Booking Status Updated',
-            'message':
-                'Booking schedule \n$formattedDt status is $statusText.',
+            'message': 'Booking schedule \n$formattedDt status is $statusText.',
             'booking_id': widget.booking['id'],
           });
         }
@@ -402,7 +401,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     final TextEditingController amountController = TextEditingController();
 
     final String storedMethod = widget.booking['payment_method'] ?? 'Cash';
-    final bool isCash = storedMethod.toLowerCase() == 'cash' || storedMethod.toLowerCase() == 'tunai';
+    final bool isCash =
+        storedMethod.toLowerCase() == 'cash' ||
+        storedMethod.toLowerCase() == 'tunai';
 
     // Default amount paid = total price
     final totalPrice = (widget.booking['total_price'] as num?)?.toDouble() ?? 0;
@@ -412,7 +413,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
 
     if (isCash) {
       // For Cash, we still need to know how much they paid to calculate change
-       result = await showDialog<Map<String, dynamic>>(
+      result = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (context) => AlertDialog(
           shape: RoundedRectangleBorder(
@@ -420,10 +421,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           ),
           title: const Text(
             'Cash Payment',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 18,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -478,7 +476,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: mutedText,
-                      side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.5),
+                      side: const BorderSide(
+                        color: Color(0xFFCBD5E1),
+                        width: 1.5,
+                      ),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -510,7 +511,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     onPressed: () {
                       final double amt =
                           double.tryParse(amountController.text) ?? totalPrice;
-                      Navigator.pop(context, {'amount': amt, 'method': storedMethod});
+                      Navigator.pop(context, {
+                        'amount': amt,
+                        'method': storedMethod,
+                      });
                     },
                     child: const Text(
                       'Show Receipt',
@@ -864,7 +868,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _translatePaymentMethod(widget.booking['payment_method'] ?? 'Cash'),
+                                  _translatePaymentMethod(
+                                    widget.booking['payment_method'] ?? 'Cash',
+                                  ),
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.bold,

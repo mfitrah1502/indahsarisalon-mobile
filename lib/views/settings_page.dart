@@ -59,13 +59,25 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
     // Dynamic Dark/Light Colors
-    final Color mainTextColor = isDarkMode ? Colors.white : const Color(0xFFD660A1);
-    final Color scaffoldBg = isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF5F8FA);
-    final Color mutedText = isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+    final Color mainTextColor = isDarkMode
+        ? Colors.white
+        : const Color(0xFFD660A1);
+    final Color scaffoldBg = isDarkMode
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF5F8FA);
+    final Color mutedText = isDarkMode
+        ? const Color(0xFF94A3B8)
+        : const Color(0xFF64748B);
     final Color cardBg = isDarkMode ? const Color(0xFF0F172A) : Colors.white;
-    final Color optionBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFF8FAFC);
-    final Color iconBoxBg = isDarkMode ? const Color(0xFF475569) : const Color(0xFFEDF2F7);
-    final Color activeNavBg = isDarkMode ? const Color(0xFF38BDF8) : const Color(0xFFD660A1);
+    final Color optionBg = isDarkMode
+        ? const Color(0xFF334155)
+        : const Color(0xFFF8FAFC);
+    final Color iconBoxBg = isDarkMode
+        ? const Color(0xFF475569)
+        : const Color(0xFFEDF2F7);
+    final Color activeNavBg = isDarkMode
+        ? const Color(0xFF38BDF8)
+        : const Color(0xFFD660A1);
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -74,7 +86,10 @@ class _SettingsPageState extends State<SettingsPage> {
           children: [
             // AppBar / Header
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+                vertical: 20.0,
+              ),
               child: Center(
                 child: Text(
                   "Settings",
@@ -86,7 +101,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            
+
             Expanded(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 24.0),
@@ -102,7 +117,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.02),
+                            color: Colors.black.withOpacity(
+                              isDarkMode ? 0.2 : 0.02,
+                            ),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -119,13 +136,26 @@ class _SettingsPageState extends State<SettingsPage> {
                               borderRadius: BorderRadius.circular(16),
                               color: const Color(0xFFE2E8F0),
                               image: DecorationImage(
-                                image: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                                image:
+                                    (AppSession.userAvatar != null &&
+                                        AppSession.userAvatar!.isNotEmpty)
                                     ? NetworkImage(AppSession.userAvatar!)
-                                    : const NetworkImage('https://cdn-icons-png.flaticon.com/512/3135/3135715.png') as ImageProvider,
+                                    : const NetworkImage(
+                                            'https://cdn-icons-png.flaticon.com/512/3135/3135715.png',
+                                          )
+                                          as ImageProvider,
                                 fit: BoxFit.cover,
                               ),
                             ),
-                            child: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty) ? null : const Icon(Icons.person, color: Colors.white, size: 40),
+                            child:
+                                (AppSession.userAvatar != null &&
+                                    AppSession.userAvatar!.isNotEmpty)
+                                ? null
+                                : const Icon(
+                                    Icons.person,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -139,15 +169,12 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(height: 4),
                           Text(
                             "${AppSession.userEmail}",
-                            style: TextStyle(
-                              color: mutedText,
-                              fontSize: 14,
-                            ),
+                            style: TextStyle(color: mutedText, fontSize: 14),
                           ),
                         ],
                       ),
                     ),
-                    
+
                     const SizedBox(height: 32),
 
                     // MEMBERSHIP SECTION
@@ -158,7 +185,9 @@ class _SettingsPageState extends State<SettingsPage> {
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
-                          color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
+                          color: isDarkMode
+                              ? const Color(0xFFCBD5E1)
+                              : const Color(0xFF8B98A5),
                         ),
                       ),
                       const SizedBox(height: 12),
@@ -167,49 +196,73 @@ class _SettingsPageState extends State<SettingsPage> {
                         decoration: BoxDecoration(
                           color: _currentTier != 'None'
                               ? mainTextColor.withOpacity(0.1)
-                              : (isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
+                              : (isDarkMode
+                                    ? const Color(0xFF1E293B)
+                                    : const Color(0xFFF8FAFC)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _currentTier != 'None'
                                 ? mainTextColor.withOpacity(0.3)
-                                : (isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                : (isDarkMode
+                                      ? const Color(0xFF334155)
+                                      : const Color(0xFFE2E8F0)),
                           ),
                         ),
                         child: Row(
                           children: [
                             Icon(
-                              _currentTier != 'None' ? Icons.stars : Icons.stars_outlined,
-                              color: _currentTier != 'None' ? mainTextColor : mutedText,
+                              _currentTier != 'None'
+                                  ? Icons.stars
+                                  : Icons.stars_outlined,
+                              color: _currentTier != 'None'
+                                  ? mainTextColor
+                                  : mutedText,
                               size: 28,
                             ),
                             const SizedBox(width: 12),
                             Expanded(
                               child: _currentTier != 'None'
                                   ? Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           "$_currentTier Member",
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor, fontSize: 16),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: mainTextColor,
+                                            fontSize: 16,
+                                          ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           "You are our exclusive member.",
-                                          style: TextStyle(color: mutedText, fontSize: 12),
+                                          style: TextStyle(
+                                            color: mutedText,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ],
                                     )
                                   : Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           "No membership yet",
-                                          style: TextStyle(fontWeight: FontWeight.bold, color: mutedText, fontSize: 15),
+                                          style: TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                            color: mutedText,
+                                            fontSize: 15,
+                                          ),
                                         ),
                                         const SizedBox(height: 4),
                                         Text(
                                           "Make transactions to earn a tier.",
-                                          style: TextStyle(color: mutedText, fontSize: 12),
+                                          style: TextStyle(
+                                            color: mutedText,
+                                            fontSize: 12,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -218,16 +271,35 @@ class _SettingsPageState extends State<SettingsPage> {
                               ElevatedButton(
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: const Color(0xFF25D366),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
-                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 12,
+                                    vertical: 8,
+                                  ),
                                 ),
                                 onPressed: () async {
-                                  final uri = Uri.parse(LoyaltyConstants.groupLinkForTier(_currentTier));
+                                  final uri = Uri.parse(
+                                    LoyaltyConstants.groupLinkForTier(
+                                      _currentTier,
+                                    ),
+                                  );
                                   if (await canLaunchUrl(uri)) {
-                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                    await launchUrl(
+                                      uri,
+                                      mode: LaunchMode.externalApplication,
+                                    );
                                   }
                                 },
-                                child: const Text("WA Group", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                                child: const Text(
+                                  "WA Group",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                               ),
                           ],
                         ),
@@ -242,11 +314,13 @@ class _SettingsPageState extends State<SettingsPage> {
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
-                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
+                        color: isDarkMode
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF8B98A5),
                       ),
                     ),
                     const SizedBox(height: 12),
-                    
+
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
@@ -263,7 +337,9 @@ class _SettingsPageState extends State<SettingsPage> {
                             onTap: () async {
                               final updated = await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const EditProfilePage()),
+                                MaterialPageRoute(
+                                  builder: (context) => const EditProfilePage(),
+                                ),
                               );
                               if (updated == true && mounted) setState(() {});
                             },
@@ -277,7 +353,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const ManageTeamPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const ManageTeamPage(),
+                                  ),
                                 );
                               },
                             ),
@@ -289,7 +368,10 @@ class _SettingsPageState extends State<SettingsPage> {
                             onTap: () {
                               Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (context) => const ChangePasswordPage()),
+                                MaterialPageRoute(
+                                  builder: (context) =>
+                                      const ChangePasswordPage(),
+                                ),
                               );
                             },
                           ),
@@ -302,7 +384,10 @@ class _SettingsPageState extends State<SettingsPage> {
                               onTap: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const CreateAccountPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) =>
+                                        const CreateAccountPage(),
+                                  ),
                                 );
                               },
                             ),
@@ -319,7 +404,9 @@ class _SettingsPageState extends State<SettingsPage> {
                         fontSize: 11,
                         fontWeight: FontWeight.bold,
                         letterSpacing: 1.2,
-                        color: isDarkMode ? const Color(0xFFCBD5E1) : const Color(0xFF8B98A5),
+                        color: isDarkMode
+                            ? const Color(0xFFCBD5E1)
+                            : const Color(0xFF8B98A5),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -347,7 +434,6 @@ class _SettingsPageState extends State<SettingsPage> {
                               },
                             ),
                           ),
-
                         ],
                       ),
                     ),
@@ -358,7 +444,9 @@ class _SettingsPageState extends State<SettingsPage> {
                     Container(
                       padding: const EdgeInsets.all(8.0),
                       decoration: BoxDecoration(
-                        color: isDarkMode ? const Color(0xFF451A1A) : const Color(0xFFFDF4F4),
+                        color: isDarkMode
+                            ? const Color(0xFF451A1A)
+                            : const Color(0xFFFDF4F4),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: _buildSettingTile(
@@ -366,8 +454,12 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: "Logout",
                         mainTextColor: mainTextColor,
                         iconBoxBg: iconBoxBg,
-                        titleColor: const Color(0xFFEF4444), // Light Red for dark mode / text red
-                        iconBgOverride: isDarkMode ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2),
+                        titleColor: const Color(
+                          0xFFEF4444,
+                        ), // Light Red for dark mode / text red
+                        iconBgOverride: isDarkMode
+                            ? const Color(0xFF7F1D1D)
+                            : const Color(0xFFFEE2E2),
                         iconColor: const Color(0xFFEF4444),
                         hideArrow: true,
                         onTap: () {
@@ -380,7 +472,9 @@ class _SettingsPageState extends State<SettingsPage> {
                               if (mounted) {
                                 Navigator.pushAndRemoveUntil(
                                   context,
-                                  MaterialPageRoute(builder: (context) => const AuthPage()),
+                                  MaterialPageRoute(
+                                    builder: (context) => const AuthPage(),
+                                  ),
                                   (route) => false,
                                 );
                               }
@@ -389,7 +483,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         },
                       ),
                     ),
-                    
+
                     const SizedBox(height: 48),
                   ],
                 ),
@@ -398,7 +492,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ],
         ),
       ),
-      
+
       // Bottom Navigation Bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
@@ -418,11 +512,41 @@ class _SettingsPageState extends State<SettingsPage> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              _buildNavItem(0, "HOME", Icons.home_filled, activeNavBg, mutedText),
-              _buildNavItem(1, "BOOKING", Icons.calendar_today_outlined, activeNavBg, mutedText),
-              _buildNavItem(2, "SERVICES", Icons.content_cut_rounded, activeNavBg, mutedText),
-              _buildNavItem(3, "REPORT", Icons.bar_chart_rounded, activeNavBg, mutedText),
-              _buildNavItem(4, "SETTINGS", Icons.settings, activeNavBg, mutedText),
+              _buildNavItem(
+                0,
+                "HOME",
+                Icons.home_filled,
+                activeNavBg,
+                mutedText,
+              ),
+              _buildNavItem(
+                1,
+                "BOOKING",
+                Icons.calendar_today_outlined,
+                activeNavBg,
+                mutedText,
+              ),
+              _buildNavItem(
+                2,
+                "SERVICES",
+                Icons.content_cut_rounded,
+                activeNavBg,
+                mutedText,
+              ),
+              _buildNavItem(
+                3,
+                "REPORT",
+                Icons.bar_chart_rounded,
+                activeNavBg,
+                mutedText,
+              ),
+              _buildNavItem(
+                4,
+                "SETTINGS",
+                Icons.settings,
+                activeNavBg,
+                mutedText,
+              ),
             ],
           ),
         ),
@@ -455,11 +579,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 color: iconBgOverride ?? iconBoxBg,
                 borderRadius: BorderRadius.circular(12),
               ),
-              child: Icon(
-                icon,
-                color: iconColor ?? mainTextColor,
-                size: 20,
-              ),
+              child: Icon(icon, color: iconColor ?? mainTextColor, size: 20),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -472,7 +592,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 ),
               ),
             ),
-            if (trailing != null) 
+            if (trailing != null)
               trailing
             else if (!hideArrow)
               Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
@@ -482,12 +602,17 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-
-  Widget _buildNavItem(int index, String label, IconData icon, [Color? activeNavBgColor, Color? mutedTextColor]) {
+  Widget _buildNavItem(
+    int index,
+    String label,
+    IconData icon, [
+    Color? activeNavBgColor,
+    Color? mutedTextColor,
+  ]) {
     final isSelected = _selectedIndex == index;
     final selectedColor = activeNavBgColor ?? Colors.blue;
     final unselectedColor = mutedTextColor ?? Colors.grey;
-    
+
     return GestureDetector(
       onTap: () {
         if (index == 0) {
@@ -544,6 +669,4 @@ class _SettingsPageState extends State<SettingsPage> {
       ),
     );
   }
-
-
 }

@@ -14,6 +14,7 @@ class UserController {
         .eq('type', 'karyawan')
         .neq('role', 'pelanggan')
         .neq('role', 'owner')
+        .neq('role', 'admin')
         .eq('status', 'aktif');
         
     // Get absensi for date
@@ -46,6 +47,7 @@ class UserController {
         .eq('type', 'karyawan')
         .neq('role', 'pelanggan')
         .neq('role', 'owner')
+        .neq('role', 'admin')
         .order('name');
         
     return (data as List<dynamic>).map((e) => UserModel.fromJson(e)).toList();

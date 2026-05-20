@@ -155,12 +155,18 @@ class _HomePageState extends State<HomePage> {
   }
 
   String formatCurrency(int amount) {
-    return NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0).format(amount);
+    return NumberFormat.currency(
+      locale: 'id_ID',
+      symbol: 'Rp ',
+      decimalDigits: 0,
+    ).format(amount);
   }
 
   String formatIncrease(num percentage) {
-    if (percentage > 0) return "+${percentage.toStringAsFixed(1)}${" vs yesterday"}";
-    if (percentage < 0) return "${percentage.toStringAsFixed(1)}${" vs yesterday"}";
+    if (percentage > 0)
+      return "+${percentage.toStringAsFixed(1)}${" vs yesterday"}";
+    if (percentage < 0)
+      return "${percentage.toStringAsFixed(1)}${" vs yesterday"}";
     return "Same as yesterday";
   }
 
@@ -196,14 +202,19 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final todayFormatted = DateFormat('MMMM d').format(DateTime.now()).toUpperCase();
+    final todayFormatted = DateFormat(
+      'MMMM d',
+    ).format(DateTime.now()).toUpperCase();
 
     return Scaffold(
       backgroundColor: scaffoldBg,
       body: SafeArea(
         child: SingleChildScrollView(
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 24.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 24.0,
+            ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -219,7 +230,9 @@ class _HomePageState extends State<HomePage> {
                             onTap: () async {
                               final result = await Navigator.push(
                                 context,
-                                MaterialPageRoute(builder: (_) => const EditProfilePage()),
+                                MaterialPageRoute(
+                                  builder: (_) => const EditProfilePage(),
+                                ),
                               );
                               if (result == true && mounted) {
                                 setState(() {});
@@ -231,14 +244,20 @@ class _HomePageState extends State<HomePage> {
                               decoration: BoxDecoration(
                                 shape: BoxShape.circle,
                                 color: const Color(0xFFE2E8F0),
-                                image: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                                image:
+                                    (AppSession.userAvatar != null &&
+                                        AppSession.userAvatar!.isNotEmpty)
                                     ? DecorationImage(
-                                        image: NetworkImage(AppSession.userAvatar!),
+                                        image: NetworkImage(
+                                          AppSession.userAvatar!,
+                                        ),
                                         fit: BoxFit.cover,
                                       )
                                     : null,
                               ),
-                              child: (AppSession.userAvatar != null && AppSession.userAvatar!.isNotEmpty)
+                              child:
+                                  (AppSession.userAvatar != null &&
+                                      AppSession.userAvatar!.isNotEmpty)
                                   ? null
                                   : const Icon(
                                       Icons.person,
@@ -305,7 +324,10 @@ class _HomePageState extends State<HomePage> {
                                     decoration: BoxDecoration(
                                       color: Colors.red,
                                       shape: BoxShape.circle,
-                                      border: Border.all(color: Colors.white, width: 2),
+                                      border: Border.all(
+                                        color: Colors.white,
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
                                 ),
@@ -316,12 +338,15 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ],
                 ),
-                
+
                 const SizedBox(height: 32),
 
                 // Day, Date, and Time Section
                 StreamBuilder<DateTime>(
-                  stream: Stream.periodic(const Duration(seconds: 1), (_) => DateTime.now()),
+                  stream: Stream.periodic(
+                    const Duration(seconds: 1),
+                    (_) => DateTime.now(),
+                  ),
                   builder: (context, snapshot) {
                     final now = snapshot.data ?? DateTime.now();
                     final dayFormat = DateFormat('EEEE', 'en_US');
@@ -344,7 +369,10 @@ class _HomePageState extends State<HomePage> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [Colors.white, Colors.pink.shade50.withOpacity(0.3)],
+                          colors: [
+                            Colors.white,
+                            Colors.pink.shade50.withOpacity(0.3),
+                          ],
                         ),
                       ),
                       child: Row(
@@ -355,7 +383,11 @@ class _HomePageState extends State<HomePage> {
                               color: primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(Icons.calendar_month_outlined, color: primaryColor, size: 28),
+                            child: Icon(
+                              Icons.calendar_month_outlined,
+                              color: primaryColor,
+                              size: 28,
+                            ),
                           ),
                           const SizedBox(width: 16),
                           Expanded(
@@ -398,15 +430,29 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         "SPECIAL OFFERS",
-                        style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 1.2, color: Color(0xFF4B5563)),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.2,
+                          color: Color(0xFF4B5563),
+                        ),
                       ),
                       GestureDetector(
                         onTap: () {
-                          Navigator.push(context, MaterialPageRoute(builder: (_) => const PromoListPage()));
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const PromoListPage(),
+                            ),
+                          );
                         },
                         child: Text(
                           "See All",
-                          style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: primaryColor),
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
                         ),
                       ),
                     ],
@@ -426,43 +472,75 @@ class _HomePageState extends State<HomePage> {
                             width: 280,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(20),
-                              image: p.imageUrl != null && p.imageUrl!.isNotEmpty
-                                ? DecorationImage(image: NetworkImage(p.imageUrl!), fit: BoxFit.cover)
-                                : null,
-                              gradient: p.imageUrl == null || p.imageUrl!.isEmpty
-                                ? LinearGradient(colors: [primaryColor, buttonColor])
-                                : null,
+                              image:
+                                  p.imageUrl != null && p.imageUrl!.isNotEmpty
+                                  ? DecorationImage(
+                                      image: NetworkImage(p.imageUrl!),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
+                              gradient:
+                                  p.imageUrl == null || p.imageUrl!.isEmpty
+                                  ? LinearGradient(
+                                      colors: [primaryColor, buttonColor],
+                                    )
+                                  : null,
                             ),
                             child: Stack(
                               children: [
                                 if (p.imageUrl == null || p.imageUrl!.isEmpty)
-                                  const Center(child: Icon(Icons.star, color: Colors.white, size: 48)),
+                                  const Center(
+                                    child: Icon(
+                                      Icons.star,
+                                      color: Colors.white,
+                                      size: 48,
+                                    ),
+                                  ),
                                 Positioned(
                                   bottom: 0,
                                   left: 0,
                                   right: 0,
                                   child: Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 12,
+                                    ),
                                     decoration: BoxDecoration(
-                                      borderRadius: const BorderRadius.vertical(bottom: Radius.circular(20)),
+                                      borderRadius: const BorderRadius.vertical(
+                                        bottom: Radius.circular(20),
+                                      ),
                                       gradient: LinearGradient(
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
-                                        colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                                        colors: [
+                                          Colors.black.withOpacity(0.8),
+                                          Colors.transparent,
+                                        ],
                                       ),
                                     ),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           p.title,
-                                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                          style: const TextStyle(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 16,
+                                          ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                         Text(
                                           formatCurrency(p.price),
-                                          style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
+                                          style: TextStyle(
+                                            color: Colors.white.withOpacity(
+                                              0.9,
+                                            ),
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                         ),
                                       ],
                                     ),
@@ -512,8 +590,12 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayBookings",
                       increase: formatIncrease(bookingsIncrease),
                       iconData: Icons.calendar_today_rounded,
-                      increaseColor: bookingsIncrease >= 0 ? primaryColor : Colors.red,
-                      trendIcon: bookingsIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
+                      increaseColor: bookingsIncrease >= 0
+                          ? primaryColor
+                          : Colors.red,
+                      trendIcon: bookingsIncrease >= 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
                     ),
                   ),
                   if (AppSession.userRole == 'owner') ...[
@@ -525,8 +607,12 @@ class _HomePageState extends State<HomePage> {
                         value: formatCurrency(todayRevenue),
                         increase: formatIncrease(revenueIncrease),
                         iconData: Icons.payments_outlined,
-                        increaseColor: revenueIncrease >= 0 ? primaryColor : Colors.red,
-                        trendIcon: revenueIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
+                        increaseColor: revenueIncrease >= 0
+                            ? primaryColor
+                            : Colors.red,
+                        trendIcon: revenueIncrease >= 0
+                            ? Icons.trending_up
+                            : Icons.trending_down,
                       ),
                     ),
                   ],
@@ -538,8 +624,12 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayCustomers",
                       increase: formatIncrease(customersIncrease),
                       iconData: Icons.people_outline_rounded,
-                      increaseColor: customersIncrease >= 0 ? primaryColor : Colors.red,
-                      trendIcon: customersIncrease >= 0 ? Icons.trending_up : Icons.trending_down,
+                      increaseColor: customersIncrease >= 0
+                          ? primaryColor
+                          : Colors.red,
+                      trendIcon: customersIncrease >= 0
+                          ? Icons.trending_up
+                          : Icons.trending_down,
                     ),
                   ),
                   if (AppSession.userRole == 'owner') ...[
@@ -561,7 +651,7 @@ class _HomePageState extends State<HomePage> {
           ),
         ),
       ),
-      
+
       // Custom Bottom Navigation Bar
       extendBody: true,
       bottomNavigationBar: Container(
@@ -607,17 +697,22 @@ class _HomePageState extends State<HomePage> {
               height: 200,
               width: double.infinity,
               decoration: BoxDecoration(
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(24),
+                ),
                 image: promo.imageUrl != null && promo.imageUrl!.isNotEmpty
-                  ? DecorationImage(image: NetworkImage(promo.imageUrl!), fit: BoxFit.cover)
-                  : null,
+                    ? DecorationImage(
+                        image: NetworkImage(promo.imageUrl!),
+                        fit: BoxFit.cover,
+                      )
+                    : null,
                 color: primaryColor,
               ),
               child: promo.imageUrl == null || promo.imageUrl!.isEmpty
-                ? const Icon(Icons.local_offer, color: Colors.white, size: 80)
-                : null,
+                  ? const Icon(Icons.local_offer, color: Colors.white, size: 80)
+                  : null,
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: Column(
@@ -629,13 +724,30 @@ class _HomePageState extends State<HomePage> {
                       Expanded(
                         child: Text(
                           promo.title,
-                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: primaryColor),
+                          style: TextStyle(
+                            fontSize: 20,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
                         ),
                       ),
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
-                        child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: primaryColor.withOpacity(0.1),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: Text(
+                          "Promo",
+                          style: TextStyle(
+                            color: primaryColor,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 12,
+                          ),
+                        ),
                       ),
                     ],
                   ),
@@ -647,18 +759,30 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 4),
                   Text(
                     formatCurrency(promo.price),
-                    style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black),
+                    style: const TextStyle(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w900,
+                      color: Colors.black,
+                    ),
                   ),
-                  if (promo.description != null && promo.description!.isNotEmpty) ...[
+                  if (promo.description != null &&
+                      promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text(
                       "Included Treatments:",
-                      style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        color: mutedText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       promo.description!,
-                      style: const TextStyle(fontSize: 14, color: Colors.black87),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        color: Colors.black87,
+                      ),
                     ),
                   ],
                   const SizedBox(height: 20),
@@ -680,14 +804,21 @@ class _HomePageState extends State<HomePage> {
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF128C7E), // Darker WhatsApp Green
+                        backgroundColor: const Color(
+                          0xFF128C7E,
+                        ), // Darker WhatsApp Green
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
                       ),
                       onPressed: () => _broadcastToWhatsAppGroup(promo),
                       icon: const Icon(Icons.forum_rounded),
-                      label: Text("Broadcast ke Grup WhatsApp", style: const TextStyle(fontWeight: FontWeight.bold)),
+                      label: Text(
+                        "Broadcast to WhatsApp Group",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 ],
@@ -698,8 +829,6 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
-
-
 
   void _broadcastToWhatsAppGroup(PromoModel promo) async {
     String groupLink = LoyaltyConstants.communityGroupLink;
@@ -716,7 +845,8 @@ class _HomePageState extends State<HomePage> {
       targetLabel = "Member Platinum";
     }
 
-    String message = "Halo semuanya! 🌸\n\n"
+    String message =
+        "Halo semuanya! 🌸\n\n"
         "Ada promo menarik khusus *${targetLabel}* di *Indah Sari Salon*: \n\n"
         "*${promo.title}* \n"
         "Hanya *${formatCurrency(promo.price)}*!\n\n"
@@ -727,21 +857,22 @@ class _HomePageState extends State<HomePage> {
 
     try {
       if (mounted) {
-        PopupHelper.showInfo(context, "Menyiapkan broadcast untuk ${targetLabel}...");
+        PopupHelper.showInfo(
+          context,
+          "Menyiapkan broadcast untuk ${targetLabel}...",
+        );
       }
 
       if (promo.imageUrl != null && promo.imageUrl!.isNotEmpty) {
         final response = await http.get(Uri.parse(promo.imageUrl!));
         final bytes = response.bodyBytes;
         final temp = await getTemporaryDirectory();
-        final path = '${temp.path}/promo_broadcast_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        final path =
+            '${temp.path}/promo_broadcast_${DateTime.now().millisecondsSinceEpoch}.jpg';
         final file = File(path);
         await file.writeAsBytes(bytes);
 
-        await Share.shareXFiles(
-          [XFile(path)],
-          text: message,
-        );
+        await Share.shareXFiles([XFile(path)], text: message);
       } else {
         await Share.share(message);
       }
@@ -752,10 +883,15 @@ class _HomePageState extends State<HomePage> {
           if (mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
-                content: Text("Successfully prepared share. Open group ${targetLabel}?"),
+                content: Text(
+                  "Successfully prepared share. Open group ${targetLabel}?",
+                ),
                 action: SnackBarAction(
                   label: "BUKA",
-                  onPressed: () => launchUrl(Uri.parse(groupLink), mode: LaunchMode.externalApplication),
+                  onPressed: () => launchUrl(
+                    Uri.parse(groupLink),
+                    mode: LaunchMode.externalApplication,
+                  ),
                 ),
                 duration: const Duration(seconds: 5),
               ),
@@ -767,7 +903,10 @@ class _HomePageState extends State<HomePage> {
       debugPrint("Error broadcasting: $e");
       await Clipboard.setData(ClipboardData(text: message));
       if (mounted) {
-        PopupHelper.showInfo(context, "Failed direct sharing. Message copied to clipboard.");
+        PopupHelper.showInfo(
+          context,
+          "Failed direct sharing. Message copied to clipboard.",
+        );
       }
     }
   }
@@ -851,11 +990,7 @@ class _HomePageState extends State<HomePage> {
               ],
             ),
           ),
-          Icon(
-            iconData,
-            size: 64,
-            color: const Color(0xFFF1F5F9),
-          ),
+          Icon(iconData, size: 64, color: const Color(0xFFF1F5F9)),
         ],
       ),
     );
@@ -974,11 +1109,7 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? primaryColor : mutedText,
-            size: 26,
-          ),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
           Text(
             label,

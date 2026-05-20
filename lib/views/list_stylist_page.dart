@@ -82,26 +82,31 @@ class _ListStylistPageState extends State<ListStylistPage> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      // Back Arrow
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Icon(
-                          Icons.arrow_back,
-                          color: primaryColor,
-                          size: 28,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
-
-                      // Title
-                      Text(
-                        "${widget.role}s",
-                        style: TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.w900,
-                          color: primaryColor,
-                          letterSpacing: -0.5,
-                        ),
+                      // Header Row with Back Button and Title
+                      Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          GestureDetector(
+                            onTap: () => Navigator.pop(context),
+                            child: Icon(
+                              Icons.arrow_back,
+                              color: primaryColor,
+                              size: 24,
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              "${widget.role}s",
+                              style: TextStyle(
+                                fontSize: 24,
+                                fontWeight: FontWeight.w900,
+                                color: primaryColor,
+                                letterSpacing: -0.5,
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                       const SizedBox(height: 8),
                       Text(
@@ -801,7 +806,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 "Female",
                                 selectedGender == "Female",
                                 (val) {
-                                  setModalState(() => selectedGender = "Female");
+                                  setModalState(
+                                    () => selectedGender = "Female",
+                                  );
                                 },
                               ),
                             ],
@@ -863,11 +870,19 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   children: [
                                     _buildTextFieldLabel("DIVISION"),
                                     _buildDropdownField(
-                                      (selectedDivision == null || selectedDivision == "") ? "-" : selectedDivision!,
+                                      (selectedDivision == null ||
+                                              selectedDivision == "")
+                                          ? "-"
+                                          : selectedDivision!,
                                       ["-", "hair", "beauty"],
                                       (val) {
                                         setModalState(
-                                          () => selectedDivision = (val == null || val == "-" || val == "") ? null : val,
+                                          () => selectedDivision =
+                                              (val == null ||
+                                                  val == "-" ||
+                                                  val == "")
+                                              ? null
+                                              : val,
                                         );
                                       },
                                     ),
@@ -915,7 +930,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                           ),
                           const SizedBox(height: 20),
 
-                          _buildTextFieldLabel("EMERGENCY CONTACT (NAME & PHONE)"),
+                          _buildTextFieldLabel(
+                            "EMERGENCY CONTACT (NAME & PHONE)",
+                          ),
                           _buildTextField(
                             "e.g. Budi (08123456789)",
                             emergencyContactController,
@@ -1076,7 +1093,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: items.any((item) => item.toLowerCase() == value.toLowerCase())
-              ? items.firstWhere((item) => item.toLowerCase() == value.toLowerCase())
+              ? items.firstWhere(
+                  (item) => item.toLowerCase() == value.toLowerCase(),
+                )
               : null,
           hint: Text(
             value,

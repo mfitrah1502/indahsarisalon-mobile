@@ -51,6 +51,7 @@ class _PresencePageState extends State<PresencePage> {
           .eq('type', 'karyawan')
           .neq('role', 'pelanggan')
           .neq('role', 'owner')
+          .neq('role', 'admin')
           .eq('status', 'aktif') // Only active employees
           .order('name');
 
@@ -163,34 +164,32 @@ class _PresencePageState extends State<PresencePage> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Premium Header (Unboxed, Sleek back icon, cohesive title color)
+            // Premium Header (Unified back button and title)
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
               child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    behavior: HitTestBehavior.opaque,
-                    child: Padding(
-                      padding: const EdgeInsets.only(right: 12.0, top: 4.0, bottom: 4.0),
-                      child: Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: darkText,
-                        size: 22,
-                      ),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: primaryColor,
+                      size: 24,
                     ),
                   ),
+                  const SizedBox(width: 12),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          "Staff Attendance  ",
+                          "Staff Attendance",
                           style: TextStyle(
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: -0.6,
-                            color: darkText,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w900,
+                            letterSpacing: -0.5,
+                            color: primaryColor,
                           ),
                         ),
                         const SizedBox(height: 2),

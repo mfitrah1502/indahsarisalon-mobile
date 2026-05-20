@@ -199,13 +199,12 @@ class _BookingListPageState extends State<BookingListPage> {
                       crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         Text(
-                          "Booking List", 
+                          "Booking List",
                           style: TextStyle(
-                            color: primaryColor, 
-                            fontSize: 22, 
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: 0.5,
-                          )
+                            color: primaryColor,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                         const SizedBox(height: 2),
                         Text(
