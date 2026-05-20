@@ -524,68 +524,72 @@ class _NotificationsPageState extends State<NotificationsPage> {
                   const SizedBox(height: 12),
                   Row(
                     children: [
-                      SizedBox(
-                        height: 36,
-                        child: ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFF25D366),
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                      Expanded(
+                        child: SizedBox(
+                          height: 36,
+                          child: ElevatedButton.icon(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFF25D366),
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(18)),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
+                            ),
+                            onPressed: () => _sendWhatsAppReminder(bookingId),
+                            icon: const Icon(Icons.chat, size: 16),
+                            label: const Text("WhatsApp", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                           ),
-                          onPressed: () => _sendWhatsAppReminder(bookingId),
-                          icon: const Icon(Icons.chat, size: 16),
-                          label: const Text("WhatsApp Reminder", style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
                         ),
                       ),
                       const SizedBox(width: 8),
-                      SizedBox(
-                        height: 36,
-                        child: ElevatedButton(
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: buttonColor,
-                            foregroundColor: Colors.white,
-                            elevation: 0,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(18),
+                      Expanded(
+                        child: SizedBox(
+                          height: 36,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              foregroundColor: Colors.white,
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(18),
+                              ),
+                              padding: const EdgeInsets.symmetric(horizontal: 12),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                          ),
-                          onPressed: () async {
-                            showDialog(
-                              context: context,
-                              barrierDismissible: false,
-                              builder: (context) => const Center(child: CircularProgressIndicator()),
-                            );
-                            try {
-                              final controller = BookingListController();
-                              final model = await controller.fetchBookingById(bookingId);
-                              if (mounted) {
-                                Navigator.pop(context); // close dialog
-                                if (model != null) {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(
-                                      builder: (_) => BookingDetailsPage(booking: model.toMap()),
-                                    ),
-                                  );
-                                } else {
-                                  PopupHelper.showError(context, 'Booking details not found.');
+                            onPressed: () async {
+                              showDialog(
+                                context: context,
+                                barrierDismissible: false,
+                                builder: (context) => const Center(child: CircularProgressIndicator()),
+                              );
+                              try {
+                                final controller = BookingListController();
+                                final model = await controller.fetchBookingById(bookingId);
+                                if (mounted) {
+                                  Navigator.pop(context); // close dialog
+                                  if (model != null) {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (_) => BookingDetailsPage(booking: model.toMap()),
+                                      ),
+                                    );
+                                  } else {
+                                    PopupHelper.showError(context, 'Booking details not found.');
+                                  }
+                                }
+                              } catch (e) {
+                                if (mounted) {
+                                  Navigator.pop(context);
+                                  PopupHelper.showError(context, 'Error: $e');
                                 }
                               }
-                            } catch (e) {
-                              if (mounted) {
-                                Navigator.pop(context);
-                                PopupHelper.showError(context, 'Error: $e');
-                              }
-                            }
-                          },
-                          child: const Text(
-                            "View Detail",
-                            style: TextStyle(
-                              fontSize: 12,
-                              fontWeight: FontWeight.bold,
+                            },
+                            child: const Text(
+                              "View Detail",
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
                           ),
                         ),

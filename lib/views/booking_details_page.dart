@@ -1088,7 +1088,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                               onPressed: _sendWhatsAppReminder,
                               icon: const Icon(Icons.chat, size: 18),
                               label: const Text(
-                                "Whatsapp Reminder",
+                                "WhatsApp",
                                 style: TextStyle(fontSize: 11),
                               ),
                               style: ElevatedButton.styleFrom(
