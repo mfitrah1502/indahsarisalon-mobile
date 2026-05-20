@@ -7,7 +7,7 @@ class BookingListController {
   Future<List<BookingListModel>> fetchBookings() async {
     final data = await _supabase
         .from('bookings')
-        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
+        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar), customer:users!bookings_user_id_fkey(phone, email, avatar)')
         .order('created_at', ascending: false);
 
     final List<BookingListModel> enriched = [];
@@ -15,7 +15,7 @@ class BookingListController {
       final bookingId = row['id'];
       final details = await _supabase
           .from('booking_details')
-          .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
+          .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, image_url, treatments(name, image))')
           .eq('booking_id', bookingId);
 
       List<String> serviceNames = [];
@@ -33,17 +33,21 @@ class BookingListController {
 
       dynamic stylistData = row['users'];
       String stylistName = 'Unknown';
+      String? stylistAvatar;
       if (stylistData != null) {
         if (stylistData is Map) {
           stylistName = stylistData['name'] ?? 'Unknown';
+          stylistAvatar = stylistData['avatar'] as String?;
         } else if (stylistData is List && stylistData.isNotEmpty) {
           stylistName = stylistData[0]['name'] ?? 'Unknown';
+          stylistAvatar = stylistData[0]['avatar'] as String?;
         }
       }
 
       Map<String, dynamic>? linkedCustomer = row['customer'] as Map<String, dynamic>?;
       String finalPhone = row['customer_phone'] ?? '-';
       String finalEmail = row['customer_email'] ?? '-';
+      String? customerAvatar = linkedCustomer?['avatar'] as String?;
 
       if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
         finalPhone = linkedCustomer['phone'] ?? '-';
@@ -56,6 +60,8 @@ class BookingListController {
         id: bookingId,
         createdAt: row['created_at'],
         stylist: stylistName,
+        stylistAvatar: stylistAvatar,
+        customerAvatar: customerAvatar,
         services: serviceNames.isEmpty ? ['Booking #$bookingId'] : serviceNames,
         datetime: row['reservation_datetime'],
         totalPrice: row['total_price'],
@@ -77,7 +83,7 @@ class BookingListController {
   Future<BookingListModel?> fetchBookingById(int id) async {
     final data = await _supabase
         .from('bookings')
-        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name), customer:users!bookings_user_id_fkey(phone, email)')
+        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar), customer:users!bookings_user_id_fkey(phone, email, avatar)')
         .eq('id', id)
         .maybeSingle();
         
@@ -85,7 +91,7 @@ class BookingListController {
 
     final details = await _supabase
         .from('booking_details')
-        .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, treatments(name))')
+        .select('price, treatment_detail_id, treatment_details(name, price, treatment_id, image_url, treatments(name, image))')
         .eq('booking_id', id);
 
     List<String> serviceNames = [];
@@ -103,17 +109,21 @@ class BookingListController {
 
     dynamic stylistData = data['users'];
     String stylistName = 'Unknown';
+    String? stylistAvatar;
     if (stylistData != null) {
       if (stylistData is Map) {
         stylistName = stylistData['name'] ?? 'Unknown';
+        stylistAvatar = stylistData['avatar'] as String?;
       } else if (stylistData is List && stylistData.isNotEmpty) {
         stylistName = stylistData[0]['name'] ?? 'Unknown';
+        stylistAvatar = stylistData[0]['avatar'] as String?;
       }
     }
 
     Map<String, dynamic>? linkedCustomer = data['customer'] as Map<String, dynamic>?;
     String finalPhone = data['customer_phone'] ?? '-';
     String finalEmail = data['customer_email'] ?? '-';
+    String? customerAvatar = linkedCustomer?['avatar'] as String?;
 
     if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
       finalPhone = linkedCustomer['phone'] ?? '-';
@@ -126,6 +136,8 @@ class BookingListController {
       id: id,
       createdAt: data['created_at'],
       stylist: stylistName,
+      stylistAvatar: stylistAvatar,
+      customerAvatar: customerAvatar,
       services: serviceNames.isEmpty ? ['Booking #$id'] : serviceNames,
       datetime: data['reservation_datetime'],
       totalPrice: data['total_price'],

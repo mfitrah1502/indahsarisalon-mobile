@@ -2,6 +2,8 @@ class BookingListModel {
   final int id;
   final String createdAt;
   final String stylist;
+  final String? stylistAvatar;
+  final String? customerAvatar;
   final List<String> services;
   final String datetime;
   final num totalPrice;
@@ -17,6 +19,8 @@ class BookingListModel {
     required this.id,
     required this.createdAt,
     required this.stylist,
+    this.stylistAvatar,
+    this.customerAvatar,
     required this.services,
     required this.datetime,
     required this.totalPrice,
@@ -33,6 +37,8 @@ class BookingListModel {
       'id': id,
       'created_at': createdAt,
       'stylist': stylist,
+      'stylist_avatar': stylistAvatar,
+      'customer_avatar': customerAvatar,
       'services': services,
       'datetime': datetime,
       'total_price': totalPrice,

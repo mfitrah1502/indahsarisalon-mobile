@@ -146,10 +146,15 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
                     color: const Color(0xFFF1F5F9),
-                    image: DecorationImage(
-                      image: NetworkImage("https://ui-avatars.com/api/?name=${Uri.encodeComponent(customer['name'])}&background=E4F0FA&color=D660A1&bold=true"),
-                      fit: BoxFit.cover,
-                    ),
+                    image: (customer['avatar'] != null && customer['avatar'].toString().isNotEmpty)
+                        ? DecorationImage(
+                            image: NetworkImage(customer['avatar']),
+                            fit: BoxFit.cover,
+                          )
+                        : DecorationImage(
+                            image: NetworkImage("https://ui-avatars.com/api/?name=${Uri.encodeComponent(customer['name'])}&background=E4F0FA&color=D660A1&bold=true"),
+                            fit: BoxFit.cover,
+                          ),
                   ),
                 ),
                 Positioned(

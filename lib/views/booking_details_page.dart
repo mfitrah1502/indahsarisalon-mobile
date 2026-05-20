@@ -621,9 +621,35 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   @override
   Widget build(BuildContext context) {
     final booking = widget.booking;
-    final services = (booking['services'] as List<String>? ?? []);
     final datetimeRaw = booking['datetime'] as String? ?? '';
     final totalPrice = (booking['total_price'] as num?)?.toDouble() ?? 0;
+
+    final fullDetails = (booking['rawData']?['full_details'] as List<dynamic>?) ?? (booking['full_details'] as List<dynamic>?) ?? [];
+    List<Map<String, dynamic>> richServices = [];
+    if (fullDetails.isNotEmpty) {
+      for (final d in fullDetails) {
+        final td = d['treatment_details'] as Map<String, dynamic>?;
+        final t = td?['treatments'] as Map<String, dynamic>?;
+        final tName = t?['name'] ?? '';
+        final dName = td?['name'] ?? '';
+        final imageUrl = td?['image_url'] ?? t?['image'];
+        String displayName = (tName == dName || dName.isEmpty) ? tName : "$tName - $dName";
+        richServices.add({'name': displayName, 'image': imageUrl});
+      }
+    } else {
+      final services = (booking['services'] as List<dynamic>? ?? []);
+      for (var s in services) {
+        richServices.add({'name': s.toString(), 'image': null});
+      }
+    }
+
+    String? headerImageUrl;
+    for (var s in richServices) {
+      if (s['image'] != null && s['image'].toString().isNotEmpty) {
+        headerImageUrl = s['image'].toString();
+        break;
+      }
+    }
 
     return Scaffold(
       backgroundColor: scaffoldBg,
@@ -725,19 +751,23 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             width: double.infinity,
                             decoration: BoxDecoration(
                               color: primaryColor,
-                              gradient: LinearGradient(
+                              gradient: headerImageUrl == null ? LinearGradient(
                                 colors: [primaryColor, const Color(0xFF1B547A)],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
-                              ),
+                              ) : null,
+                              image: headerImageUrl != null ? DecorationImage(
+                                image: NetworkImage(headerImageUrl),
+                                fit: BoxFit.cover,
+                              ) : null,
                             ),
-                            child: const Center(
+                            child: headerImageUrl == null ? const Center(
                               child: Icon(
                                 Icons.content_cut,
                                 size: 64,
                                 color: Colors.white30,
                               ),
-                            ),
+                            ) : null,
                           ),
                           Padding(
                             padding: const EdgeInsets.all(20.0),
@@ -753,25 +783,25 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                     letterSpacing: 0.8,
                                   ),
                                 ),
-                                const SizedBox(height: 8),
-                                ...services.map(
+                                const SizedBox(height: 12),
+                                ...richServices.map(
                                   (s) => Padding(
-                                    padding: const EdgeInsets.only(bottom: 6.0),
+                                    padding: const EdgeInsets.only(bottom: 12.0),
                                     child: Row(
                                       children: [
                                         Icon(
                                           Icons.check_circle_outline,
-                                          size: 16,
+                                          size: 18,
                                           color: primaryColor,
                                         ),
                                         const SizedBox(width: 8),
                                         Expanded(
                                           child: Text(
-                                            s,
+                                            s['name'],
                                             style: TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,
-                                              color: primaryColor,
+                                              color: const Color(0xFF1E293B),
                                             ),
                                           ),
                                         ),
@@ -900,12 +930,20 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
                               color: const Color(0xFFE4F0FA),
+                              image: (booking['stylist_avatar'] != null && booking['stylist_avatar'].toString().isNotEmpty)
+                                  ? DecorationImage(
+                                      image: NetworkImage(booking['stylist_avatar']),
+                                      fit: BoxFit.cover,
+                                    )
+                                  : null,
                             ),
-                            child: Icon(
-                              Icons.person,
-                              color: primaryColor,
-                              size: 28,
-                            ),
+                            child: (booking['stylist_avatar'] == null || booking['stylist_avatar'].toString().isEmpty)
+                                ? Icon(
+                                    Icons.person,
+                                    color: primaryColor,
+                                    size: 28,
+                                  )
+                                : null,
                           ),
                           const SizedBox(width: 16),
                           Expanded(

@@ -414,27 +414,37 @@ class _BookingListPageState extends State<BookingListPage> {
                                               Row(
                                                 crossAxisAlignment: CrossAxisAlignment.center,
                                                 children: [
-                                                  // Stylist avatar
+                                                  // Customer avatar
                                                   Container(
                                                     width: 54, height: 54,
                                                     decoration: BoxDecoration(
                                                       borderRadius: BorderRadius.circular(16),
-                                                      gradient: LinearGradient(
-                                                        begin: Alignment.topLeft,
-                                                        end: Alignment.bottomRight,
-                                                        colors: [
-                                                          primaryColor.withValues(alpha: 0.1),
-                                                          primaryColor.withValues(alpha: 0.02),
-                                                        ]
-                                                      ),
+                                                      gradient: (booking.customerAvatar == null || booking.customerAvatar!.isEmpty)
+                                                          ? LinearGradient(
+                                                              begin: Alignment.topLeft,
+                                                              end: Alignment.bottomRight,
+                                                              colors: [
+                                                                primaryColor.withValues(alpha: 0.1),
+                                                                primaryColor.withValues(alpha: 0.02),
+                                                              ],
+                                                            )
+                                                          : null,
+                                                      image: (booking.customerAvatar != null && booking.customerAvatar!.isNotEmpty)
+                                                          ? DecorationImage(
+                                                              image: NetworkImage(booking.customerAvatar!),
+                                                              fit: BoxFit.cover,
+                                                            )
+                                                          : null,
                                                       border: Border.all(color: primaryColor.withValues(alpha: 0.1)),
                                                     ),
-                                                    child: Center(
-                                                      child: Text(
-                                                        booking.customerName != '-' ? booking.customerName[0].toUpperCase() : "C",
-                                                        style: TextStyle(color: primaryColor, fontSize: 24, fontWeight: FontWeight.w800),
-                                                      ),
-                                                    ),
+                                                    child: (booking.customerAvatar == null || booking.customerAvatar!.isEmpty)
+                                                        ? Center(
+                                                            child: Text(
+                                                              booking.customerName != '-' ? booking.customerName[0].toUpperCase() : "C",
+                                                              style: TextStyle(color: primaryColor, fontSize: 24, fontWeight: FontWeight.w800),
+                                                            ),
+                                                          )
+                                                        : null,
                                                   ),
                                                   const SizedBox(width: 16),
                                                   Expanded(
