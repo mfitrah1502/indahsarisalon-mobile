@@ -631,7 +631,7 @@ class _BookingListPageState extends State<BookingListPage> {
               letterSpacing: 0.5
             )
           ),
-          const SizedBox(height: 4),
+        const SizedBox(height: 4),
           Container(
             width: 4,
             height: 4,

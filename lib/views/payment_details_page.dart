@@ -460,6 +460,15 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           Icon(icon, color: isSelected ? primaryColor : mutedText, size: 26),
           const SizedBox(height: 6),
           Text(label, style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, color: isSelected ? primaryColor : mutedText, letterSpacing: 0.5)),
+        const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isSelected ? primaryColor : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
         ],
       ),
     );

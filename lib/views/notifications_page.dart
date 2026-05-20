@@ -602,6 +602,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Widget _buildNavItem(int index, String label, IconData icon) {
+    final isSelected = false;
     return GestureDetector(
       onTap: () {
         if (index == 0) {
@@ -652,6 +653,15 @@ class _NotificationsPageState extends State<NotificationsPage> {
               fontWeight: FontWeight.w800,
               color: mutedText,
               letterSpacing: 0.5,
+            ),
+          ),
+        const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isSelected ? mutedText : Colors.transparent,
+              shape: BoxShape.circle,
             ),
           ),
         ],

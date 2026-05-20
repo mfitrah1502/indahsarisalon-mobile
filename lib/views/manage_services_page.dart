@@ -1154,6 +1154,15 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
               letterSpacing: 0.5,
             ),
           ),
+        const SizedBox(height: 4),
+          Container(
+            width: 4,
+            height: 4,
+            decoration: BoxDecoration(
+              color: isSelected ? primaryColor : Colors.transparent,
+              shape: BoxShape.circle,
+            ),
+          ),
         ],
       ),
     );

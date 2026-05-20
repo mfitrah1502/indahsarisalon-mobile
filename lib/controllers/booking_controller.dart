@@ -253,28 +253,7 @@ class BookingController {
       }
     }
 
-    try {
-      String formattedDt = reservationDatetime;
-      try {
-        final dt = DateTime.parse(reservationDatetime).toLocal();
-        final date = DateFormat('d MMMM yyyy', 'en').format(dt);
-        final time = DateFormat('HH:mm').format(dt);
-        formattedDt = "$date at $time WIB";
-      } catch (_) {
-        if (reservationDatetime.length >= 16) {
-          formattedDt = reservationDatetime.substring(0, 16).replaceAll('T', ' ');
-        }
-      }
-
-      await supabase.from('notifikasi').insert({
-        'user_id': userId,
-        'title': 'Booking Success',
-        'message': 'Booking for schedule $formattedDt has been successfully created.',
-        'booking_id': bookingId,
-      });
-    } catch (e) {
-      debugPrint('Failed to insert notification: \$e');
-    }
+    // Notification insertion is now handled by the database trigger "trigger_notifikasi_on_booking"
 
     return bookingId.toString();
   }
