@@ -257,7 +257,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     "Notifications",
                     style: TextStyle(
                       color: primaryColor,
-                      fontSize: 24,
+                      fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
