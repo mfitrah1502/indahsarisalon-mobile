@@ -82,13 +82,19 @@ class _AddPromoPageState extends State<AddPromoPage> {
         context: context,
         initialTime: TimeOfDay.now(),
         initialEntryMode: TimePickerEntryMode.input,
-        builder: (context, child) => Theme(
-          data: Theme.of(context).copyWith(
-            colorScheme: isDark 
-                ? const ColorScheme.dark(primary: Color(0xFFD660A1), onPrimary: Colors.white, surface: Color(0xFF0F172A))
-                : ColorScheme.light(primary: primaryColor),
+        builder: (context, child) => MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: const TextScaler.linear(1.0),
+            viewInsets: EdgeInsets.zero, // Prevent keyboard from squishing height
           ),
-          child: child!,
+          child: Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: isDark 
+                  ? const ColorScheme.dark(primary: Color(0xFFD660A1), onPrimary: Colors.white, surface: Color(0xFF0F172A))
+                  : ColorScheme.light(primary: primaryColor),
+            ),
+            child: child!,
+          ),
         ),
       );
 
