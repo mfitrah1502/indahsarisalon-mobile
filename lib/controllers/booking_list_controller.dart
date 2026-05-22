@@ -7,8 +7,20 @@ class BookingListController {
   Future<List<BookingListModel>> fetchBookings() async {
     final data = await _supabase
         .from('bookings')
-        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar), customer:users!bookings_user_id_fkey(phone, email, avatar)')
+        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar)')
         .order('created_at', ascending: false);
+
+    final customersQuery = await _supabase.from('users').select('phone, email, avatar').eq('role', 'pelanggan');
+    final Map<String, String> avatarByPhone = {};
+    final Map<String, String> avatarByEmail = {};
+    for (var c in customersQuery) {
+       if (c['phone'] != null && c['phone'].toString().isNotEmpty) {
+           avatarByPhone[c['phone'].toString()] = c['avatar']?.toString() ?? '';
+       }
+       if (c['email'] != null && c['email'].toString().isNotEmpty) {
+           avatarByEmail[c['email'].toString()] = c['avatar']?.toString() ?? '';
+       }
+    }
 
     final List<BookingListModel> enriched = [];
     for (final row in data) {
@@ -44,16 +56,14 @@ class BookingListController {
         }
       }
 
-      Map<String, dynamic>? linkedCustomer = row['customer'] as Map<String, dynamic>?;
       String finalPhone = row['customer_phone'] ?? '-';
       String finalEmail = row['customer_email'] ?? '-';
-      String? customerAvatar = linkedCustomer?['avatar'] as String?;
-
-      if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
-        finalPhone = linkedCustomer['phone'] ?? '-';
-      }
-      if ((finalEmail == '-' || finalEmail == 'null') && linkedCustomer != null) {
-        finalEmail = linkedCustomer['email'] ?? '-';
+      
+      String? customerAvatar;
+      if (finalPhone != '-' && avatarByPhone.containsKey(finalPhone) && avatarByPhone[finalPhone]!.isNotEmpty) {
+        customerAvatar = avatarByPhone[finalPhone];
+      } else if (finalEmail != '-' && avatarByEmail.containsKey(finalEmail) && avatarByEmail[finalEmail]!.isNotEmpty) {
+        customerAvatar = avatarByEmail[finalEmail];
       }
 
       enriched.add(BookingListModel(
@@ -83,7 +93,7 @@ class BookingListController {
   Future<BookingListModel?> fetchBookingById(int id) async {
     final data = await _supabase
         .from('bookings')
-        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar), customer:users!bookings_user_id_fkey(phone, email, avatar)')
+        .select('id, created_at, reservation_datetime, total_price, status, customer_name, customer_phone, customer_email, user_id, stylist_id, payment_method, users!bookings_stylist_id_fkey(name, avatar)')
         .eq('id', id)
         .maybeSingle();
         
@@ -120,16 +130,27 @@ class BookingListController {
       }
     }
 
-    Map<String, dynamic>? linkedCustomer = data['customer'] as Map<String, dynamic>?;
     String finalPhone = data['customer_phone'] ?? '-';
     String finalEmail = data['customer_email'] ?? '-';
-    String? customerAvatar = linkedCustomer?['avatar'] as String?;
-
-    if ((finalPhone == '-' || finalPhone == 'null') && linkedCustomer != null) {
-      finalPhone = linkedCustomer['phone'] ?? '-';
-    }
-    if ((finalEmail == '-' || finalEmail == 'null') && linkedCustomer != null) {
-      finalEmail = linkedCustomer['email'] ?? '-';
+    String? customerAvatar;
+    
+    // Attempt to fetch customer avatar if they are a registered user
+    if (finalPhone != '-' || finalEmail != '-') {
+      try {
+        final query = _supabase.from('users').select('avatar').eq('role', 'pelanggan');
+        dynamic res;
+        if (finalPhone != '-') {
+          res = await query.eq('phone', finalPhone).maybeSingle();
+        } 
+        if (res == null && finalEmail != '-') {
+          res = await query.eq('email', finalEmail).maybeSingle();
+        }
+        if (res != null) {
+          customerAvatar = res['avatar'] as String?;
+        }
+      } catch (e) {
+        // Ignore
+      }
     }
 
     return BookingListModel(

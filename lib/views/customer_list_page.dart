@@ -200,70 +200,70 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         ),
                       ),
                       const SizedBox(width: 8),
-                      Builder(
-                        builder: (context) {
-                          final spend = customer['spend'] as int;
-                          String tier = 'Reguler';
-                          Color tc = mutedText;
-                          if (spend >= 3000000) { tier = 'Platinum'; tc = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155); } // dark slate
-                          else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
-                          else if (spend >= 1000000) { tier = 'Silver'; tc = isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8); } // silver
-                          
-                          bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
-                          if (isCc) {
-                            DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
-                            if (exp != null && exp.isBefore(DateTime.now())) {
-                              if (spend < 1500000) {
-                                isCc = false;
+                      Flexible(
+                        child: Builder(
+                          builder: (context) {
+                            final spend = customer['spend'] as int;
+                            String tier = 'Reguler';
+                            Color tc = mutedText;
+                            if (spend >= 3000000) { tier = 'Platinum'; tc = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155); } // dark slate
+                            else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
+                            else if (spend >= 1000000) { tier = 'Silver'; tc = isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8); } // silver
+                            
+                            bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
+                            if (isCc) {
+                              DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
+                              if (exp != null && exp.isBefore(DateTime.now())) {
+                                if (spend < 1500000) {
+                                  isCc = false;
+                                }
                               }
                             }
-                          }
 
-                          return Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              if (tier != 'Reguler') ...[
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: tc.withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: tc.withOpacity(0.5)),
-                                  ),
-                                  child: Text(
-                                    tier,
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                      color: tc,
+                            return Wrap(
+                              spacing: 4,
+                              runSpacing: 4,
+                              children: [
+                                if (tier != 'Reguler')
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: tc.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: tc.withOpacity(0.5)),
+                                    ),
+                                    child: Text(
+                                      tier,
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                        color: tc,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                              if (isCc) ...[
-                                if (tier != 'Reguler') const SizedBox(width: 4),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFD660A1).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(6),
-                                    border: Border.all(color: const Color(0xFFD660A1).withOpacity(0.5)),
-                                  ),
-                                  child: const Text(
-                                    'Colour Circle',
-                                    style: TextStyle(
-                                      fontSize: 9,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.5,
-                                      color: Color(0xFFD660A1),
+                                if (isCc)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: const Color(0xFFD660A1).withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(6),
+                                      border: Border.all(color: const Color(0xFFD660A1).withOpacity(0.5)),
+                                    ),
+                                    child: const Text(
+                                      'Colour Circle',
+                                      style: TextStyle(
+                                        fontSize: 9,
+                                        fontWeight: FontWeight.bold,
+                                        letterSpacing: 0.5,
+                                        color: Color(0xFFD660A1),
+                                      ),
                                     ),
                                   ),
-                                ),
                               ],
-                            ],
-                          );
-                        }
+                            );
+                          }
+                        ),
                       ),
                     ],
                   ),
