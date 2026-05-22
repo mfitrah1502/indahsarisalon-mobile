@@ -155,9 +155,12 @@ class _SettingsPageState extends State<SettingsPage> {
                           const SizedBox(height: 16),
                           Text(
                             "${AppSession.userName}",
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                             style: TextStyle(
                               color: mainTextColor,
-                              fontSize: 24,
+                              fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
