@@ -45,6 +45,8 @@ class _AuthPageState extends State<AuthPage> {
           await prefs.setString('language', 'English');
         }
 
+        if (!mounted) return;
+
         PopupHelper.showSuccess(context, "Login successful!", onConfirm: () {
           Navigator.pushReplacement(
             context,
@@ -257,8 +259,8 @@ class _AuthPageState extends State<AuthPage> {
                             child: Checkbox(
                               value: rememberMe,
                               onChanged: (v) => setState(() => rememberMe = v!),
-                              fillColor: MaterialStateProperty.resolveWith((states) {
-                                if (states.contains(MaterialState.selected)) {
+                              fillColor: WidgetStateProperty.resolveWith((states) {
+                                if (states.contains(WidgetState.selected)) {
                                   return primaryColor;
                                 }
                                 return inputBg;

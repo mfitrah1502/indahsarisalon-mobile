@@ -1,19 +1,20 @@
+import 'dart:io';
+
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import '../app_session.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
-import 'dart:io';
-import 'dart:typed_data';
-import 'package:flutter/foundation.dart' show kIsWeb;
-import '../models/service_model.dart';
-import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
-import 'home_page.dart';
-import 'booking_list_page.dart';
-import 'settings_page.dart';
-import 'report_page.dart';
-import 'add_promo_page.dart';
+
+import '../app_session.dart';
+import '../controllers/service_controller.dart';
+import '../models/service_model.dart';
 import '../utils/popup_helper.dart';
+import 'add_promo_page.dart';
+import 'booking_list_page.dart';
+import 'home_page.dart';
+import 'report_page.dart';
+import 'settings_page.dart';
 
 class ManageServicesPage extends StatefulWidget {
   const ManageServicesPage({super.key});
@@ -30,7 +31,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
   Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
   Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
   Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
-  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.5);
   Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
 
   final _currency = NumberFormat.currency(
@@ -184,7 +185,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             value: isActive,
                             onChanged: (val) =>
                                 setStateDialog(() => isActive = val),
-                            activeColor: primaryColor,
+                            activeThumbColor: primaryColor,
                           ),
                         ],
                       ),
@@ -199,8 +200,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       icon: Icons.calendar_today,
                       onTap: () async {
                         final picked = await _selectDateTimeQuick(ctx, startAt);
-                        if (picked != null)
+                        if (picked != null) {
                           setStateDialog(() => startAt = picked);
+                        }
                       },
                     ),
 
@@ -214,8 +216,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       icon: Icons.calendar_today,
                       onTap: () async {
                         final picked = await _selectDateTimeQuick(ctx, endAt);
-                        if (picked != null)
+                        if (picked != null) {
                           setStateDialog(() => endAt = picked);
+                        }
                       },
                     ),
 
@@ -303,7 +306,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     );
 
     if (date != null) {
-      if (!mounted) return null;
+      if (!context.mounted) return null;
       final time = await showTimePicker(
         context: context,
         initialTime: TimeOfDay.fromDateTime(initial),
@@ -445,14 +448,17 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               source: ImageSource.gallery,
                               imageQuality: 70,
                             );
-                            if (picked != null)
+                            if (picked != null) {
                               setStateDialog(() => dialogImage = picked);
+                            }
                           } catch (e) {
                             debugPrint("Error picking image: $e");
-                            PopupHelper.showError(
-                              context,
-                              "Failed to capture image: $e",
-                            );
+                            if (ctx.mounted) {
+                              PopupHelper.showError(
+                                ctx,
+                                "Failed to capture image: $e",
+                              );
+                            }
                           }
                         },
                         child: Container(
@@ -479,7 +485,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                 ? Image.network(
                                     service.imageUrl!,
                                     fit: BoxFit.cover,
-                                    errorBuilder: (_, __, ___) =>
+                                    errorBuilder: (_, _, _) =>
                                         Icon(Icons.add_a_photo, size: 30, color: primaryColor),
                                   )
                                 : Column(
@@ -607,8 +613,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           ),
                           onPressed: () async {
                             if (treatmentController.text.isEmpty &&
-                                nameController.text.isEmpty)
+                                nameController.text.isEmpty) {
                               return;
+                            }
                             Navigator.pop(ctx);
 
                             String? imageUrl;
@@ -694,7 +701,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       style: TextStyle(color: mainTextColor),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: mutedText.withOpacity(0.6), fontSize: 14),
+        hintStyle: TextStyle(color: mutedText.withValues(alpha: 0.6), fontSize: 14),
         filled: true,
         fillColor: inputBg,
         border: OutlineInputBorder(
@@ -806,7 +813,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       child: ListView.separated(
                         scrollDirection: Axis.horizontal,
                         itemCount: _categories.length,
-                        separatorBuilder: (_, __) => const SizedBox(width: 8),
+                        separatorBuilder: (_, _) => const SizedBox(width: 8),
                         itemBuilder: (_, i) {
                           final cat = _categories[i];
                           final isSelected = _selectedCategory == cat;
@@ -956,7 +963,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: filtered.length,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (_, index) {
                               final svc = filtered[index];
@@ -970,7 +977,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.02),
+                                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.02),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -993,7 +1000,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             ? Image.network(
                                                 svc.imageUrl!,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
+                                                errorBuilder: (_, _, _) =>
                                                     Icon(
                                                       Icons.content_cut_rounded,
                                                       size: 20,
@@ -1088,7 +1095,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             child: Container(
                                               padding: const EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color: isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFEF2F2),
+                                                color: isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.3) : const Color(0xFFFEF2F2),
                                                 borderRadius:
                                                     BorderRadius.circular(6),
                                               ),
@@ -1120,7 +1127,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -1148,32 +1155,33 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        if (index == 0)
+        if (index == 0) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const HomePage()),
             (r) => false,
           );
-        else if (index == 1)
+        } else if (index == 1) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const BookingListPage()),
             (r) => false,
           );
-        else if (index == 3)
+        } else if (index == 3) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const ReportPage()),
             (r) => false,
           );
-        else if (index == 4)
+        } else if (index == 4) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const SettingsPage()),
             (r) => false,
           );
-        else
+        } else {
           setState(() => _selectedIndex = index);
+        }
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

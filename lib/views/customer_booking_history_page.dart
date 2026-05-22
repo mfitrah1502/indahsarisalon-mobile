@@ -97,7 +97,7 @@ class _CustomerBookingHistoryPageState
       case 'Platinum':
         return isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       case 'Gold':
-        return isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFEF9C3);
+        return isDark ? const Color(0xFF78350F).withValues(alpha: 0.3) : const Color(0xFFFEF9C3);
       case 'Silver':
         return isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
       default:
@@ -241,22 +241,34 @@ class _CustomerBookingHistoryPageState
                   ),
                   const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Booking History',
-                          style: TextStyle(
-                            color: primaryColor,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          widget.customer['name'],
-                          style: TextStyle(color: mutedText, fontSize: 13),
-                        ),
-                      ],
+                    child: Text(
+                      'Booking History',
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            // ── Customer Name Label ──────────────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 24.0,
+              ).copyWith(bottom: 12),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      widget.customer['name'],
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.bold,
+                        color: mutedText,
+                      ),
                     ),
                   ),
                 ],
@@ -274,7 +286,7 @@ class _CustomerBookingHistoryPageState
                   decoration: BoxDecoration(
                     color: tierBg,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: tierColor.withOpacity(0.3)),
+                    border: Border.all(color: tierColor.withValues(alpha: 0.3)),
                   ),
                   child: Row(
                     children: [
@@ -283,7 +295,7 @@ class _CustomerBookingHistoryPageState
                         width: 48,
                         height: 48,
                         decoration: BoxDecoration(
-                          color: tierColor.withOpacity(0.15),
+                          color: tierColor.withValues(alpha: 0.15),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Icon(
@@ -391,7 +403,7 @@ class _CustomerBookingHistoryPageState
                                 border: Border.all(color: borderCol, width: 1),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                                    color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),

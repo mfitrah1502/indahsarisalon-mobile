@@ -34,7 +34,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
     decimalDigits: 0,
   );
 
-  int _selectedIndex = 1;
+  final int _selectedIndex = 1;
   String _selectedCategory = 'All';
   String _selectedStaffCategory = 'All';
   String _searchQuery = '';
@@ -127,7 +127,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
 
   List<String> _getQualifiedPositions(ServiceModel service) {
     final category = service.category.toLowerCase().trim();
-    final name = (service.treatmentName + " " + service.detailName).toLowerCase();
+    final name = ("${service.treatmentName} ${service.detailName}").toLowerCase();
     
     if (category == 'haircut' || category == 'hair coloring') {
       return ['hairstylist'];
@@ -332,11 +332,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       });
     } catch (e) {
       debugPrint('Error fetching services: $e');
-      if (mounted)
+      if (mounted) {
         setState(() {
           _loadingCategories = false;
           _loadingServices = false;
         });
+      }
     }
   }
 
@@ -482,7 +483,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: chosenPrice == basePrice
-                              ? (isDark ? const Color(0xFFD660A1).withOpacity(0.15) : const Color(0xFFD660A1).withOpacity(0.08))
+                              ? (isDark ? const Color(0xFFD660A1).withValues(alpha: 0.15) : const Color(0xFFD660A1).withValues(alpha: 0.08))
                               : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
@@ -546,7 +547,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                       ),
                       hintText: "0",
                       hintStyle: TextStyle(
-                        color: isDark ? const Color(0xFF94A3B8).withOpacity(0.5) : const Color(0xFF64748B).withOpacity(0.5),
+                        color: isDark ? const Color(0xFF94A3B8).withValues(alpha: 0.5) : const Color(0xFF64748B).withValues(alpha: 0.5),
                       ),
                       filled: true,
                       fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
@@ -926,7 +927,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5),
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
                               color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
@@ -949,7 +950,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               ),
                               hintText: "Search services...",
                               hintStyle: TextStyle(
-                                color: mutedText.withOpacity(0.7),
+                                color: mutedText.withValues(alpha: 0.7),
                                 fontSize: 14,
                               ),
                               border: InputBorder.none,
@@ -972,7 +973,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             child: ListView.separated(
                               scrollDirection: Axis.horizontal,
                               itemCount: _categories.length,
-                              separatorBuilder: (_, __) =>
+                              separatorBuilder: (_, _) =>
                                   const SizedBox(width: 8),
                               itemBuilder: (_, i) {
                                 final cat = _categories[i];
@@ -1038,11 +1039,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             shrinkWrap: true,
                             physics: const NeverScrollableScrollPhysics(),
                             itemCount: filtered.length + 1,
-                            separatorBuilder: (_, __) =>
+                            separatorBuilder: (_, _) =>
                                 const SizedBox(height: 12),
                             itemBuilder: (_, index) {
-                              if (index == filtered.length)
+                              if (index == filtered.length) {
                                 return const SizedBox(height: 120);
+                              }
                               final item = filtered[index];
                               final ServiceModel service = item['service'];
                               final isSelected = item['selected'] == true;
@@ -1067,7 +1069,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? (isDark ? primaryColor.withOpacity(0.15) : primaryColor.withOpacity(0.05))
+                                      ? (isDark ? primaryColor.withValues(alpha: 0.15) : primaryColor.withValues(alpha: 0.05))
                                       : cardBg,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
@@ -1078,7 +1080,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.03),
+                                      color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.03),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -1102,7 +1104,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             ? Image.network(
                                                 service.imageUrl!,
                                                 fit: BoxFit.cover,
-                                                errorBuilder: (_, __, ___) =>
+                                                errorBuilder: (_, _, _) =>
                                                     Icon(
                                                       Icons.image_outlined,
                                                       color: mutedText,
@@ -1279,7 +1281,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 4),
                                 ),
@@ -1346,7 +1348,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   vertical: 18,
                                 ),
                                 elevation: 8,
-                                shadowColor: Colors.black.withOpacity(0.15),
+                                shadowColor: Colors.black.withValues(alpha: 0.15),
                               ),
                               onPressed: _selectedStylistIndex == -1
                                   ? null
@@ -1414,7 +1416,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -1527,7 +1529,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: primaryColor.withOpacity(0.3),
+                    color: primaryColor.withValues(alpha: 0.3),
                     blurRadius: 8,
                     offset: const Offset(0, 4),
                   ),

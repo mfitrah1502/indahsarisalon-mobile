@@ -119,7 +119,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
               : Border.all(color: borderCol, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -185,87 +185,15 @@ class _CustomerListPageState extends State<CustomerListPage> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          customer['name'],
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: mainTextColor,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Builder(
-                          builder: (context) {
-                            final spend = customer['spend'] as int;
-                            String tier = 'Reguler';
-                            Color tc = mutedText;
-                            if (spend >= 3000000) { tier = 'Platinum'; tc = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155); } // dark slate
-                            else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
-                            else if (spend >= 1000000) { tier = 'Silver'; tc = isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8); } // silver
-                            
-                            bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
-                            if (isCc) {
-                              DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
-                              if (exp != null && exp.isBefore(DateTime.now())) {
-                                if (spend < 1500000) {
-                                  isCc = false;
-                                }
-                              }
-                            }
-
-                            return Wrap(
-                              spacing: 4,
-                              runSpacing: 4,
-                              children: [
-                                if (tier != 'Reguler')
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: tc.withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: tc.withOpacity(0.5)),
-                                    ),
-                                    child: Text(
-                                      tier,
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                        color: tc,
-                                      ),
-                                    ),
-                                  ),
-                                if (isCc)
-                                  Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                                    decoration: BoxDecoration(
-                                      color: const Color(0xFFD660A1).withOpacity(0.1),
-                                      borderRadius: BorderRadius.circular(6),
-                                      border: Border.all(color: const Color(0xFFD660A1).withOpacity(0.5)),
-                                    ),
-                                    child: const Text(
-                                      'Colour Circle',
-                                      style: TextStyle(
-                                        fontSize: 9,
-                                        fontWeight: FontWeight.bold,
-                                        letterSpacing: 0.5,
-                                        color: Color(0xFFD660A1),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            );
-                          }
-                        ),
-                      ),
-                    ],
+                  Text(
+                    customer['name'],
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: mainTextColor,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                   const SizedBox(height: 2),
                   Text(
@@ -276,6 +204,75 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
+                  ),
+                  Builder(
+                    builder: (context) {
+                      final spend = customer['spend'] as int;
+                      String tier = 'Reguler';
+                      Color tc = mutedText;
+                      if (spend >= 3000000) { tier = 'Platinum'; tc = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155); } // dark slate
+                      else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
+                      else if (spend >= 1000000) { tier = 'Silver'; tc = isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8); } // silver
+                      
+                      bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
+                      if (isCc) {
+                        DateTime? exp = customer['colour_circle_expired_at'] != null ? DateTime.tryParse(customer['colour_circle_expired_at']) : null;
+                        if (exp != null && exp.isBefore(DateTime.now())) {
+                          if (spend < 1500000) {
+                            isCc = false;
+                          }
+                        }
+                      }
+
+                      if (tier == 'Reguler' && !isCc) return const SizedBox.shrink();
+
+                       return Padding(
+                        padding: const EdgeInsets.only(top: 6.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (tier != 'Reguler')
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: tc.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: tc.withValues(alpha: 0.5)),
+                                ),
+                                child: Text(
+                                  tier,
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                    color: tc,
+                                  ),
+                                ),
+                              ),
+                            if (tier != 'Reguler' && isCc) const SizedBox(height: 4),
+                            if (isCc)
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFD660A1).withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(color: const Color(0xFFD660A1).withValues(alpha: 0.5)),
+                                ),
+                                child: const Text(
+                                  'Colour Circle',
+                                  style: TextStyle(
+                                    fontSize: 9,
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 0.5,
+                                    color: Color(0xFFD660A1),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }
                   ),
                 ],
               ),
@@ -413,7 +410,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                         color: cardBg,
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(color: borderCol, width: 1),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                       ),
                       child: TextField(
                         controller: _searchController,
@@ -437,7 +434,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                       color: cardBg,
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: borderCol, width: 1),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                      boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
                     child: PopupMenuButton<String>(
                       color: cardBg,

@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
-import '../app_session.dart';
-import '../models/booking_list_model.dart';
-import '../controllers/booking_list_controller.dart';
 import 'package:intl/intl.dart';
-import 'home_page.dart';
-import 'settings_page.dart';
-import 'select_services_page.dart';
+
+import '../app_session.dart';
+import '../controllers/booking_list_controller.dart';
+import '../models/booking_list_model.dart';
+import '../utils/popup_helper.dart';
 import 'booking_details_page.dart';
+import 'home_page.dart';
 import 'manage_services_page.dart';
 import 'report_page.dart';
-import '../utils/popup_helper.dart';
+import 'select_services_page.dart';
+import 'settings_page.dart';
 
 class BookingListPage extends StatefulWidget {
   const BookingListPage({super.key});
@@ -31,7 +32,7 @@ class _BookingListPageState extends State<BookingListPage> {
   Color get inputBg => isDark ? const Color(0xFF334155) : Colors.white;
   Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
 
-  final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
+
 
   int _selectedIndex = 1;
   bool _loading = true;
@@ -67,7 +68,6 @@ class _BookingListPageState extends State<BookingListPage> {
     Map<String, List<BookingListModel>> groups = {};
     for (var b in _filteredBookings) {
       final createdAtStr = b.createdAt;
-      if (createdAtStr == null) continue;
       
       final date = DateTime.parse(createdAtStr).toLocal();
       final now = DateTime.now();
@@ -252,7 +252,7 @@ class _BookingListPageState extends State<BookingListPage> {
                           decoration: BoxDecoration(
                             color: _bookings.isEmpty 
                                 ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)) 
-                                : (isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFFF1F2)),
+                                : (isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.3) : const Color(0xFFFFF1F2)),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               if (_bookings.isNotEmpty)
@@ -567,10 +567,10 @@ class _BookingListPageState extends State<BookingListPage> {
                                         ),
                                       ),
                                     );
-                                  }).toList(),
+                                  }),
                                 ],
                               );
-                            }).toList(),
+                            }),
                           const SizedBox(height: 100),
                         ],
                       ),
@@ -638,11 +638,17 @@ class _BookingListPageState extends State<BookingListPage> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        if (index == 0) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
-        else if (index == 2) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
-        else if (index == 3) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
-        else if (index == 4) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
-        else setState(() => _selectedIndex = index);
+        if (index == 0) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
+        } else if (index == 2) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
+        } else if (index == 4) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+        } else {
+          setState(() => _selectedIndex = index);
+        }
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

@@ -70,6 +70,8 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
           .eq('id', userId)
           .single();
 
+      if (!mounted) return;
+
       final isCurrentCorrect = BCrypt.checkpw(currentPass, userData['password']);
       if (!isCurrentCorrect) {
         setState(() => _isLoading = false);
@@ -91,15 +93,15 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
         );
       } catch (_) {}
 
-      if (mounted) {
-        PopupHelper.showSuccess(context, 'Password successfully updated!', onConfirm: () {
-          Navigator.pop(context);
-        });
-      }
+      if (!mounted) return;
+
+      PopupHelper.showSuccess(context, 'Password successfully updated!', onConfirm: () {
+        if (!context.mounted) return;
+        Navigator.pop(context);
+      });
     } catch (e) {
-      if (mounted) {
-        PopupHelper.showError(context, 'Error updating password: ${e.toString()}');
-      }
+      if (!mounted) return;
+      PopupHelper.showError(context, 'Error updating password: ${e.toString()}');
     } finally {
       if (mounted) {
         setState(() => _isLoading = false);
@@ -136,14 +138,14 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
                       "Change Password",
                       style: TextStyle(
                         color: currentMainText,
-                        fontSize: 24,
+                        fontSize: 18,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
                   ],
                 ),
                 
-                const SizedBox(height: 32),
+                const SizedBox(height: 8),
                 Text(
                   "Create a new strong password that you don't use for other websites.",
                   style: TextStyle(color: mutedText, fontSize: 15, height: 1.4),
@@ -206,7 +208,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
   }
 
   Widget _buildPasswordField(String label, TextEditingController controller, bool showPassword, VoidCallback onToggle, bool isDarkMode) {
-    final inputBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6);
+    final inputBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6);
     final inputTextColor = isDarkMode ? Colors.white : const Color(0xFF1E293B);
 
     return Column(
@@ -241,7 +243,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
               suffixIcon: IconButton(
                 icon: Icon(
                   showPassword ? Icons.visibility : Icons.visibility_off,
-                  color: mutedText.withOpacity(0.5), size: 20,
+                  color: mutedText.withValues(alpha: 0.5), size: 20,
                 ),
                 onPressed: onToggle,
               ),

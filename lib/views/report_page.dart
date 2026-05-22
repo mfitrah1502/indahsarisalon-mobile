@@ -1,20 +1,17 @@
-import 'dart:io';
-import 'package:flutter/material.dart';
-import '../app_session.dart';
-import '../models/report_model.dart';
-import '../controllers/report_controller.dart';
-import 'package:intl/intl.dart';
 import 'package:fl_chart/fl_chart.dart';
-import 'package:excel/excel.dart' hide Border;
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import 'package:printing/printing.dart';
-import 'package:pdf/pdf.dart';
 
-import 'home_page.dart';
-import 'booking_list_page.dart';
-import 'manage_services_page.dart';
-import 'settings_page.dart';
+import '../app_session.dart';
+import '../controllers/report_controller.dart';
+import '../models/report_model.dart';
 import '../utils/pdf_report_helper.dart';
 import '../utils/popup_helper.dart';
+import 'booking_list_page.dart';
+import 'home_page.dart';
+import 'manage_services_page.dart';
+import 'settings_page.dart';
 
 class ReportPage extends StatefulWidget {
   const ReportPage({super.key});
@@ -32,7 +29,7 @@ class _ReportPageState extends State<ReportPage> {
   Color get cardBgAlt => isDark ? const Color(0xFF1E293B) : Colors.white;
   Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B);
   Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
-  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.5);
   Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
 
   final int _selectedIndex = 3;
@@ -152,7 +149,7 @@ class _ReportPageState extends State<ReportPage> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+                            color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -208,7 +205,7 @@ class _ReportPageState extends State<ReportPage> {
                       labelText: "Expense Name",
                       labelStyle: TextStyle(color: mutedText),
                       hintText: "Example: Electricity, Budi's Salary",
-                      hintStyle: TextStyle(color: mutedText.withOpacity(0.6)),
+                      hintStyle: TextStyle(color: mutedText.withValues(alpha: 0.6)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
                         borderSide: BorderSide(color: inputBorderColor),
@@ -218,7 +215,7 @@ class _ReportPageState extends State<ReportPage> {
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
                     dropdownColor: cardBg,
-                    value: category,
+                    initialValue: category,
                     style: TextStyle(color: mainTextColor),
                     decoration: InputDecoration(
                       labelText: "Category",
@@ -328,17 +325,18 @@ class _ReportPageState extends State<ReportPage> {
         dateRange: _dateRange,
       );
 
-      if (!context.mounted) return;
+      if (!mounted) return;
 
       final now = DateTime.now();
       final fileName = "Report_Salon_${DateFormat('yyyyMMdd_HHmmss').format(now)}.pdf";
 
       await Printing.sharePdf(bytes: bytes, filename: fileName);
 
+      if (!mounted) return;
       PopupHelper.showInfo(context, "PDF Report ready to share/save");
     } catch (e) {
       debugPrint("Error exporting pdf: $e");
-      if (!context.mounted) return;
+      if (!mounted) return;
       PopupHelper.showError(context, "Failed to download PDF report: $e");
     }
   }
@@ -370,8 +368,9 @@ class _ReportPageState extends State<ReportPage> {
                   int idx = value.toInt();
                   if (idx >= 0 && idx < dailyStats.length) {
                     if (dailyStats.length > 7 &&
-                        idx % (dailyStats.length ~/ 5) != 0)
+                        idx % (dailyStats.length ~/ 5) != 0) {
                       return const SizedBox();
+                    }
                     final date = dailyStats[idx].date;
                     final isYearly = _selectedFilter == 'Tahunan';
                     return Padding(
@@ -805,7 +804,7 @@ class _ReportPageState extends State<ReportPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

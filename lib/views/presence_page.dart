@@ -180,36 +180,34 @@ class _PresencePageState extends State<PresencePage> {
                     child: Icon(
                       Icons.arrow_back,
                       color: primaryColor,
-                      size: 24,
+                      size: 28,
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          "Staff Attendance",
-                          style: TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w900,
-                            letterSpacing: -0.5,
-                            color: primaryColor,
-                          ),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          "Manage staff attendance & schedule today",
-                          style: TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: mutedText,
-                          ),
-                        ),
-                      ],
+                    child: Text(
+                      "Staff Attendance",
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: primaryColor,
+                      ),
                     ),
                   ),
                 ],
+              ),
+            ),
+
+            // Description text above Search Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 12),
+              child: Text(
+                "Manage staff attendance & schedule today",
+                style: TextStyle(
+                  fontSize: 13,
+                  fontWeight: FontWeight.w500,
+                  color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                ),
               ),
             ),
 
@@ -223,7 +221,7 @@ class _PresencePageState extends State<PresencePage> {
                   border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: isDark ? Colors.transparent : Colors.black.withOpacity(0.02),
+                      color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -235,7 +233,7 @@ class _PresencePageState extends State<PresencePage> {
                   decoration: InputDecoration(
                     prefixIcon: Icon(Icons.search_rounded, color: primaryColor, size: 20),
                     hintText: "Search staff name...",
-                    hintStyle: TextStyle(color: mutedText.withOpacity(0.7), fontSize: 14, fontWeight: FontWeight.w500),
+                    hintStyle: TextStyle(color: mutedText.withValues(alpha: 0.7), fontSize: 14, fontWeight: FontWeight.w500),
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   ),
@@ -289,20 +287,20 @@ class _PresencePageState extends State<PresencePage> {
                         border: isSelected
                             ? null
                             : Border.all(
-                                color: isToday ? primaryColor.withOpacity(0.3) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                color: isToday ? primaryColor.withValues(alpha: 0.3) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                                 width: isToday ? 1.5 : 1.0,
                               ),
                         boxShadow: isSelected
                             ? [
                                 BoxShadow(
-                                  color: primaryColor.withOpacity(0.3),
+                                  color: primaryColor.withValues(alpha: 0.3),
                                   blurRadius: 8,
                                   offset: const Offset(0, 4),
                                 ),
                               ]
                             : [
                                 BoxShadow(
-                                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.01),
+                                  color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.01),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -346,7 +344,7 @@ class _PresencePageState extends State<PresencePage> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
-                              Icon(Icons.people_outline_rounded, color: mutedText.withOpacity(0.4), size: 48),
+                              Icon(Icons.people_outline_rounded, color: mutedText.withValues(alpha: 0.4), size: 48),
                               const SizedBox(height: 12),
                               Text(
                                 "Staff not found",
@@ -373,7 +371,7 @@ class _PresencePageState extends State<PresencePage> {
                                 border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: isDark ? Colors.transparent : Colors.black.withOpacity(0.015),
+                                    color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.015),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -402,7 +400,7 @@ class _PresencePageState extends State<PresencePage> {
                                         child: staff['avatar'] == null || staff['avatar'].toString().isEmpty
                                             ? Icon(
                                                 Icons.person_rounded,
-                                                color: mutedText.withOpacity(0.6),
+                                                color: mutedText.withValues(alpha: 0.6),
                                                 size: 26,
                                               )
                                             : null,
@@ -529,7 +527,7 @@ class _PresencePageState extends State<PresencePage> {
                                               boxShadow: [
                                                 BoxShadow(
                                                   color: (isAktif ? const Color(0xFF10B981) : const Color(0xFFEF4444))
-                                                      .withOpacity(0.25),
+                                                      .withValues(alpha: 0.25),
                                                   blurRadius: 5,
                                                   offset: const Offset(0, 2),
                                                 )

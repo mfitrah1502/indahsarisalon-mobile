@@ -18,7 +18,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
   Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
   Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
   Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
-  Color get inputBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9).withOpacity(0.5);
+  Color get inputBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9).withValues(alpha: 0.5);
   Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
   Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
 
@@ -86,42 +86,47 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       children: [
         Scaffold(
           backgroundColor: scaffoldBg,
-          appBar: AppBar(
-            backgroundColor: scaffoldBg,
-            elevation: 0,
-            leading: IconButton(
-              icon: Icon(Icons.arrow_back, color: primaryColor),
-              onPressed: () => Navigator.pop(context),
-            ),
-            title: Text(
-              "Create Account",
-              style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 18),
-            ),
-            centerTitle: false,
-          ),
-          body: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  "Create Account",
-                  style: TextStyle(
-                    fontSize: 32,
-                    fontWeight: FontWeight.bold,
-                    color: primaryColor,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Row with Back Button and Title
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: primaryColor,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          "Create Account",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Join our community and book your next appointment easily.",
-                  style: TextStyle(
-                    fontSize: 16,
-                    color: isDark ? mutedText : primaryColor.withOpacity(0.8),
-                    height: 1.5,
+                  const SizedBox(height: 12),
+                  Text(
+                    "Create a new admin account to help manage salon bookings and operations.",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: mutedText,
+                      height: 1.4,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 32),
+                  const SizedBox(height: 32),
                 
                 // White Form Container
                 Container(
@@ -132,7 +137,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                     border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -222,6 +227,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
             ),
           ),
         ),
+      ),
         if (_isLoading)
           Container(
             color: Colors.black26,
@@ -239,7 +245,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: isDark ? mutedText : primaryColor.withOpacity(0.7),
+          color: isDark ? mutedText : primaryColor.withValues(alpha: 0.7),
           letterSpacing: 1.0,
         ),
       ),
@@ -264,7 +270,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       style: TextStyle(color: mainTextColor, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: isDark ? mutedText.withOpacity(0.4) : primaryColor.withOpacity(0.3)),
+        hintStyle: TextStyle(color: isDark ? mutedText.withValues(alpha: 0.4) : primaryColor.withValues(alpha: 0.3)),
         filled: true,
         fillColor: inputBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
@@ -278,7 +284,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: isDark ? const Color(0xFF475569) : primaryColor.withOpacity(0.1), width: 1),
+          borderSide: BorderSide(color: isDark ? const Color(0xFF475569) : primaryColor.withValues(alpha: 0.1), width: 1),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

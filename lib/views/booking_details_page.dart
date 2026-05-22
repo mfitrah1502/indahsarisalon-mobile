@@ -43,7 +43,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     decimalDigits: 0,
   );
 
-  int _selectedIndex = 1;
+  final int _selectedIndex = 1;
   bool _updating = false;
 
   String get _status => widget.booking['status'] as String? ?? 'pending';
@@ -206,7 +206,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
@@ -247,7 +247,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext);
               Navigator.pop(context, true);
             },
             child: Text('Nanti Saja', style: TextStyle(color: mutedText)),
@@ -264,10 +264,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
               if (await canLaunchUrl(uri)) {
                 await launchUrl(uri, mode: LaunchMode.externalApplication);
               }
-              if (mounted) {
-                Navigator.pop(context);
-                Navigator.pop(context, true);
-              }
+              if (!context.mounted) return;
+              Navigator.pop(dialogContext);
+              // ignore: use_build_context_synchronously
+              Navigator.pop(context, true);
             },
             child: const Text(
               'Gabung Grup',
@@ -348,7 +348,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         ),
       ),
     ).then((val) {
-      if (val == true) {
+      if (val == true && mounted) {
         Navigator.pop(context, true);
       }
     });
@@ -381,7 +381,9 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     if (await canLaunchUrl(uri)) {
       await launchUrl(uri, mode: LaunchMode.externalApplication);
     } else {
-      PopupHelper.showError(context, "Failed to open WhatsApp.");
+      if (mounted) {
+        PopupHelper.showError(context, "Failed to open WhatsApp.");
+      }
     }
   }
 
@@ -403,10 +405,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           .join(", ");
     } else {
       final s = widget.booking['services'];
-      if (s is List)
+      if (s is List) {
         servicesStr = s.join(", ");
-      else if (s is String)
+      } else if (s is String) {
         servicesStr = s;
+      }
     }
 
     final String message =
@@ -420,6 +423,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     try {
       // Use Share.share which automatically "pastes" the message into the text box
       // when the user selects a contact or group in WhatsApp.
+      // ignore: deprecated_member_use
       await Share.share(message);
     } catch (e) {
       debugPrint("Error broadcasting: $e");
@@ -634,6 +638,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
         services[0]['price'] = totalPrice;
       }
 
+      if (!mounted) return;
+
       Navigator.push(
         context,
         MaterialPageRoute(
@@ -771,7 +777,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -1299,7 +1305,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -1327,36 +1333,37 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        if (index == 0)
+        if (index == 0) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const HomePage()),
             (r) => false,
           );
-        else if (index == 1)
+        } else if (index == 1) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const BookingListPage()),
             (r) => false,
           );
-        else if (index == 2)
+        } else if (index == 2) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const ManageServicesPage()),
             (r) => false,
           );
-        else if (index == 3)
+        } else if (index == 3) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const ReportPage()),
             (r) => false,
           );
-        else if (index == 4)
+        } else if (index == 4) {
           Navigator.pushAndRemoveUntil(
             context,
             MaterialPageRoute(builder: (_) => const SettingsPage()),
             (r) => false,
           );
+        }
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

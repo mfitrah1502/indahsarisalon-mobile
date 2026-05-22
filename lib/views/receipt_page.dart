@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+
 import '../app_session.dart';
 
 class ReceiptPage extends StatelessWidget {
@@ -50,7 +51,6 @@ class ReceiptPage extends StatelessWidget {
     final Color cardBg = isDarkMode ? const Color(0xFF0F172A) : Colors.white;
     final Color mainTextColor = isDarkMode ? const Color(0xFFCBD5E1) : Colors.black;
     final Color mutedText = isDarkMode ? const Color(0xFF94A3B8) : Colors.grey;
-    final Color activeNavBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFCCE6F0);
     final Color primaryColor = const Color(0xFFD660A1);
 
     double subtotal = 0;
@@ -91,7 +91,7 @@ class ReceiptPage extends StatelessWidget {
     final total = totalOverride ?? (subtotal - effectiveDiscountAmount);
     final change = amountPaid - total;
 
-    Future<void> _printReceipt() async {
+    Future<void> printReceipt() async {
       final doc = pw.Document();
       final titleFont = pw.Font.helveticaBold();
       final regularFont = pw.Font.helvetica();
@@ -318,7 +318,7 @@ class ReceiptPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -419,7 +419,7 @@ class ReceiptPage extends StatelessWidget {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 16),
                           ),
-                          onPressed: _printReceipt,
+                          onPressed: printReceipt,
                           icon: const Icon(Icons.print, color: Colors.white),
                           label: const Text(
                             "Print Receipt",

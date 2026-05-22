@@ -1,30 +1,29 @@
-import 'package:flutter/material.dart';
-import '../app_session.dart';
-import 'package:flutter/services.dart';
-import 'package:intl/intl.dart';
-import '../controllers/loyalty_controller.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:path_provider/path_provider.dart';
-import 'package:http/http.dart' as http;
-import 'package:whatsapp_share/whatsapp_share.dart';
 import 'dart:io';
-import '../controllers/home_controller.dart';
-import '../models/promo_model.dart';
-import 'notifications_page.dart';
-import 'booking_page.dart';
-import 'settings_page.dart';
-import 'booking_list_page.dart';
-import 'manage_services_page.dart';
-import 'report_page.dart';
-import 'edit_profile_page.dart';
-import 'customer_list_page.dart';
-import '../app_session.dart';
+
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:http/http.dart' as http;
+import 'package:intl/intl.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'promo_list_page.dart';
-import '../utils/popup_helper.dart';
+
+import '../app_session.dart';
+import '../controllers/home_controller.dart';
+import '../controllers/loyalty_controller.dart';
+import '../models/promo_model.dart';
 import '../utils/loyalty_constants.dart';
+import '../utils/popup_helper.dart';
+import 'booking_list_page.dart';
+import 'customer_list_page.dart';
+import 'edit_profile_page.dart';
+import 'manage_services_page.dart';
+import 'notifications_page.dart';
 import 'presence_page.dart';
+import 'promo_list_page.dart';
+import 'report_page.dart';
+import 'settings_page.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -167,10 +166,12 @@ class _HomePageState extends State<HomePage> {
   }
 
   String formatIncrease(num percentage) {
-    if (percentage > 0)
+    if (percentage > 0) {
       return "+${percentage.toStringAsFixed(1)}${" vs yesterday"}";
-    if (percentage < 0)
+    }
+    if (percentage < 0) {
       return "${percentage.toStringAsFixed(1)}${" vs yesterday"}";
+    }
     return "Same as yesterday";
   }
 
@@ -365,7 +366,7 @@ class _HomePageState extends State<HomePage> {
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -380,7 +381,7 @@ class _HomePageState extends State<HomePage> {
                                 ]
                               : [
                                   Colors.white,
-                                  Colors.pink.shade50.withOpacity(0.3),
+                                  Colors.pink.shade50.withValues(alpha: 0.3),
                                 ],
                         ),
                       ),
@@ -389,7 +390,7 @@ class _HomePageState extends State<HomePage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFD660A1).withOpacity(0.1),
+                              color: const Color(0xFFD660A1).withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: const Icon(
@@ -472,7 +473,7 @@ class _HomePageState extends State<HomePage> {
                     child: ListView.separated(
                       scrollDirection: Axis.horizontal,
                       itemCount: _promos.length,
-                      separatorBuilder: (_, __) => const SizedBox(width: 16),
+                      separatorBuilder: (_, _) => const SizedBox(width: 16),
                       itemBuilder: (context, index) {
                         final p = _promos[index];
                         return GestureDetector(
@@ -522,7 +523,7 @@ class _HomePageState extends State<HomePage> {
                                         begin: Alignment.bottomCenter,
                                         end: Alignment.topCenter,
                                         colors: [
-                                          Colors.black.withOpacity(0.8),
+                                          Colors.black.withValues(alpha: 0.8),
                                           Colors.transparent,
                                         ],
                                       ),
@@ -544,8 +545,8 @@ class _HomePageState extends State<HomePage> {
                                         Text(
                                           formatCurrency(p.price),
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(
-                                              0.9,
+                                            color: Colors.white.withValues(
+                                              alpha: 0.9,
                                             ),
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
@@ -669,7 +670,7 @@ class _HomePageState extends State<HomePage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -746,7 +747,7 @@ class _HomePageState extends State<HomePage> {
                           vertical: 4,
                         ),
                         decoration: BoxDecoration(
-                          color: primaryColor.withOpacity(0.1),
+                          color: primaryColor.withValues(alpha: 0.1),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Text(
@@ -856,7 +857,7 @@ class _HomePageState extends State<HomePage> {
 
     String message =
         "Halo semuanya! 🌸\n\n"
-        "Ada promo menarik khusus *${targetLabel}* di *Indah Sari Salon*: \n\n"
+        "Ada promo menarik khusus *$targetLabel* di *Indah Sari Salon*: \n\n"
         "*${promo.title}* \n"
         "Hanya *${formatCurrency(promo.price)}*!\n\n"
         "Treatment: ${promo.description ?? '-'}\n"
@@ -868,7 +869,7 @@ class _HomePageState extends State<HomePage> {
       if (mounted) {
         PopupHelper.showInfo(
           context,
-          "Menyiapkan broadcast untuk ${targetLabel}...",
+          "Menyiapkan broadcast untuk $targetLabel...",
         );
       }
 
@@ -881,9 +882,18 @@ class _HomePageState extends State<HomePage> {
         final file = File(path);
         await file.writeAsBytes(bytes);
 
-        await Share.shareXFiles([XFile(path)], text: message);
+        await SharePlus.instance.share(
+          ShareParams(
+            text: message,
+            files: [XFile(path)],
+          ),
+        );
       } else {
-        await Share.share(message);
+        await SharePlus.instance.share(
+          ShareParams(
+            text: message,
+          ),
+        );
       }
 
       // After sharing, ask if they want to open the group directly
@@ -893,7 +903,7 @@ class _HomePageState extends State<HomePage> {
             ScaffoldMessenger.of(context).showSnackBar(
               SnackBar(
                 content: Text(
-                  "Successfully prepared share. Open group ${targetLabel}?",
+                  "Successfully prepared share. Open group $targetLabel?",
                 ),
                 action: SnackBarAction(
                   label: "BUKA",
@@ -933,7 +943,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1020,7 +1030,7 @@ class _HomePageState extends State<HomePage> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),

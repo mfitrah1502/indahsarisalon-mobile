@@ -1,16 +1,18 @@
-import 'package:flutter/material.dart';
 import 'dart:io';
+
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../models/user_model.dart';
-import '../controllers/user_controller.dart';
-import 'home_page.dart';
-import 'booking_list_page.dart';
-import 'manage_services_page.dart';
-import 'settings_page.dart';
-import 'report_page.dart';
-import '../utils/popup_helper.dart';
+
 import '../app_session.dart';
+import '../controllers/user_controller.dart';
+import '../models/user_model.dart';
+import '../utils/popup_helper.dart';
+import 'booking_list_page.dart';
+import 'home_page.dart';
+import 'manage_services_page.dart';
+import 'report_page.dart';
+import 'settings_page.dart';
 
 class ListStylistPage extends StatefulWidget {
   final String role;
@@ -97,18 +99,17 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             child: Icon(
                               Icons.arrow_back,
                               color: primaryColor,
-                              size: 24,
+                              size: 28,
                             ),
                           ),
-                          const SizedBox(width: 12),
+                          const SizedBox(width: 16),
                           Expanded(
                             child: Text(
                               "${widget.role}s",
                               style: TextStyle(
-                                fontSize: 24,
-                                fontWeight: FontWeight.w900,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
                                 color: primaryColor,
-                                letterSpacing: -0.5,
                               ),
                             ),
                           ),
@@ -153,7 +154,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   ),
                                   hintText: "Search member",
                                   hintStyle: TextStyle(
-                                    color: mutedText.withOpacity(0.8),
+                                    color: mutedText.withValues(alpha: 0.8),
                                     fontSize: 14,
                                   ),
                                   border: InputBorder.none,
@@ -220,7 +221,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: isDark ? Colors.transparent : Colors.black.withOpacity(0.02),
+                                    color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.02),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -283,7 +284,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: isDark ? const Color(0xFFF472B6) : buttonColor.withOpacity(0.8),
+                                              color: isDark ? const Color(0xFFF472B6) : buttonColor.withValues(alpha: 0.8),
                                             ),
                                           ),
                                         const SizedBox(height: 4),
@@ -328,27 +329,25 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                         message:
                                             "Yakin ingin menghapus ${stylist.name} dari tim?",
                                         onConfirm: () async {
-                                          if (stylist.id != null) {
-                                            try {
-                                              await _userController
-                                                  .deleteStylist(stylist.id!);
-                                              _fetchStylists();
-                                              if (mounted) {
-                                                PopupHelper.showSuccess(
-                                                  context,
-                                                  'Stylist berhasil dihapus',
-                                                );
-                                              }
-                                            } catch (e) {
-                                              if (mounted) {
-                                                PopupHelper.showError(
-                                                  context,
-                                                  'Failed to delete stylist: $e',
-                                                );
-                                              }
+                                          try {
+                                            await _userController
+                                                .deleteStylist(stylist.id);
+                                            _fetchStylists();
+                                            if (context.mounted) {
+                                              PopupHelper.showSuccess(
+                                                context,
+                                                'Stylist berhasil dihapus',
+                                              );
+                                            }
+                                          } catch (e) {
+                                            if (context.mounted) {
+                                              PopupHelper.showError(
+                                                context,
+                                                'Failed to delete stylist: $e',
+                                              );
                                             }
                                           }
-                                        },
+                                                                                },
                                       );
                                     },
                                     child: Container(
@@ -388,7 +387,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
           border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.transparent),
           boxShadow: [
             BoxShadow(
-              color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
+              color: isDark ? Colors.transparent : Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -432,12 +431,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
     final addressController = TextEditingController(
       text: isEdit ? stylist.address : '',
     );
-    final positionController = TextEditingController(
-      text: isEdit ? stylist.position : '',
-    );
-    final divisionController = TextEditingController(
-      text: isEdit ? stylist.division : '',
-    );
+
     final emergencyContactController = TextEditingController(
       text: isEdit ? stylist.emergencyContact : '',
     );
@@ -501,7 +495,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
               } catch (e) {
                 setModalState(() => isUploading = false);
                 debugPrint("Error uploading image: $e");
-                if (mounted) {
+                if (context.mounted) {
                   PopupHelper.showError(context, "Failed to upload photo: $e");
                 }
               }
@@ -653,13 +647,15 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 _fetchStylists();
                               } catch (e) {
                                 debugPrint("Error saving stylist: $e");
-                                PopupHelper.showError(
-                                  context,
-                                  'Failed to save data: $e',
-                                );
+                                if (context.mounted) {
+                                  PopupHelper.showError(
+                                    context,
+                                    'Failed to save data: $e',
+                                  );
+                                }
                               }
                             }
-                            if (mounted) Navigator.pop(context);
+                            if (context.mounted) Navigator.pop(context);
                           },
                           child: Text(
                             "Save",
@@ -1029,7 +1025,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
       ),
@@ -1040,7 +1036,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
-            color: isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6),
+            color: isDark ? const Color(0xFF94A3B8).withValues(alpha: 0.6) : const Color(0xFF64748B).withValues(alpha: 0.6),
             fontSize: 15,
           ),
           border: InputBorder.none,
@@ -1057,7 +1053,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
         ),
@@ -1065,7 +1061,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
           text,
           style: TextStyle(
             color: text == "Select Date"
-                ? (isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6))
+                ? (isDark ? const Color(0xFF94A3B8).withValues(alpha: 0.6) : const Color(0xFF64748B).withValues(alpha: 0.6))
                 : mainTextColor,
             fontSize: 15,
           ),
@@ -1083,12 +1079,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: isDark ? primaryColor.withOpacity(0.4) : primaryColor.withOpacity(0.2),
+      selectedColor: isDark ? primaryColor.withValues(alpha: 0.4) : primaryColor.withValues(alpha: 0.2),
       labelStyle: TextStyle(
         color: isSelected ? (isDark ? Colors.white : primaryColor) : mutedText,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
+      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: isDark ? const BorderSide(color: Color(0xFF475569)) : BorderSide.none,
@@ -1104,7 +1100,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(12),
         border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
       ),
@@ -1120,7 +1116,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
           hint: Text(
             value,
             style: TextStyle(
-              color: isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6),
+              color: isDark ? const Color(0xFF94A3B8).withValues(alpha: 0.6) : const Color(0xFF64748B).withValues(alpha: 0.6),
               fontSize: 15,
             ),
           ),

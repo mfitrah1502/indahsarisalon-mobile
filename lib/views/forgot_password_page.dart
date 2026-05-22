@@ -110,7 +110,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     border: Border.all(color: borderCol, width: 1),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.03),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
                       ),
@@ -140,7 +140,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             fontSize: 15,
                           ),
                           filled: true,
-                          fillColor: inputBg.withOpacity(isDark ? 0.3 : 0.5),
+                          fillColor: inputBg.withValues(alpha: isDark ? 0.3 : 0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -175,7 +175,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             fontSize: 15,
                           ),
                           filled: true,
-                          fillColor: inputBg.withOpacity(isDark ? 0.3 : 0.5),
+                          fillColor: inputBg.withValues(alpha: isDark ? 0.3 : 0.5),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8),
                             borderSide: BorderSide.none,
@@ -201,7 +201,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                             ),
                             padding: const EdgeInsets.symmetric(vertical: 18),
                             elevation: 4,
-                            shadowColor: primaryColor.withOpacity(0.3),
+                            shadowColor: primaryColor.withValues(alpha: 0.3),
                           ),
                           onPressed: _isLoading
                               ? null
@@ -226,33 +226,35 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                         .eq('username', username)
                                         .maybeSingle();
 
+                                    if (!context.mounted) return;
+
                                     if (user == null) {
-                                        PopupHelper.showError(context, 'Username tidak ditemukan');
+                                      PopupHelper.showError(context, 'Username tidak ditemukan');
                                       setState(() => _isLoading = false);
                                       return;
                                     }
 
                                     if (user['email'] != email) {
-                                        PopupHelper.showError(context, 'Email tidak sesuai dengan username tersebut');
+                                      PopupHelper.showError(context, 'Email tidak sesuai dengan username tersebut');
                                       setState(() => _isLoading = false);
                                       return;
                                     }
 
                                     await Supabase.instance.client.auth.resetPasswordForEmail(email);
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       _showOTPDialog(context);
                                     }
                                   } on AuthException catch (e) {
-                                    if (mounted) {
+                                    if (context.mounted) {
                                       String message = e.message;
                                       if (e.statusCode == '429' || e.message.contains('rate limit')) {
                                         message = 'Too many requests. Please wait a while before requesting another OTP.';
                                       }
-                                        PopupHelper.showError(context, message);
+                                      PopupHelper.showError(context, message);
                                     }
                                   } catch (e) {
-                                    if (mounted) {
-                                        PopupHelper.showError(context, 'Error: ${e.toString()}');
+                                    if (context.mounted) {
+                                      PopupHelper.showError(context, 'Error: ${e.toString()}');
                                     }
                                   } finally {
                                     if (mounted) {
@@ -325,7 +327,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
                     letterSpacing: 1.2,
-                    color: mutedText.withOpacity(0.5),
+                    color: mutedText.withValues(alpha: 0.5),
                   ),
                 ),
               ],
@@ -346,11 +348,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
       builder: (ctx) {
         bool isResending = false;
         return StatefulBuilder(
-          builder: (context, setStateDialog) {
+          builder: (dialogContext, setStateDialog) {
             Future<void> verify() async {
               final otp = _otpControllers.map((c) => c.text).join();
               if (otp.length != 8) {
-                  PopupHelper.showError(context, 'Please enter a valid 8-digit OTP');
+                if (dialogContext.mounted) {
+                  PopupHelper.showError(dialogContext, 'Please enter a valid 8-digit OTP');
+                }
                 return;
               }
 
@@ -361,8 +365,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   token: otp,
                   type: OtpType.recovery,
                 );
-                if (mounted) {
-                  Navigator.pop(ctx);
+                if (dialogContext.mounted) {
+                  Navigator.pop(dialogContext);
+                }
+                if (context.mounted) {
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (context) => ResetPasswordPage(
@@ -372,11 +378,11 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   );
                 }
               } catch (e) {
-                if (mounted) {
-                    PopupHelper.showError(context, 'Invalid OTP or error: ${e.toString()}');
+                if (dialogContext.mounted) {
+                  PopupHelper.showError(dialogContext, 'Invalid OTP or error: ${e.toString()}');
                 }
               } finally {
-                if (mounted) {
+                if (dialogContext.mounted) {
                   setStateDialog(() => _isVerifying = false);
                 }
               }
@@ -385,200 +391,206 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             return Dialog(
               backgroundColor: Colors.transparent,
               insetPadding: const EdgeInsets.symmetric(horizontal: 32),
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color: cardBg,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: borderCol, width: 1),
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Shield Icon Container
-                Container(
-                  width: 64, height: 64,
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF334155) : const Color(0xFFD6E9FF),
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Icon(Icons.verified_user, color: isDark ? Colors.white : primaryColor, size: 32),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: cardBg,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: borderCol, width: 1),
                 ),
-                const SizedBox(height: 24),
-                
-                Text(
-                  "Verify Your Identity",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: mainTextColor,
-                  ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  "Please enter the 8-digit code sent to:",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: mutedText,
-                    height: 1.5,
-                  ),
-                ),
-                Text(
-                  emailController.text,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : primaryColor,
-                  ),
-                ),
-                const SizedBox(height: 32),
-
-                // OTP Inputs
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: List.generate(8, (index) {
-                    return SizedBox(
-                      width: 32,
-                      height: 48,
-                      child: TextField(
-                        controller: _otpControllers[index],
-                        textAlign: TextAlign.center,
-                        keyboardType: TextInputType.number,
-                        inputFormatters: [
-                          FilteringTextInputFormatter.digitsOnly,
-                          LengthLimitingTextInputFormatter(1),
-                        ],
-                        onChanged: (value) {
-                          if (value.isNotEmpty) {
-                            if (index < 7) {
-                              FocusScope.of(ctx).nextFocus();
-                            } else {
-                              // Auto-verify on last digit
-                              FocusScope.of(ctx).unfocus();
-                              verify();
-                            }
-                          } else if (value.isEmpty && index > 0) {
-                            FocusScope.of(ctx).previousFocus();
-                          }
-                        },
-                        decoration: InputDecoration(
-                          filled: true,
-                          fillColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide.none,
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            borderSide: BorderSide(color: primaryColor, width: 2),
-                          ),
-                          contentPadding: EdgeInsets.zero,
-                        ),
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : primaryColor,
-                        ),
-                      ),
-                    );
-                  }),
-                ),
-
-                const SizedBox(height: 32),
-
-                // Verify Button
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: buttonColor,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      elevation: 4,
-                      shadowColor: primaryColor.withOpacity(0.3),
-                    ),
-                    onPressed: _isVerifying ? null : verify,
-                    child: _isVerifying
-                        ? const SizedBox(
-                            width: 24,
-                            height: 24,
-                            child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
-                          )
-                        : const Text("Verify", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-                  ),
-                ),
-
-                const SizedBox(height: 8),
-
-                // Cancel Button
-                TextButton(
-                  onPressed: () {
-                    PopupHelper.showConfirm(
-                      context,
-                      title: "Cancel Verification?",
-                      message: "Are you sure you want to cancel the OTP verification process?",
-                      onConfirm: () {
-                        Navigator.pop(ctx);
-                      },
-                    );
-                  },
-                  child: Text(
-                    "Cancel",
-                    style: TextStyle(
-                      color: mutedText,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-
-                const SizedBox(height: 20),
-                Divider(color: borderCol),
-                const SizedBox(height: 12),
-
-                // Resend section
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Text(
-                      "Didn't receive the code? ",
-                      style: TextStyle(color: mutedText, fontSize: 13),
+                    // Shield Icon Container
+                    Container(
+                      width: 64, height: 64,
+                      decoration: BoxDecoration(
+                        color: isDark ? const Color(0xFF334155) : const Color(0xFFD6E9FF),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      child: Icon(Icons.verified_user, color: isDark ? Colors.white : primaryColor, size: 32),
                     ),
-                    GestureDetector(
-                      onTap: isResending ? null : () async {
-                        setStateDialog(() => isResending = true);
-                        try {
-                          await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
-                          if (mounted) {
-                              PopupHelper.showSuccess(context, 'OTP sent successfully!');
-                          }
-                        } catch (e) {
-                          if (mounted) {
-                              PopupHelper.showError(context, 'Failed to resend OTP: ${e.toString()}');
-                          }
-                        } finally {
-                          setStateDialog(() => isResending = false);
+                    const SizedBox(height: 24),
+                    
+                    Text(
+                      "Verify Your Identity",
+                      style: TextStyle(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: mainTextColor,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      "Please enter the 8-digit code sent to:",
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: mutedText,
+                        height: 1.5,
+                      ),
+                    ),
+                    Text(
+                      emailController.text,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        color: isDark ? Colors.white : primaryColor,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    // OTP Inputs
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: List.generate(8, (index) {
+                        return SizedBox(
+                          width: 32,
+                          height: 48,
+                          child: TextField(
+                            controller: _otpControllers[index],
+                            textAlign: TextAlign.center,
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                              LengthLimitingTextInputFormatter(1),
+                            ],
+                            onChanged: (value) {
+                              if (value.isNotEmpty) {
+                                if (index < 7) {
+                                  FocusScope.of(ctx).nextFocus();
+                                } else {
+                                  // Auto-verify on last digit
+                                  FocusScope.of(ctx).unfocus();
+                                  verify();
+                                }
+                              } else if (value.isEmpty && index > 0) {
+                                FocusScope.of(ctx).previousFocus();
+                              }
+                            },
+                            decoration: InputDecoration(
+                              filled: true,
+                              fillColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(8),
+                                borderSide: BorderSide(color: primaryColor, width: 2),
+                              ),
+                              contentPadding: EdgeInsets.zero,
+                            ),
+                            style: TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                              color: isDark ? Colors.white : primaryColor,
+                            ),
+                          ),
+                        );
+                      }),
+                    ),
+
+                    const SizedBox(height: 32),
+
+                    // Verify Button
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: buttonColor,
+                          foregroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          elevation: 4,
+                          shadowColor: primaryColor.withValues(alpha: 0.3),
+                        ),
+                        onPressed: _isVerifying ? null : verify,
+                        child: _isVerifying
+                            ? const SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                              )
+                            : const Text("Verify", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+
+                    const SizedBox(height: 8),
+
+                    // Cancel Button
+                    TextButton(
+                      onPressed: () {
+                        if (dialogContext.mounted) {
+                          PopupHelper.showConfirm(
+                            dialogContext,
+                            title: "Cancel Verification?",
+                            message: "Are you sure you want to cancel the OTP verification process?",
+                            onConfirm: () {
+                              if (dialogContext.mounted) {
+                                Navigator.pop(dialogContext);
+                              }
+                            },
+                          );
                         }
                       },
                       child: Text(
-                        isResending ? "Resending..." : "Resend Code",
+                        "Cancel",
                         style: TextStyle(
-                          color: isResending ? mutedText : primaryColor,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 13,
+                          color: mutedText,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
+
+                    const SizedBox(height: 20),
+                    Divider(color: borderCol),
+                    const SizedBox(height: 12),
+
+                    // Resend section
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Didn't receive the code? ",
+                          style: TextStyle(color: mutedText, fontSize: 13),
+                        ),
+                        GestureDetector(
+                          onTap: isResending ? null : () async {
+                            setStateDialog(() => isResending = true);
+                            try {
+                              await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
+                              if (context.mounted) {
+                                PopupHelper.showSuccess(context, 'OTP sent successfully!');
+                              }
+                            } catch (e) {
+                              if (context.mounted) {
+                                PopupHelper.showError(context, 'Failed to resend OTP: ${e.toString()}');
+                              }
+                            } finally {
+                              if (dialogContext.mounted) {
+                                setStateDialog(() => isResending = false);
+                              }
+                            }
+                          },
+                          child: Text(
+                            isResending ? "Resending..." : "Resend Code",
+                            style: TextStyle(
+                              color: isResending ? mutedText : primaryColor,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
-              ],
-            ),
-          ),
+              ),
+            );
+          },
         );
-      },
-    );
       },
     );
   }

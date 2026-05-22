@@ -112,8 +112,8 @@ class _SettingsPageState extends State<SettingsPage> {
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(
-                              isDarkMode ? 0.2 : 0.02,
+                            color: Colors.black.withValues(
+                              alpha: isDarkMode ? 0.2 : 0.02,
                             ),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
@@ -193,14 +193,14 @@ class _SettingsPageState extends State<SettingsPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: _currentTier != 'None'
-                              ? mainTextColor.withOpacity(0.1)
+                              ? mainTextColor.withValues(alpha: 0.1)
                               : (isDarkMode
                                     ? const Color(0xFF1E293B)
                                     : const Color(0xFFF8FAFC)),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
                             color: _currentTier != 'None'
-                                ? mainTextColor.withOpacity(0.3)
+                                ? mainTextColor.withValues(alpha: 0.3)
                                 : (isDarkMode
                                       ? const Color(0xFF334155)
                                       : const Color(0xFFE2E8F0)),
@@ -429,7 +429,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             mutedTextColor: mutedText,
                             trailing: CupertinoSwitch(
                               value: isDarkMode,
-                              activeColor: activeNavBg,
+                              activeTrackColor: activeNavBg,
                               onChanged: (val) {
                                   // Update global theme state
                                   AppSession.isDarkMode = val;
@@ -473,7 +473,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             message: "Are you sure you want to log out?",
                             onConfirm: () async {
                               await AuthController().logout();
-                              if (mounted) {
+                              if (context.mounted) {
                                 Navigator.pushAndRemoveUntil(
                                   context,
                                   MaterialPageRoute(
@@ -504,7 +504,7 @@ class _SettingsPageState extends State<SettingsPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+              color: Colors.black.withValues(alpha: isDarkMode ? 0.2 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

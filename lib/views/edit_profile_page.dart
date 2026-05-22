@@ -20,8 +20,8 @@ class _EditProfilePageState extends State<EditProfilePage> {
   Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
   Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
   Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B);
-  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6);
-  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6);
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.6);
 
   final TextEditingController _fullNameController = TextEditingController();
   final TextEditingController _nicknameController = TextEditingController();
@@ -668,14 +668,14 @@ class _EditProfilePageState extends State<EditProfilePage> {
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                       color: date == null
-                          ? mutedText.withOpacity(0.5)
+                          ? mutedText.withValues(alpha: 0.5)
                           : mainTextColor,
                     ),
                   ),
                 ),
                 Icon(
                   Icons.calendar_today,
-                  color: mutedText.withOpacity(0.5),
+                  color: mutedText.withValues(alpha: 0.5),
                   size: 20,
                 ),
               ],
@@ -728,7 +728,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: primaryColor.withOpacity(isDark ? 0.35 : 0.2),
+      selectedColor: primaryColor.withValues(alpha: isDark ? 0.35 : 0.2),
       labelStyle: TextStyle(
         color: isSelected ? primaryColor : mutedText,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
@@ -816,7 +816,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               ),
               suffixIcon: Icon(
                 icon,
-                color: mutedText.withOpacity(0.5),
+                color: mutedText.withValues(alpha: 0.5),
                 size: 20,
               ),
             ),
@@ -840,7 +840,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -858,7 +858,7 @@ class _EditProfilePageState extends State<EditProfilePage> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: primaryColor.withOpacity(isDark ? 0.25 : 0.1),
+                  color: primaryColor.withValues(alpha: isDark ? 0.25 : 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(

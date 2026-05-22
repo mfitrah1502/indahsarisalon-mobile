@@ -1,16 +1,17 @@
-import 'booking_details_page.dart';
-import '../controllers/booking_list_controller.dart';
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
-import 'manage_services_page.dart';
-import 'home_page.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
+
+import '../app_session.dart';
+import '../controllers/booking_list_controller.dart';
+import '../utils/popup_helper.dart';
+import 'booking_details_page.dart';
 import 'booking_list_page.dart';
+import 'home_page.dart';
+import 'manage_services_page.dart';
 import 'report_page.dart';
 import 'settings_page.dart';
-import '../utils/popup_helper.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../app_session.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -219,7 +220,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
       if (await canLaunchUrl(uri)) {
         await launchUrl(uri, mode: LaunchMode.externalApplication);
       } else {
-        PopupHelper.showError(context, "Failed to open WhatsApp.");
+        if (mounted) {
+          PopupHelper.showError(context, "Failed to open WhatsApp.");
+        }
       }
     } catch (e) {
       if (mounted) {
@@ -387,7 +390,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withValues(alpha: 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -433,7 +436,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: isUnread
-              ? (isDark ? const Color(0xFFD660A1).withOpacity(0.25) : const Color(0xFFD660A1).withOpacity(0.3))
+              ? (isDark ? const Color(0xFFD660A1).withValues(alpha: 0.25) : const Color(0xFFD660A1).withValues(alpha: 0.3))
               : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
           width: isUnread ? 1.5 : 1,
         ),
@@ -441,7 +444,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
             ? null
             : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.03),
+                  color: Colors.black.withValues(alpha: 0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -616,7 +619,6 @@ class _NotificationsPageState extends State<NotificationsPage> {
   }
 
   Widget _buildNavItem(int index, String label, IconData icon) {
-    final isSelected = false;
     return GestureDetector(
       onTap: () {
         if (index == 0) {
@@ -673,8 +675,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
           Container(
             width: 4,
             height: 4,
-            decoration: BoxDecoration(
-              color: isSelected ? mutedText : Colors.transparent,
+            decoration: const BoxDecoration(
+              color: Colors.transparent,
               shape: BoxShape.circle,
             ),
           ),

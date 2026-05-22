@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:intl/intl.dart';
 
 class BookingController {
   /// Mendapatkan list jam yang tersedia (contoh: ["09:00", "09:15", ...])
@@ -16,11 +15,12 @@ class BookingController {
     int shiftEndHour = 18,
   }) async {
     final supabase = Supabase.instance.client;
-    
+
     // 1. Definisikan jam awal dan akhir dari hari yang dipilih
     final startOfDay = DateTime(date.year, date.month, date.day);
     final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
-    final dateStr = "${date.year}-${date.month.toString().padLeft(2,'0')}-${date.day.toString().padLeft(2,'0')}";
+    final dateStr =
+        "${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}";
 
     try {
       // Cek Absensi dulu. Jika stylist libur (off) di hari ini, langsung return kosong.
@@ -61,10 +61,10 @@ class BookingController {
       List<_TimeRange> existingBookings = [];
       for (var b in bookingsData) {
         if (b['reservation_datetime'] == null) continue;
-        
+
         final dtStr = b['reservation_datetime'] as String;
         final startTime = DateTime.parse(dtStr);
-        
+
         // Hitung total durasi dari booking ini
         int sumDuration = 0;
         bool isHairColouring = false;
@@ -78,32 +78,48 @@ class BookingController {
                 sumDuration += (td['duration'] as num).toInt();
               }
               final treatments = td['treatments'] as Map<String, dynamic>?;
-              final tName = (treatments?['name'] ?? '').toString().toLowerCase();
-              final categories = treatments?['categories'] as Map<String, dynamic>?;
+              final tName = (treatments?['name'] ?? '')
+                  .toString()
+                  .toLowerCase();
+              final categories =
+                  treatments?['categories'] as Map<String, dynamic>?;
               final cat = (categories?['name'] ?? '').toString().toLowerCase();
               final dName = (td['name'] ?? '').toString().toLowerCase();
-              
-              if (['color', 'warna', 'pewarnaan'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+
+              if (['color', 'warna', 'pewarnaan'].any(
+                (k) =>
+                    tName.contains(k) || dName.contains(k) || cat.contains(k),
+              )) {
                 isHairColouring = true;
               }
-              if (['color', 'warna', 'pelurusan', 'smoothing', 'relaxing', 'rebonding'].any((k) => tName.contains(k) || dName.contains(k) || cat.contains(k))) {
+              if ([
+                'color',
+                'warna',
+                'pelurusan',
+                'smoothing',
+                'relaxing',
+                'rebonding',
+              ].any(
+                (k) =>
+                    tName.contains(k) || dName.contains(k) || cat.contains(k),
+              )) {
                 isLongService = true;
               }
             }
           }
         }
-        
+
         if (isHairColouring) {
           sumDuration = 420;
         } else if (isLongService && sumDuration < 240) {
           sumDuration = 240;
         }
-        
+
         // Jika karena alasan tertentu durasi 0, kita asumsikan default 30 menit
         if (sumDuration == 0) sumDuration = 30;
 
         DateTime endTime = startTime.add(Duration(minutes: sumDuration));
-        
+
         final status = b['status'] as String?;
         if (status != null && status.toLowerCase() == 'berhasil') {
           // Jika sudah selesai (berhasil), gunakan waktu update sebagai end time
@@ -112,8 +128,8 @@ class BookingController {
           if (updatedAtStr != null) {
             final updatedAt = DateTime.parse(updatedAtStr).toLocal();
             // Hanya berlaku jika selesai pada hari yang sama dengan booking
-            if (updatedAt.year == startTime.year && 
-                updatedAt.month == startTime.month && 
+            if (updatedAt.year == startTime.year &&
+                updatedAt.month == startTime.month &&
                 updatedAt.day == startTime.day) {
               if (endTime.isAfter(updatedAt)) {
                 endTime = updatedAt.isAfter(startTime) ? updatedAt : startTime;
@@ -124,14 +140,26 @@ class BookingController {
             }
           }
         }
-        
+
         existingBookings.add(_TimeRange(start: startTime, end: endTime));
       }
 
       // 4. Generate slot waktu setiap 15 menit
       List<String> availableSlots = [];
-      DateTime slotStart = DateTime(date.year, date.month, date.day, shiftStartHour, 0);
-      final shiftEnd = DateTime(date.year, date.month, date.day, shiftEndHour, 0);
+      DateTime slotStart = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        shiftStartHour,
+        0,
+      );
+      final shiftEnd = DateTime(
+        date.year,
+        date.month,
+        date.day,
+        shiftEndHour,
+        0,
+      );
 
       while (slotStart.isBefore(shiftEnd)) {
         final slotEnd = slotStart.add(Duration(minutes: totalDuration));
@@ -155,7 +183,7 @@ class BookingController {
         // Jangan tampilkan waktu yang sudah lewat jika harinya adalah hari ini
         final now = DateTime.now();
         if (slotStart.isBefore(now)) {
-           isConflict = true; 
+          isConflict = true;
         }
 
         // Jika valid, tambahkan ke result
@@ -174,7 +202,7 @@ class BookingController {
       debugPrint("Error fetching schedules: $e");
       debugPrint("Stacktrace: $stack");
       // Fallback aman jika terjadi error
-      return []; 
+      return [];
     }
   }
 
@@ -199,22 +227,28 @@ class BookingController {
       }
     }
     if (treatmentId == null) {
-      throw Exception("treatment_id tidak ditemukan. Silakan coba booking ulang.");
+      throw Exception(
+        "treatment_id tidak ditemukan. Silakan coba booking ulang.",
+      );
     }
 
-    final bookingInsert = await supabase.from('bookings').insert({
-      'user_id': userId,
-      'stylist_id': stylistId,
-      'treatment_id': treatmentId,
-      'reservation_datetime': reservationDatetime,
-      'total_price': totalPrice,
-      'status': 'pending',
-      'payment_status': paymentMethod == 'Tunai' ? 'unpaid' : 'paid',
-      'customer_name': customerName,
-      'customer_phone': customerPhone,
-      'customer_email': customerEmail,
-      'payment_method': paymentMethod,
-    }).select('id').single();
+    final bookingInsert = await supabase
+        .from('bookings')
+        .insert({
+          'user_id': userId,
+          'stylist_id': stylistId,
+          'treatment_id': treatmentId,
+          'reservation_datetime': reservationDatetime,
+          'total_price': totalPrice,
+          'status': 'pending',
+          'payment_status': paymentMethod == 'Tunai' ? 'unpaid' : 'paid',
+          'customer_name': customerName,
+          'customer_phone': customerPhone,
+          'customer_email': customerEmail,
+          'payment_method': paymentMethod,
+        })
+        .select('id')
+        .single();
 
     final bookingId = bookingInsert['id'];
 
@@ -232,23 +266,29 @@ class BookingController {
       String cat = (svc['category'] ?? '').toString().toLowerCase();
       String tName = (svc['treatment_name'] ?? '').toString().toLowerCase();
       if (cat.contains('color') || tName.contains('color')) {
-         coloringSpend += (svc['adjusted_price'] ?? svc['price']);
+        coloringSpend += (svc['adjusted_price'] ?? svc['price']);
       }
     }
 
     if (coloringSpend >= 1500000) {
       if (customerPhone.isNotEmpty) {
-        final q = await supabase.from('users')
-          .select('id')
-          .eq('role', 'pelanggan')
-          .eq('phone', customerPhone)
-          .limit(1)
-          .maybeSingle();
+        final q = await supabase
+            .from('users')
+            .select('id')
+            .eq('role', 'pelanggan')
+            .eq('phone', customerPhone)
+            .limit(1)
+            .maybeSingle();
         if (q != null && q['id'] != null) {
-          await supabase.from('users').update({
-             'is_colour_circle': true,
-             'colour_circle_expired_at': DateTime.now().add(const Duration(days: 730)).toIso8601String()
-          }).eq('id', q['id']);
+          await supabase
+              .from('users')
+              .update({
+                'is_colour_circle': true,
+                'colour_circle_expired_at': DateTime.now()
+                    .add(const Duration(days: 730))
+                    .toIso8601String(),
+              })
+              .eq('id', q['id']);
         }
       }
     }

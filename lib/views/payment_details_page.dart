@@ -1,17 +1,16 @@
 import 'package:flutter/material.dart';
-import '../controllers/booking_controller.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
+
 import '../app_session.dart';
-import 'home_page.dart';
-import 'settings_page.dart';
-import 'booking_list_page.dart';
-import 'manage_services_page.dart';
-import 'report_page.dart';
+import '../controllers/booking_controller.dart';
 import '../utils/midtrans_helper.dart';
 import '../utils/popup_helper.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:whatsapp_share/whatsapp_share.dart';
-import 'package:share_plus/share_plus.dart';
+import 'booking_list_page.dart';
+import 'home_page.dart';
+import 'manage_services_page.dart';
+import 'report_page.dart';
+import 'settings_page.dart';
 
 
 
@@ -55,7 +54,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
   final _currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   int _selectedPaymentIndex = 2; // Default: Cash at Salon
-  int _selectedIndex = 1;
+  final int _selectedIndex = 1;
   bool _processing = false;
 
   final List<Map<String, dynamic>> _paymentMethods = [
@@ -66,7 +65,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
 
   Future<void> _confirmBooking() async {
     setState(() => _processing = true);
-    final BookingController _bookingController = BookingController();
+    final BookingController bookingController = BookingController();
 
     try {
       // Get user_id from current session
@@ -77,7 +76,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       
       final String paymentMethod = _paymentMethods[_selectedPaymentIndex]["title"];
       
-      final bookingId = await _bookingController.confirmBooking(
+      final bookingId = await bookingController.confirmBooking(
         userId: userId,
         stylistId: widget.stylistId,
         reservationDatetime: widget.reservationDatetime,
@@ -114,6 +113,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
           debugPrint("Midtrans Error: $e");
         }
         
+        if (!mounted) return;
         Navigator.pushAndRemoveUntil(
           context,
           MaterialPageRoute(builder: (_) => const BookingListPage()),
@@ -144,25 +144,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       }
     }
   }
-  Future<void> _broadcastToEmployeeGroup() async {
-    final String date = widget.reservationDatetime.substring(0, 10);
-    final String time = widget.reservationDatetime.substring(11, 16);
-    final String services = widget.selectedServices.map((s) => s['name'] ?? s['treatment_name']).join(", ");
 
-    final String message = "*BOOKING BARU - INDAH SARI SALON*\n\n"
-        "📍 *Stylist:* ${widget.stylistName}\n"
-        "👤 *Customer:* ${widget.customerName}\n"
-        "📅 *Jadwal:* $date | $time WIB\n"
-        "💇 *Treatment:* $services\n\n"
-        "_Mohon bersiap sebelum jam booking. Terima kasih!_";
-
-    try {
-      // Use standard share to allow selecting WhatsApp Group
-      await Share.share(message);
-    } catch (e) {
-      debugPrint("Broadcast Error: $e");
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -178,16 +160,20 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    child: Icon(Icons.arrow_back, color: primaryColor, size: 28),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: primaryColor,
+                      size: 28,
+                    ),
                   ),
+                  const SizedBox(width: 16),
                   Expanded(
-                    child: Center(
-                      child: Padding(
-                        padding: const EdgeInsets.only(right: 44.0),
-                        child: Text(
-                          "Payment Details",
-                          style: TextStyle(color: primaryColor, fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                    child: Text(
+                      "Payment Details",
+                      style: TextStyle(
+                        color: primaryColor,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
@@ -211,7 +197,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                       decoration: BoxDecoration(
                         color: cardBg,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -287,7 +273,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                               const SizedBox(width: 8),
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                                decoration: BoxDecoration(color: const Color(0xFFD660A1).withOpacity(isDark ? 0.2 : 0.1), borderRadius: BorderRadius.circular(4)),
+                                                decoration: BoxDecoration(color: const Color(0xFFD660A1).withValues(alpha: isDark ? 0.2 : 0.1), borderRadius: BorderRadius.circular(4)),
                                                 child: const Text("Colour Circle -35%", style: TextStyle(color: Color(0xFFD660A1), fontSize: 9, fontWeight: FontWeight.bold)),
                                               ),
                                             ],
@@ -344,7 +330,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5),
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withValues(alpha: 0.5),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Icon(method["icon"], size: 20, color: isDark ? Colors.white : primaryColor),
@@ -375,8 +361,12 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       decoration: BoxDecoration(
-                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0).withOpacity(0.6),
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0).withValues(alpha: 0.6),
                         borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: isDark ? dividerColor : const Color(0xFFCBD5E1),
+                          width: 1.5,
+                        ),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -436,7 +426,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
         decoration: BoxDecoration(
           color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05), blurRadius: 20, offset: const Offset(0, -5))],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: SafeArea(
@@ -460,11 +450,17 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
     final isSelected = _selectedIndex == index;
     return GestureDetector(
       onTap: () {
-        if (index == 0) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
-        else if (index == 1) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
-        else if (index == 2) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
-        else if (index == 3) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
-        else if (index == 4) Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+        if (index == 0) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const HomePage()), (r) => false);
+        } else if (index == 1) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const BookingListPage()), (r) => false);
+        } else if (index == 2) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ManageServicesPage()), (r) => false);
+        } else if (index == 3) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const ReportPage()), (r) => false);
+        } else if (index == 4) {
+          Navigator.pushAndRemoveUntil(context, MaterialPageRoute(builder: (_) => const SettingsPage()), (r) => false);
+        }
       },
       child: Column(
         mainAxisSize: MainAxisSize.min,

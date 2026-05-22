@@ -157,12 +157,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         suffixIcon: IconButton(
                           icon: Icon(
                             _showPassword ? Icons.visibility : Icons.visibility_off,
-                            color: mutedText.withOpacity(0.5), size: 20,
+                            color: mutedText.withValues(alpha: 0.5), size: 20,
                           ),
                           onPressed: () => setState(() => _showPassword = !_showPassword),
                         ),
                         filled: true,
-                        fillColor: inputBg.withOpacity(0.5),
+                        fillColor: inputBg.withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
@@ -192,12 +192,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         suffixIcon: IconButton(
                           icon: Icon(
                             _showConfirm ? Icons.visibility : Icons.visibility_off,
-                            color: mutedText.withOpacity(0.5), size: 20,
+                            color: mutedText.withValues(alpha: 0.5), size: 20,
                           ),
                           onPressed: () => setState(() => _showConfirm = !_showConfirm),
                         ),
                         filled: true,
-                        fillColor: inputBg.withOpacity(0.5),
+                        fillColor: inputBg.withValues(alpha: 0.5),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(8),
                           borderSide: BorderSide.none,
@@ -257,7 +257,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                       ),
                       padding: const EdgeInsets.symmetric(vertical: 18),
                       elevation: 4,
-                      shadowColor: primaryColor.withOpacity(0.3),
+                      shadowColor: primaryColor.withValues(alpha: 0.3),
                     ),
                     onPressed: (_has8Chars && _hasUppercase && _hasSpecialSymbol && !_isLoading) ? () async {
                       if (passwordController.text != confirmController.text) {
@@ -281,17 +281,19 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                           await Supabase.instance.client.auth.signOut();
                         } catch (_) {}
 
-                        if (mounted) {
+                        if (context.mounted) {
                           PopupHelper.showSuccess(context, 'Password successfully updated!', onConfirm: () {
-                            Navigator.pushAndRemoveUntil(
-                              context,
-                              MaterialPageRoute(builder: (context) => const AuthPage()),
-                              (route) => false,
-                            );
+                            if (context.mounted) {
+                              Navigator.pushAndRemoveUntil(
+                                context,
+                                MaterialPageRoute(builder: (context) => const AuthPage()),
+                                (route) => false,
+                              );
+                            }
                           });
                         }
                       } catch (e) {
-                        if (mounted) {
+                        if (context.mounted) {
                           PopupHelper.showError(context, 'Error updating password: ${e.toString()}');
                         }
                       } finally {
@@ -337,7 +339,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
         children: [
           Icon(
             isValid ? Icons.check_circle : Icons.circle_outlined,
-            color: isValid ? primaryColor : mutedText.withOpacity(0.4),
+            color: isValid ? primaryColor : mutedText.withValues(alpha: 0.4),
             size: 16,
           ),
           const SizedBox(width: 12),

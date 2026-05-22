@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../controllers/booking_controller.dart';
-import 'home_page.dart';
-import 'customer_list_page.dart';
-import 'settings_page.dart';
-import 'select_services_page.dart';
-import 'booking_list_page.dart';
-import 'manage_services_page.dart';
-import 'report_page.dart';
-import 'payment_details_page.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import '../utils/popup_helper.dart';
+
 import '../app_session.dart';
+import '../controllers/booking_controller.dart';
+import '../utils/popup_helper.dart';
+import 'booking_list_page.dart';
+import 'customer_list_page.dart';
+import 'home_page.dart';
+import 'manage_services_page.dart';
+import 'payment_details_page.dart';
+import 'report_page.dart';
+import 'settings_page.dart';
 
 class BookingPage extends StatefulWidget {
   final DateTime selectedDate;
@@ -55,7 +55,7 @@ class _BookingPageState extends State<BookingPage> {
   Color get dividerColor => isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
 
   int _selectedTimeIndex = -1;
-  int _selectedIndex = 1;
+  final int _selectedIndex = 1;
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameCtrl = TextEditingController();
@@ -284,22 +284,10 @@ class _BookingPageState extends State<BookingPage> {
                 children: [
                   GestureDetector(
                     onTap: () => Navigator.pop(context),
-                    behavior: HitTestBehavior.opaque,
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: cardBg,
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: dividerColor),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(Icons.arrow_back_ios_new_rounded, color: darkText, size: 20),
+                    child: Icon(
+                      Icons.arrow_back,
+                      color: primaryColor,
+                      size: 28,
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -355,8 +343,8 @@ class _BookingPageState extends State<BookingPage> {
                         boxShadow: [
                           BoxShadow(
                             color: isDark
-                                ? Colors.black.withOpacity(0.2)
-                                : const Color(0xFFCBD5E1).withOpacity(0.2),
+                                ? Colors.black.withValues(alpha: 0.2)
+                                : const Color(0xFFCBD5E1).withValues(alpha: 0.2),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -390,7 +378,7 @@ class _BookingPageState extends State<BookingPage> {
                                 Container(
                                   padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                   decoration: BoxDecoration(
-                                    color: primaryColor.withOpacity(0.1),
+                                    color: primaryColor.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Text(
@@ -485,7 +473,7 @@ class _BookingPageState extends State<BookingPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
+                              color: primaryColor.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
@@ -630,7 +618,7 @@ class _BookingPageState extends State<BookingPage> {
                               ? []
                               : [
                                   BoxShadow(
-                                    color: buttonColor.withOpacity(isDark ? 0.1 : 0.3),
+                                    color: buttonColor.withValues(alpha: isDark ? 0.1 : 0.3),
                                     blurRadius: 15,
                                     offset: const Offset(0, 6),
                                   ),
@@ -667,11 +655,12 @@ class _BookingPageState extends State<BookingPage> {
                                             })
                                             .eq('id', widget.rescheduleBookingId!);
 
-                                        if (mounted) {
+                                        if (context.mounted) {
                                           PopupHelper.showSuccess(
                                             context,
                                             "Schedule has been successfully changed!",
                                             onConfirm: () {
+                                              if (!context.mounted) return;
                                               Navigator.pushAndRemoveUntil(
                                                 context,
                                                 MaterialPageRoute(builder: (_) => const BookingListPage()),
@@ -681,7 +670,7 @@ class _BookingPageState extends State<BookingPage> {
                                           );
                                         }
                                       } catch (e) {
-                                        if (mounted) {
+                                        if (context.mounted) {
                                           PopupHelper.showError(context, "Failed to reschedule: $e");
                                           setState(() => _loadingTimes = false);
                                         }
@@ -731,7 +720,7 @@ class _BookingPageState extends State<BookingPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.04),
+              color: Colors.black.withValues(alpha: 0.04),
               blurRadius: 24,
               offset: const Offset(0, -8),
             ),
@@ -787,7 +776,7 @@ class _BookingPageState extends State<BookingPage> {
           borderRadius: BorderRadius.circular(16),
           borderSide: const BorderSide(color: Color(0xFFEF4444)),
         ),
-        prefixIcon: Icon(icon, color: mutedText.withOpacity(0.7), size: 22),
+        prefixIcon: Icon(icon, color: mutedText.withValues(alpha: 0.7), size: 22),
       ),
       keyboardType: keyboardType,
       validator: validator,
@@ -805,7 +794,7 @@ class _BookingPageState extends State<BookingPage> {
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: primaryColor.withOpacity(0.1),
+                color: primaryColor.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, size: 16, color: primaryColor),
@@ -844,14 +833,14 @@ class _BookingPageState extends State<BookingPage> {
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: (isDark ? Colors.white : primaryColor).withOpacity(0.35),
+                            color: (isDark ? Colors.white : primaryColor).withValues(alpha: 0.35),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
                         ]
                       : [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.015),
+                            color: Colors.black.withValues(alpha: 0.015),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -898,14 +887,14 @@ class _BookingPageState extends State<BookingPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, color: isSelected ? primaryColor : mutedText.withOpacity(0.5), size: 24),
+            Icon(icon, color: isSelected ? primaryColor : mutedText.withValues(alpha: 0.5), size: 24),
             const SizedBox(height: 4),
             Text(
               label,
               style: TextStyle(
                 fontSize: 10,
                 fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: isSelected ? primaryColor : mutedText.withOpacity(0.5),
+                color: isSelected ? primaryColor : mutedText.withValues(alpha: 0.5),
                 letterSpacing: 0.5,
               ),
             ),

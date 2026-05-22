@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
-import 'home_page.dart';
+
+import '../app_session.dart';
 import 'booking_list_page.dart';
-import 'settings_page.dart';
-import 'manage_services_page.dart';
+import 'home_page.dart';
 import 'list_stylist_page.dart';
+import 'manage_services_page.dart';
 import 'presence_page.dart';
 import 'report_page.dart';
-import '../utils/popup_helper.dart';
-import '../app_session.dart';
+import 'settings_page.dart';
 
 class ManageTeamPage extends StatefulWidget {
   const ManageTeamPage({super.key});
@@ -136,7 +136,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                              color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -216,7 +216,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
+              color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

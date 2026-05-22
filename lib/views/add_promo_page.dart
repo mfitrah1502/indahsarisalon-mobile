@@ -60,7 +60,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
     }
   }
 
-  Future<void> _selectDateTime(BuildContext context, bool isStart) async {
+  Future<void> _selectDateTime(bool isStart) async {
     final DateTime? pickedDate = await showDatePicker(
       context: context,
       initialDate: DateTime.now(),
@@ -293,7 +293,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                                 : Image.file(
                                     File(_imageFile!.path),
                                     fit: BoxFit.cover,
-                                    errorBuilder: (ctx, _, __) => const Icon(Icons.error),
+                                    errorBuilder: (ctx, _, _) => const Icon(Icons.error),
                                   ))
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
@@ -338,7 +338,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                               _dateBox(
                                 text: _formatDateTime(_startDate, _startTime),
                                 icon: Icons.calendar_today_outlined,
-                                onTap: () => _selectDateTime(context, true),
+                                onTap: () => _selectDateTime(true),
                               ),
                             ],
                           ),
@@ -353,7 +353,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                               _dateBox(
                                 text: _formatDateTime(_endDate, _endTime),
                                 icon: Icons.event_available_outlined,
-                                onTap: () => _selectDateTime(context, false),
+                                onTap: () => _selectDateTime(false),
                               ),
                             ],
                           ),
@@ -419,7 +419,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                           Switch(
                             value: _isPromoActive,
                             onChanged: (val) => setState(() => _isPromoActive = val),
-                            activeColor: isDark ? Colors.white : primaryColor,
+                            activeThumbColor: isDark ? Colors.white : primaryColor,
                           ),
                         ],
                       ),
@@ -469,7 +469,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
         style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: mainTextColor),
         decoration: InputDecoration(
           hintText: hint,
-          hintStyle: TextStyle(color: mutedText.withOpacity(0.5), fontSize: 14),
+          hintStyle: TextStyle(color: mutedText.withValues(alpha: 0.5), fontSize: 14),
           border: InputBorder.none,
           contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         ),

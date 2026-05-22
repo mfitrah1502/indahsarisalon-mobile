@@ -92,7 +92,7 @@ class _PromoListPageState extends State<PromoListPage> {
                       ),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(color: primaryColor.withOpacity(0.1), borderRadius: BorderRadius.circular(10)),
+                        decoration: BoxDecoration(color: primaryColor.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
                         child: Text("Promo", style: TextStyle(color: primaryColor, fontWeight: FontWeight.bold, fontSize: 12)),
                       ),
                     ],
@@ -105,7 +105,7 @@ class _PromoListPageState extends State<PromoListPage> {
                     const SizedBox(height: 16),
                     Text("Included Treatments:", style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(promo.description!, style: TextStyle(fontSize: 14, color: mainTextColor.withOpacity(0.87))),
+                    Text(promo.description!, style: TextStyle(fontSize: 14, color: mainTextColor.withValues(alpha: 0.87))),
                   ],
                   const SizedBox(height: 20),
                   const Divider(),
@@ -165,7 +165,7 @@ class _PromoListPageState extends State<PromoListPage> {
                       : ListView.separated(
                           padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 8.0),
                           itemCount: _promos.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 16),
+                          separatorBuilder: (_, _) => const SizedBox(height: 16),
                           itemBuilder: (context, index) {
                             final p = _promos[index];
                             return GestureDetector(
@@ -196,7 +196,7 @@ class _PromoListPageState extends State<PromoListPage> {
                                           gradient: LinearGradient(
                                             begin: Alignment.bottomCenter,
                                             end: Alignment.topCenter,
-                                            colors: [Colors.black.withOpacity(0.8), Colors.transparent],
+                                            colors: [Colors.black.withValues(alpha: 0.8), Colors.transparent],
                                           ),
                                         ),
                                         child: Column(
@@ -210,7 +210,7 @@ class _PromoListPageState extends State<PromoListPage> {
                                             ),
                                             Text(
                                               formatCurrency(p.price),
-                                              style: TextStyle(color: mainTextColor.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
+                                              style: TextStyle(color: mainTextColor.withValues(alpha: 0.9), fontSize: 14, fontWeight: FontWeight.w600),
                                             ),
                                           ],
                                         ),
