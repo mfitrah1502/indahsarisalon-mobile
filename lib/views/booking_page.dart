@@ -43,10 +43,16 @@ class BookingPage extends StatefulWidget {
 }
 
 class _BookingPageState extends State<BookingPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFFAFAFC);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFFFFFFF);
+  Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get dividerColor => isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
 
   int _selectedTimeIndex = -1;
   int _selectedIndex = 1;
@@ -264,11 +270,10 @@ class _BookingPageState extends State<BookingPage> {
 
   @override
   Widget build(BuildContext context) {
-    final Color cardBg = Colors.white;
-    final Color darkText = const Color(0xFF0F172A);
+    final Color darkText = mainTextColor;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFFAFAFC),
+      backgroundColor: scaffoldBg,
       body: SafeArea(
         child: Column(
           children: [
@@ -283,12 +288,12 @@ class _BookingPageState extends State<BookingPage> {
                     child: Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(14),
-                        border: Border.all(color: const Color(0xFFF1F5F9)),
+                        border: Border.all(color: dividerColor),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.02),
+                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -308,7 +313,7 @@ class _BookingPageState extends State<BookingPage> {
                             fontSize: 22,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.5,
-                            color: darkText,
+                            color: primaryColor,
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -338,16 +343,20 @@ class _BookingPageState extends State<BookingPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        gradient: const LinearGradient(
-                          colors: [Color(0xFFFFFFFF), Color(0xFFF8FAFC)],
+                        gradient: LinearGradient(
+                          colors: isDark
+                              ? [const Color(0xFF0F172A), const Color(0xFF1E293B)]
+                              : [const Color(0xFFFFFFFF), const Color(0xFFF8FAFC)],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
                         ),
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: Colors.white, width: 2),
+                        border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.white, width: 2),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFFCBD5E1).withOpacity(0.2),
+                            color: isDark
+                                ? Colors.black.withOpacity(0.2)
+                                : const Color(0xFFCBD5E1).withOpacity(0.2),
                             blurRadius: 15,
                             offset: const Offset(0, 8),
                           ),
@@ -360,8 +369,8 @@ class _BookingPageState extends State<BookingPage> {
                             height: 54,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              color: const Color(0xFFF1F5F9),
-                              border: Border.all(color: const Color(0xFFE2E8F0)),
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                               image: widget.stylistAvatar != null && widget.stylistAvatar!.isNotEmpty
                                   ? DecorationImage(
                                       image: NetworkImage(widget.stylistAvatar!),
@@ -409,9 +418,9 @@ class _BookingPageState extends State<BookingPage> {
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF8FAFC),
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                               borderRadius: BorderRadius.circular(12),
-                              border: Border.all(color: const Color(0xFFF1F5F9)),
+                              border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                             ),
                             child: Column(
                               children: [
@@ -444,7 +453,7 @@ class _BookingPageState extends State<BookingPage> {
                             fontSize: 18,
                             fontWeight: FontWeight.w800,
                             letterSpacing: -0.3,
-                            color: darkText,
+                            color: primaryColor,
                           ),
                         ),
                         GestureDetector(
@@ -476,19 +485,19 @@ class _BookingPageState extends State<BookingPage> {
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: buttonColor.withOpacity(0.1),
+                              color: primaryColor.withOpacity(0.1),
                               borderRadius: BorderRadius.circular(20),
                             ),
                             child: Row(
                               children: [
-                                Icon(Icons.contact_phone_rounded, size: 14, color: buttonColor),
+                                Icon(Icons.contact_phone_rounded, size: 14, color: primaryColor),
                                 const SizedBox(width: 4),
                                 Text(
                                   "From Contacts",
                                   style: TextStyle(
                                     fontSize: 12,
                                     fontWeight: FontWeight.w800,
-                                    color: buttonColor,
+                                    color: primaryColor,
                                   ),
                                 ),
                               ],
@@ -545,7 +554,7 @@ class _BookingPageState extends State<BookingPage> {
                         fontSize: 18,
                         fontWeight: FontWeight.w800,
                         letterSpacing: -0.3,
-                        color: darkText,
+                        color: primaryColor,
                       ),
                     ),
                     const SizedBox(height: 6),
@@ -567,18 +576,23 @@ class _BookingPageState extends State<BookingPage> {
                         width: double.infinity,
                         padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 20),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFFEF2F2),
+                          color: isDark ? const Color(0xFF451A1A) : const Color(0xFFFEF2F2),
                           borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: const Color(0xFFFECACA)),
+                          border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
                         ),
                         child: Column(
                           children: [
-                            const Icon(Icons.event_busy_rounded, color: Color(0xFFEF4444), size: 36),
+                            Icon(Icons.event_busy_rounded, color: isDark ? const Color(0xFFF87171) : const Color(0xFFEF4444), size: 36),
                             const SizedBox(height: 12),
-                            const Text(
+                            Text(
                               "No available schedule or not enough time for the selected treatment duration.",
                               textAlign: TextAlign.center,
-                              style: TextStyle(color: Color(0xFF991B1B), fontSize: 13, fontWeight: FontWeight.w600, height: 1.4),
+                              style: TextStyle(
+                                color: isDark ? const Color(0xFFFECACA) : const Color(0xFF991B1B),
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                                height: 1.4,
+                              ),
                             ),
                           ],
                         ),
@@ -616,7 +630,7 @@ class _BookingPageState extends State<BookingPage> {
                               ? []
                               : [
                                   BoxShadow(
-                                    color: buttonColor.withOpacity(0.3),
+                                    color: buttonColor.withOpacity(isDark ? 0.1 : 0.3),
                                     blurRadius: 15,
                                     offset: const Offset(0, 6),
                                   ),
@@ -625,7 +639,7 @@ class _BookingPageState extends State<BookingPage> {
                         child: ElevatedButton(
                           style: ElevatedButton.styleFrom(
                             backgroundColor: buttonColor,
-                            disabledBackgroundColor: const Color(0xFFCBD5E1),
+                            disabledBackgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
@@ -713,7 +727,7 @@ class _BookingPageState extends State<BookingPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -750,24 +764,24 @@ class _BookingPageState extends State<BookingPage> {
   }) {
     return TextFormField(
       controller: controller,
-      style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Color(0xFF0F172A)),
+      style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: mainTextColor),
       decoration: InputDecoration(
         labelText: label,
         labelStyle: TextStyle(color: mutedText, fontWeight: FontWeight.w500, fontSize: 14),
         filled: true,
-        fillColor: Colors.white,
+        fillColor: cardBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: inputBorderColor),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+          borderSide: BorderSide(color: inputBorderColor),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
-          borderSide: BorderSide(color: primaryColor, width: 1.5),
+          borderSide: BorderSide(color: isDark ? Colors.white : primaryColor, width: 1.5),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(16),
@@ -799,10 +813,10 @@ class _BookingPageState extends State<BookingPage> {
             const SizedBox(width: 10),
             Text(
               title,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
-                color: Color(0xFF0F172A),
+                color: primaryColor,
               ),
             ),
           ],
@@ -821,16 +835,16 @@ class _BookingPageState extends State<BookingPage> {
                 duration: const Duration(milliseconds: 200),
                 padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? primaryColor : Colors.white,
+                  color: isSelected ? (isDark ? Colors.white : primaryColor) : cardBg,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
+                    color: isSelected ? (isDark ? Colors.white : primaryColor) : inputBorderColor,
                     width: isSelected ? 0 : 1,
                   ),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: primaryColor.withOpacity(0.35),
+                            color: (isDark ? Colors.white : primaryColor).withOpacity(0.35),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -848,7 +862,9 @@ class _BookingPageState extends State<BookingPage> {
                   style: TextStyle(
                     fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
                     fontSize: 14,
-                    color: isSelected ? Colors.white : const Color(0xFF475569),
+                    color: isSelected
+                        ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                        : (isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569)),
                   ),
                 ),
               ),

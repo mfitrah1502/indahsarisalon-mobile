@@ -10,6 +10,7 @@ import 'report_page.dart';
 import 'settings_page.dart';
 import '../utils/popup_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
+import '../app_session.dart';
 
 class NotificationsPage extends StatefulWidget {
   const NotificationsPage({super.key});
@@ -19,10 +20,11 @@ class NotificationsPage extends StatefulWidget {
 }
 
 class _NotificationsPageState extends State<NotificationsPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
 
   bool isLoading = true;
   List<Map<String, dynamic>> todayNotifications = [];
@@ -273,8 +275,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 children: [
                   Text(
                     unreadCount > 0 ? "You have $unreadCount new updates" : "No new updates",
-                    style: const TextStyle(
-                      color: Color(0xFF4B5563),
+                    style: TextStyle(
+                      color: mutedText,
                       fontSize: 15,
                       fontWeight: FontWeight.w500,
                     ),
@@ -307,13 +309,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           if (todayNotifications.isNotEmpty) ...[
-                            const Text(
+                            Text(
                               "TODAY",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
-                                color: Color(0xFF4B5563),
+                                color: mutedText,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -323,8 +325,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 timeText: _getTimeAgo(DateTime.parse(notif['created_at']).toLocal()),
                                 description: _formatNotificationMessage(notif['message']),
                                 iconData: _getIconForTitle(notif['title']),
-                                iconBgColor: const Color(0xFFE4F0F9),
-                                iconColor: primaryColor,
+                                iconBgColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4F0F9),
+                                iconColor: isDark ? const Color(0xFFD660A1) : primaryColor,
                                 isUnread: notif['is_read'] == false,
                                 showButton: notif['title'].toString().toLowerCase().contains('booking'),
                                 bookingId: notif['booking_id'],
@@ -335,13 +337,13 @@ class _NotificationsPageState extends State<NotificationsPage> {
 
                           if (earlierNotifications.isNotEmpty) ...[
                             const SizedBox(height: 16),
-                            const Text(
+                            Text(
                               "EARLIER",
                               style: TextStyle(
                                 fontSize: 12,
                                 fontWeight: FontWeight.bold,
                                 letterSpacing: 1.2,
-                                color: Color(0xFF4B5563),
+                                color: mutedText,
                               ),
                             ),
                             const SizedBox(height: 16),
@@ -351,8 +353,8 @@ class _NotificationsPageState extends State<NotificationsPage> {
                                 timeText: _getTimeAgo(DateTime.parse(notif['created_at']).toLocal()),
                                 description: _formatNotificationMessage(notif['message']),
                                 iconData: _getIconForTitle(notif['title']),
-                                iconBgColor: const Color(0xFFDEE3E8),
-                                iconColor: const Color(0xFF5A6A7D),
+                                iconBgColor: isDark ? const Color(0xFF334155) : const Color(0xFFDEE3E8),
+                                iconColor: isDark ? const Color(0xFF94A3B8) : const Color(0xFF5A6A7D),
                                 isUnread: notif['is_read'] == false,
                                 showButton: notif['title'].toString().toLowerCase().contains('booking'),
                                 bookingId: notif['booking_id'],
@@ -381,7 +383,7 @@ class _NotificationsPageState extends State<NotificationsPage> {
       // Bottom Navigation Bar
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: scaffoldBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -420,22 +422,30 @@ class _NotificationsPageState extends State<NotificationsPage> {
     required bool showButton,
     int? bookingId,
   }) {
-    Color cardBg = isUnread ? Colors.white : const Color(0xFFF1F4F8);
+    Color cardBg = isUnread
+        ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFFFF5F8))
+        : (isDark ? const Color(0xFF0F172A) : Colors.white);
 
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: isUnread
-            ? [
+        border: Border.all(
+          color: isUnread
+              ? (isDark ? const Color(0xFFD660A1).withOpacity(0.25) : const Color(0xFFD660A1).withOpacity(0.3))
+              : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+          width: isUnread ? 1.5 : 1,
+        ),
+        boxShadow: isDark
+            ? null
+            : [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
+                  color: Colors.black.withOpacity(0.03),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
-              ]
-            : null,
+              ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -477,10 +487,10 @@ class _NotificationsPageState extends State<NotificationsPage> {
                     Expanded(
                       child: Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1F2937),
+                          color: isDark ? Colors.white : const Color(0xFF1F2937),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -491,9 +501,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                       children: [
                         Text(
                           timeText,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: Color(0xFF6B7280),
+                            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF6B7280),
                           ),
                         ),
                         if (isUnread) ...[
@@ -514,9 +524,9 @@ class _NotificationsPageState extends State<NotificationsPage> {
                 const SizedBox(height: 8),
                 Text(
                   description,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 14,
-                    color: Color(0xFF4B5563),
+                    color: isDark ? const Color(0xFFE2E8F0) : const Color(0xFF4B5563),
                     height: 1.4,
                   ),
                 ),

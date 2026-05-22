@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import '../models/user_model.dart';
 import '../controllers/user_controller.dart';
 import '../models/service_model.dart';
+import '../app_session.dart';
 import '../controllers/service_controller.dart';
 import 'package:intl/intl.dart';
 import 'home_page.dart';
@@ -20,10 +21,13 @@ class SelectServicesPage extends StatefulWidget {
 }
 
 class _SelectServicesPageState extends State<SelectServicesPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF4F7F9);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF4F7F9);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+
   final _currencyFormat = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -416,8 +420,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
         return StatefulBuilder(
           builder: (ctx, setSheet) {
             return Container(
-              decoration: const BoxDecoration(
-                color: Colors.white,
+              decoration: BoxDecoration(
+                color: scaffoldBg,
                 borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
               ),
               padding: EdgeInsets.only(
@@ -478,13 +482,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
                           color: chosenPrice == basePrice
-                              ? primaryColor.withOpacity(0.08)
-                              : const Color(0xFFF8FAFC),
+                              ? (isDark ? const Color(0xFFD660A1).withOpacity(0.15) : const Color(0xFFD660A1).withOpacity(0.08))
+                              : (isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC)),
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
                             color: chosenPrice == basePrice
-                                ? primaryColor
-                                : const Color(0xFFE2E8F0),
+                                ? const Color(0xFFD660A1)
+                                : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                             width: chosenPrice == basePrice ? 2 : 1,
                           ),
                         ),
@@ -495,7 +499,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               _currencyFormat.format(basePrice),
                               style: TextStyle(
                                 fontWeight: FontWeight.bold,
-                                color: primaryColor,
+                                color: chosenPrice == basePrice ? const Color(0xFFD660A1) : (isDark ? Colors.white : Colors.black87),
                                 fontSize: 16,
                               ),
                             ),
@@ -531,26 +535,32 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                         chosenPrice = int.tryParse(v) ?? 0;
                       });
                     },
+                    style: TextStyle(
+                      color: isDark ? Colors.white : Colors.black87,
+                    ),
                     decoration: InputDecoration(
                       prefixText: "Rp  ",
-                      prefixStyle: TextStyle(
-                        color: primaryColor,
+                      prefixStyle: const TextStyle(
+                        color: Color(0xFFD660A1),
                         fontWeight: FontWeight.bold,
                       ),
                       hintText: "0",
+                      hintStyle: TextStyle(
+                        color: isDark ? const Color(0xFF94A3B8).withOpacity(0.5) : const Color(0xFF64748B).withOpacity(0.5),
+                      ),
                       filled: true,
-                      fillColor: const Color(0xFFF8FAFC),
+                      fillColor: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                       ),
                       enabledBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                        borderSide: BorderSide(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                       ),
                       focusedBorder: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(color: primaryColor, width: 2),
+                        borderSide: const BorderSide(color: Color(0xFFD660A1), width: 2),
                       ),
                       contentPadding: const EdgeInsets.symmetric(
                         horizontal: 16,
@@ -677,13 +687,13 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                   ),
                                   decoration: BoxDecoration(
                                     color: isSelected
-                                        ? primaryColor
-                                        : Colors.white,
+                                        ? const Color(0xFFD660A1)
+                                        : cardBg,
                                     borderRadius: BorderRadius.circular(16),
                                     border: isSelected
                                         ? null
                                         : Border.all(
-                                            color: const Color(0xFFE2E8F0),
+                                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                           ),
                                   ),
                                   child: Column(
@@ -707,7 +717,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           fontWeight: FontWeight.bold,
                                           color: isSelected
                                               ? Colors.white
-                                              : const Color(0xFF1E293B),
+                                              : (isDark ? Colors.white : const Color(0xFF1E293B)),
                                         ),
                                       ),
                                     ],
@@ -731,9 +741,16 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 color: primaryColor,
                               ),
                             ),
-                            Text(
-                              "${_filteredStylists.length} available",
-                              style: TextStyle(fontSize: 13, color: mutedText),
+                            Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  "${_filteredStylists.length} available",
+                                  style: TextStyle(fontSize: 13, color: mutedText),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(Icons.arrow_forward_ios, size: 14, color: mutedText),
+                              ],
                             ),
                           ],
                         ),
@@ -770,7 +787,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             width: double.infinity,
                             alignment: Alignment.center,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: scaffoldBg,
                               borderRadius: BorderRadius.circular(12),
                             ),
                             child: Text(
@@ -831,10 +848,10 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                             child:
                                                 stylist.avatar == null ||
                                                     stylist.avatar!.isEmpty
-                                                ? const Icon(
+                                                ? Icon(
                                                     Icons.person,
-                                                    color: Color(0xFF94A3B8),
-                                                    size: 30,
+                                                    color: mutedText,
+                                                    size: 40,
                                                   )
                                                 : null,
                                           ),
@@ -909,11 +926,18 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0),
+                              width: 1,
+                            ),
                           ),
                           child: TextField(
                             onChanged: (v) => setState(() => _searchQuery = v),
+                            style: TextStyle(
+                              color: isDark ? Colors.white : Colors.black87,
+                            ),
                             decoration: InputDecoration(
                               icon: Padding(
                                 padding: const EdgeInsets.only(left: 8.0),
@@ -925,7 +949,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               ),
                               hintText: "Search services...",
                               hintStyle: TextStyle(
-                                color: mutedText,
+                                color: mutedText.withOpacity(0.7),
                                 fontSize: 14,
                               ),
                               border: InputBorder.none,
@@ -963,12 +987,12 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                     decoration: BoxDecoration(
                                       color: isSelected
                                           ? primaryColor
-                                          : Colors.white,
+                                          : (isDark ? const Color(0xFF334155) : scaffoldBg),
                                       borderRadius: BorderRadius.circular(20),
                                       border: Border.all(
                                         color: isSelected
                                             ? primaryColor
-                                            : const Color(0xFFE2E8F0),
+                                            : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
                                       ),
                                     ),
                                     alignment: Alignment.center,
@@ -976,8 +1000,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                       cat,
                                       style: TextStyle(
                                         color: isSelected
-                                            ? Colors.white
-                                            : mutedText,
+                                            ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                                            : (isDark ? Colors.white70 : mutedText),
                                         fontWeight: isSelected
                                             ? FontWeight.bold
                                             : FontWeight.w600,
@@ -1043,19 +1067,19 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
                                   color: isSelected
-                                      ? primaryColor.withOpacity(0.04)
-                                      : Colors.white,
+                                      ? (isDark ? primaryColor.withOpacity(0.15) : primaryColor.withOpacity(0.05))
+                                      : cardBg,
                                   borderRadius: BorderRadius.circular(16),
                                   border: Border.all(
                                     color: isSelected
-                                        ? primaryColor.withOpacity(0.3)
-                                        : Colors.transparent,
-                                    width: isSelected ? 1.5 : 0,
+                                        ? primaryColor
+                                        : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                                    width: isSelected ? 1.5 : 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.01),
-                                      blurRadius: 10,
+                                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.03),
+                                      blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
@@ -1211,8 +1235,8 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
                                           color: isSelected
-                                              ? primaryColor
-                                              : const Color(0xFFF1F5F9),
+                                              ? const Color(0xFFD660A1)
+                                              : (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
@@ -1221,7 +1245,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                                           isSelected ? Icons.check : Icons.add,
                                           color: isSelected
                                               ? Colors.white
-                                              : primaryColor,
+                                              : const Color(0xFFD660A1),
                                           size: 20,
                                         ),
                                       ),
@@ -1251,7 +1275,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
                               vertical: 16,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: cardBg,
                               borderRadius: BorderRadius.circular(16),
                               boxShadow: [
                                 BoxShadow(
@@ -1386,7 +1410,7 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -1490,10 +1514,14 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isSelected ? primaryColor : Colors.white,
+          color: isSelected
+              ? primaryColor
+              : (isDark ? const Color(0xFF334155) : Colors.white),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(
-            color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
+            color: isSelected
+                ? primaryColor
+                : (isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0)),
             width: 1,
           ),
           boxShadow: isSelected
@@ -1512,7 +1540,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
             Icon(
               icon,
               size: 16,
-              color: isSelected ? Colors.white : primaryColor,
+              color: isSelected
+                  ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                  : primaryColor,
             ),
             const SizedBox(width: 6),
             Text(
@@ -1520,7 +1550,9 @@ class _SelectServicesPageState extends State<SelectServicesPage> {
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.bold,
-                color: isSelected ? Colors.white : const Color(0xFF1E293B),
+                color: isSelected
+                    ? (isDark ? const Color(0xFF0F172A) : Colors.white)
+                    : (isDark ? Colors.white70 : const Color(0xFF1E293B)),
               ),
             ),
           ],

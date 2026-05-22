@@ -5,6 +5,7 @@ import 'package:intl/intl.dart';
 import 'booking_details_page.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../utils/loyalty_constants.dart';
+import '../app_session.dart';
 
 class CustomerBookingHistoryPage extends StatefulWidget {
   final Map<String, dynamic> customer;
@@ -18,9 +19,13 @@ class CustomerBookingHistoryPage extends StatefulWidget {
 
 class _CustomerBookingHistoryPageState
     extends State<CustomerBookingHistoryPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -77,11 +82,11 @@ class _CustomerBookingHistoryPageState
   Color _getTierColor(String tier) {
     switch (tier) {
       case 'Platinum':
-        return const Color(0xFF334155);
+        return isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155);
       case 'Gold':
         return const Color(0xFFEAB308);
       case 'Silver':
-        return const Color(0xFF94A3B8);
+        return isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
       default:
         return mutedText;
     }
@@ -90,13 +95,13 @@ class _CustomerBookingHistoryPageState
   Color _getTierBg(String tier) {
     switch (tier) {
       case 'Platinum':
-        return const Color(0xFFE2E8F0);
+        return isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
       case 'Gold':
-        return const Color(0xFFFEF9C3);
+        return isDark ? const Color(0xFF78350F).withOpacity(0.3) : const Color(0xFFFEF9C3);
       case 'Silver':
-        return const Color(0xFFF1F5F9);
+        return isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
       default:
-        return const Color(0xFFF8FAFC);
+        return isDark ? const Color(0xFF0F172A) : const Color(0xFFF8FAFC);
     }
   }
 
@@ -160,12 +165,12 @@ class _CustomerBookingHistoryPageState
     switch (status.toLowerCase()) {
       case 'berhasil':
       case 'success':
-        return const Color(0xFF16A34A);
+        return isDark ? const Color(0xFF4ADE80) : const Color(0xFF16A34A);
       case 'dibatalkan':
       case 'cancelled':
-        return const Color(0xFFDC2626);
+        return isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626);
       default:
-        return const Color(0xFFEA580C);
+        return isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C);
     }
   }
 
@@ -173,12 +178,12 @@ class _CustomerBookingHistoryPageState
     switch (status.toLowerCase()) {
       case 'berhasil':
       case 'success':
-        return const Color(0xFFDCFCE7);
+        return isDark ? const Color(0xFF064E3B) : const Color(0xFFDCFCE7);
       case 'dibatalkan':
       case 'cancelled':
-        return const Color(0xFFFEE2E2);
+        return isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEE2E2);
       default:
-        return const Color(0xFFFFEDD5);
+        return isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5);
     }
   }
 
@@ -381,11 +386,12 @@ class _CustomerBookingHistoryPageState
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cardBg,
                                 borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: borderCol, width: 1),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -404,11 +410,11 @@ class _CustomerBookingHistoryPageState
                                           borderRadius: BorderRadius.circular(
                                             12,
                                           ),
-                                          color: const Color(0xFFE4F0FA),
+                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4F0FA),
                                         ),
-                                        child: Icon(
+                                        child: const Icon(
                                           Icons.content_cut,
-                                          color: primaryColor,
+                                          color: Color(0xFFD660A1),
                                           size: 28,
                                         ),
                                       ),
@@ -420,10 +426,10 @@ class _CustomerBookingHistoryPageState
                                           children: [
                                             Text(
                                               serviceLabel,
-                                              style: const TextStyle(
+                                              style: TextStyle(
                                                 fontWeight: FontWeight.bold,
                                                 fontSize: 15,
-                                                color: Color(0xFF0F172A),
+                                                color: mainTextColor,
                                               ),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
@@ -464,8 +470,8 @@ class _CustomerBookingHistoryPageState
                                     ],
                                   ),
                                   const SizedBox(height: 14),
-                                  const Divider(
-                                    color: Color(0xFFF1F5F9),
+                                  Divider(
+                                    color: borderCol,
                                     height: 1,
                                   ),
                                   const SizedBox(height: 14),
@@ -483,10 +489,10 @@ class _CustomerBookingHistoryPageState
                                           const SizedBox(width: 6),
                                           Text(
                                             _formatDateTime(booking.datetime),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: Color(0xFF334155),
+                                              color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155),
                                             ),
                                           ),
                                         ],

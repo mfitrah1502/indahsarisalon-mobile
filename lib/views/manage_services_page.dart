@@ -23,10 +23,16 @@ class ManageServicesPage extends StatefulWidget {
 }
 
 class _ManageServicesPageState extends State<ManageServicesPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5);
+  Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
+
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -123,6 +129,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         return StatefulBuilder(
           builder: (ctx, setStateDialog) {
             return Dialog(
+              backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20),
               ),
@@ -146,9 +153,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFF8FAFC),
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: inputBorderColor),
                       ),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -156,11 +163,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
+                              Text(
                                 "Status Promo",
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 15,
+                                  color: mainTextColor,
                                 ),
                               ),
                               Text(
@@ -276,9 +284,20 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       firstDate: DateTime(2000),
       lastDate: DateTime(2101),
       builder: (context, child) => Theme(
-        data: Theme.of(
-          context,
-        ).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+        data: Theme.of(context).copyWith(
+          colorScheme: isDark
+              ? ColorScheme.dark(
+                  primary: const Color(0xFFD660A1),
+                  onPrimary: Colors.white,
+                  surface: cardBg,
+                  onSurface: mainTextColor,
+                )
+              : ColorScheme.light(
+                  primary: const Color(0xFFD660A1),
+                  onPrimary: Colors.white,
+                  onSurface: const Color(0xFFD660A1),
+                ),
+        ),
         child: child!,
       ),
     );
@@ -290,9 +309,20 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
         initialTime: TimeOfDay.fromDateTime(initial),
         initialEntryMode: TimePickerEntryMode.input, // Text input, no dial
         builder: (context, child) => Theme(
-          data: Theme.of(
-            context,
-          ).copyWith(colorScheme: ColorScheme.light(primary: primaryColor)),
+          data: Theme.of(context).copyWith(
+            colorScheme: isDark
+                ? ColorScheme.dark(
+                    primary: const Color(0xFFD660A1),
+                    onPrimary: Colors.white,
+                    surface: cardBg,
+                    onSurface: mainTextColor,
+                  )
+                : ColorScheme.light(
+                    primary: const Color(0xFFD660A1),
+                    onPrimary: Colors.white,
+                    onSurface: const Color(0xFFD660A1),
+                  ),
+          ),
           child: child!,
         ),
       );
@@ -319,9 +349,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
         decoration: BoxDecoration(
-          color: const Color(0xFFF1F5F9),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: const Color(0xFFE2E8F0)),
+          border: Border.all(color: inputBorderColor),
         ),
         child: Row(
           children: [
@@ -330,9 +360,10 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
             Expanded(
               child: Text(
                 text,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
+                  color: mainTextColor,
                 ),
               ),
             ),
@@ -373,6 +404,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       context: context,
       builder: (ctx) {
         return Dialog(
+          backgroundColor: cardBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
@@ -427,9 +459,9 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                           width: double.infinity,
                           height: 120,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF1F5F9),
+                            color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: inputBorderColor),
                           ),
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(16),
@@ -448,7 +480,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                     service.imageUrl!,
                                     fit: BoxFit.cover,
                                     errorBuilder: (_, __, ___) =>
-                                        const Icon(Icons.add_a_photo, size: 30),
+                                        Icon(Icons.add_a_photo, size: 30, color: primaryColor),
                                   )
                                 : Column(
                                     mainAxisAlignment: MainAxisAlignment.center,
@@ -497,11 +529,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 16),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                          color: inputBg,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: DropdownButtonHideUnderline(
                           child: DropdownButton<String>(
+                            dropdownColor: cardBg,
                             value: _categories.contains(selectedCategory)
                                 ? selectedCategory
                                 : (_categories.length > 1
@@ -516,7 +549,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                 value: v,
                                 child: Text(
                                   v,
-                                  style: const TextStyle(fontSize: 14),
+                                  style: TextStyle(fontSize: 14, color: mainTextColor),
                                 ),
                               );
                             }).toList(),
@@ -658,11 +691,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       controller: controller,
       keyboardType: numeric ? TextInputType.number : TextInputType.text,
       inputFormatters: numeric ? [FilteringTextInputFormatter.digitsOnly] : [],
+      style: TextStyle(color: mainTextColor),
       decoration: InputDecoration(
         hintText: hint,
         hintStyle: TextStyle(color: mutedText.withOpacity(0.6), fontSize: 14),
         filled: true,
-        fillColor: const Color(0xFFE2E8F0).withOpacity(0.5),
+        fillColor: inputBg,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
           borderSide: BorderSide.none,
@@ -743,11 +777,12 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         vertical: 2,
                       ),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0),
+                        color: inputBg,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: TextField(
                         onChanged: (v) => setState(() => _searchQuery = v),
+                        style: TextStyle(color: mainTextColor),
                         decoration: InputDecoration(
                           icon: Padding(
                             padding: const EdgeInsets.only(left: 8.0),
@@ -783,19 +818,19 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                 horizontal: 16,
                               ),
                               decoration: BoxDecoration(
-                                color: isSelected ? primaryColor : Colors.white,
+                                color: isSelected ? primaryColor : cardBg,
                                 borderRadius: BorderRadius.circular(20),
                                 border: Border.all(
                                   color: isSelected
                                       ? primaryColor
-                                      : const Color(0xFFE2E8F0),
+                                      : inputBorderColor,
                                 ),
                               ),
                               alignment: Alignment.center,
                               child: Text(
                                 cat,
                                 style: TextStyle(
-                                  color: isSelected ? Colors.white : mutedText,
+                                  color: isSelected ? (isDark ? const Color(0xFF0F172A) : Colors.white) : mutedText,
                                   fontWeight: isSelected
                                       ? FontWeight.bold
                                       : FontWeight.w600,
@@ -849,7 +884,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                         width: double.infinity,
                         child: OutlinedButton(
                           style: OutlinedButton.styleFrom(
-                            side: BorderSide(color: primaryColor),
+                            side: const BorderSide(color: Color(0xFFD660A1)),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
                             ),
@@ -869,7 +904,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                             children: [
                               Icon(
                                 Icons.local_offer_outlined,
-                                color: primaryColor,
+                                color: const Color(0xFFD660A1),
                                 size: 20,
                               ),
                               const SizedBox(width: 8),
@@ -878,7 +913,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                 style: TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.bold,
-                                  color: primaryColor,
+                                  color: const Color(0xFFD660A1),
                                 ),
                               ),
                             ],
@@ -931,11 +966,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                               return Container(
                                 padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Colors.white,
+                                  color: cardBg,
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: Colors.black.withOpacity(0.02),
+                                      color: Colors.black.withOpacity(isDark ? 0.3 : 0.02),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -949,7 +984,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                       width: 44,
                                       height: 44,
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFE4F0FA),
+                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4F0FA),
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       child: ClipRRect(
@@ -1036,7 +1071,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             child: Container(
                                               padding: const EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFF1F5F9),
+                                                color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                                                 borderRadius:
                                                     BorderRadius.circular(6),
                                               ),
@@ -1053,7 +1088,7 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
                                             child: Container(
                                               padding: const EdgeInsets.all(6),
                                               decoration: BoxDecoration(
-                                                color: const Color(0xFFFEF2F2),
+                                                color: isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFEF2F2),
                                                 borderRadius:
                                                     BorderRadius.circular(6),
                                               ),
@@ -1081,11 +1116,11 @@ class _ManageServicesPageState extends State<ManageServicesPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

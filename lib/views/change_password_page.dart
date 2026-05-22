@@ -12,10 +12,13 @@ class ChangePasswordPage extends StatefulWidget {
 }
 
 class _ChangePasswordPageState extends State<ChangePasswordPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
 
   final currentPasswordController = TextEditingController();
   final newPasswordController = TextEditingController();
@@ -110,7 +113,7 @@ class _ChangePasswordPageState extends State<ChangePasswordPage> {
     // If the app supports dark mode everywhere, we should use Theme.of(context).brightness
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final currentScaffoldBg = isDarkMode ? const Color(0xFF1E293B) : scaffoldBg;
-    final currentMainText = isDarkMode ? Colors.white : primaryColor;
+    final currentMainText = primaryColor;
 
     return Scaffold(
       backgroundColor: currentScaffoldBg,

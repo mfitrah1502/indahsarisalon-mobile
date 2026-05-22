@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'home_page.dart';
-import 'booking_page.dart';
 import 'booking_list_page.dart';
 import 'manage_team_page.dart';
 import 'manage_services_page.dart';
@@ -12,7 +11,6 @@ import 'create_account_page.dart';
 import 'auth_page.dart';
 import '../app_session.dart';
 import '../controllers/auth_controller.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'report_page.dart';
 import '../utils/popup_helper.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -26,7 +24,7 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  bool isDarkMode = false; // Default to light mode
+  bool get isDarkMode => AppSession.isDarkMode; // synced with global theme
   int _selectedIndex = 4; // Settings is active
   String _currentTier = 'None';
 
@@ -58,10 +56,7 @@ class _SettingsPageState extends State<SettingsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Dynamic Dark/Light Colors
-    final Color mainTextColor = isDarkMode
-        ? Colors.white
-        : const Color(0xFFD660A1);
+    final Color mainTextColor = const Color(0xFFD660A1);
     final Color scaffoldBg = isDarkMode
         ? const Color(0xFF1E293B)
         : const Color(0xFFF5F8FA);
@@ -134,7 +129,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             height: 80,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
-                              color: const Color(0xFFE2E8F0),
+                              color: optionBg,
                               image: DecorationImage(
                                 image:
                                     (AppSession.userAvatar != null &&
@@ -151,9 +146,9 @@ class _SettingsPageState extends State<SettingsPage> {
                                 (AppSession.userAvatar != null &&
                                     AppSession.userAvatar!.isNotEmpty)
                                 ? null
-                                : const Icon(
+                                : Icon(
                                     Icons.person,
-                                    color: Colors.white,
+                                    color: mainTextColor,
                                     size: 40,
                                   ),
                           ),
@@ -334,6 +329,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: "Edit Profile",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
+                            mutedTextColor: mutedText,
                             onTap: () async {
                               final updated = await Navigator.push(
                                 context,
@@ -350,6 +346,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               title: "Manage Team",
                               mainTextColor: mainTextColor,
                               iconBoxBg: iconBoxBg,
+                              mutedTextColor: mutedText,
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -365,6 +362,7 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: "Change Password",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
+                            mutedTextColor: mutedText,
                             onTap: () {
                               Navigator.push(
                                 context,
@@ -381,6 +379,7 @@ class _SettingsPageState extends State<SettingsPage> {
                               title: "Add Another Account",
                               mainTextColor: mainTextColor,
                               iconBoxBg: iconBoxBg,
+                              mutedTextColor: mutedText,
                               onTap: () {
                                 Navigator.push(
                                   context,
@@ -424,13 +423,14 @@ class _SettingsPageState extends State<SettingsPage> {
                             title: "Dark Mode",
                             mainTextColor: mainTextColor,
                             iconBoxBg: iconBoxBg,
+                            mutedTextColor: mutedText,
                             trailing: CupertinoSwitch(
                               value: isDarkMode,
                               activeColor: activeNavBg,
                               onChanged: (val) {
-                                setState(() {
-                                  isDarkMode = val;
-                                });
+                                  // Update global theme state
+                                  AppSession.isDarkMode = val;
+                                  setState(() {});
                               },
                             ),
                           ),
@@ -454,6 +454,7 @@ class _SettingsPageState extends State<SettingsPage> {
                         title: "Logout",
                         mainTextColor: mainTextColor,
                         iconBoxBg: iconBoxBg,
+                        mutedTextColor: mutedText,
                         titleColor: const Color(
                           0xFFEF4444,
                         ), // Light Red for dark mode / text red
@@ -559,6 +560,7 @@ class _SettingsPageState extends State<SettingsPage> {
     required String title,
     required Color mainTextColor,
     required Color iconBoxBg,
+    Color? mutedTextColor,
     Color? titleColor,
     Color? iconBgOverride,
     Color? iconColor,
@@ -595,7 +597,7 @@ class _SettingsPageState extends State<SettingsPage> {
             if (trailing != null)
               trailing
             else if (!hideArrow)
-              Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+              Icon(Icons.arrow_forward_ios, size: 14, color: mutedTextColor ?? Colors.grey),
           ],
         ),
       ),

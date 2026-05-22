@@ -7,6 +7,7 @@ import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../utils/popup_helper.dart';
 import 'package:intl/intl.dart';
+import '../app_session.dart';
 
 class AddPromoPage extends StatefulWidget {
   const AddPromoPage({super.key});
@@ -16,10 +17,14 @@ class AddPromoPage extends StatefulWidget {
 }
 
 class _AddPromoPageState extends State<AddPromoPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
@@ -63,7 +68,9 @@ class _AddPromoPageState extends State<AddPromoPage> {
       lastDate: DateTime(2101),
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
-          colorScheme: ColorScheme.light(primary: primaryColor),
+          colorScheme: isDark 
+              ? const ColorScheme.dark(primary: Color(0xFFD660A1), onPrimary: Colors.white, surface: Color(0xFF0F172A))
+              : ColorScheme.light(primary: primaryColor),
         ),
         child: child!,
       ),
@@ -77,7 +84,9 @@ class _AddPromoPageState extends State<AddPromoPage> {
         initialEntryMode: TimePickerEntryMode.input,
         builder: (context, child) => Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: ColorScheme.light(primary: primaryColor),
+            colorScheme: isDark 
+                ? const ColorScheme.dark(primary: Color(0xFFD660A1), onPrimary: Colors.white, surface: Color(0xFF0F172A))
+                : ColorScheme.light(primary: primaryColor),
           ),
           child: child!,
         ),
@@ -266,9 +275,9 @@ class _AddPromoPageState extends State<AddPromoPage> {
                         width: double.infinity,
                         height: 160,
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardBg,
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                          border: Border.all(color: borderCol),
                         ),
                         child: ClipRRect(
                           borderRadius: BorderRadius.circular(20),
@@ -283,7 +292,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                             : Column(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  Icon(Icons.add_photo_alternate_outlined, color: primaryColor, size: 40),
+                                  Icon(Icons.add_photo_alternate_outlined, color: isDark ? Colors.white : primaryColor, size: 40),
                                   const SizedBox(height: 8),
                                   Text("Tap to upload banner", style: TextStyle(color: mutedText, fontSize: 13)),
                                 ],
@@ -353,16 +362,17 @@ class _AddPromoPageState extends State<AddPromoPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: borderCol),
                       ),
                       child: DropdownButtonHideUnderline(
                         child: DropdownButton<String>(
+                          dropdownColor: cardBg,
                           value: _targetAudience,
                           isExpanded: true,
-                          icon: Icon(Icons.groups_outlined, color: primaryColor),
-                          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.black),
+                          icon: Icon(Icons.groups_outlined, color: isDark ? Colors.white : primaryColor),
+                          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: mainTextColor),
                           items: [
                             DropdownMenuItem(value: 'general', child: Text("All (General)")),
                             DropdownMenuItem(value: 'community', child: Text("Community (Initial Group)")),
@@ -383,19 +393,19 @@ class _AddPromoPageState extends State<AddPromoPage> {
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
-                        border: Border.all(color: const Color(0xFFE2E8F0)),
+                        border: Border.all(color: borderCol),
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.flash_on, color: primaryColor, size: 20),
+                          Icon(Icons.flash_on, color: isDark ? Colors.white : primaryColor, size: 20),
                           const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text("Promo Status", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                                Text("Promo Status", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15, color: mainTextColor)),
                                 Text("Turn on to make the promo visible on the promo page", style: TextStyle(color: mutedText, fontSize: 12)),
                               ],
                             ),
@@ -403,7 +413,7 @@ class _AddPromoPageState extends State<AddPromoPage> {
                           Switch(
                             value: _isPromoActive,
                             onChanged: (val) => setState(() => _isPromoActive = val),
-                            activeColor: primaryColor,
+                            activeColor: isDark ? Colors.white : primaryColor,
                           ),
                         ],
                       ),
@@ -443,14 +453,14 @@ class _AddPromoPageState extends State<AddPromoPage> {
 
   Widget _textField({required TextEditingController controller, required String hint, bool numeric = false, Function(String)? onChanged, int maxLines = 1}) {
     return Container(
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+      decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderCol)),
       child: TextField(
         controller: controller,
         onChanged: onChanged,
         maxLines: maxLines,
         keyboardType: numeric ? TextInputType.number : TextInputType.text,
         inputFormatters: numeric ? [FilteringTextInputFormatter.digitsOnly] : [],
-        style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+        style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: mainTextColor),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(color: mutedText.withOpacity(0.5), fontSize: 14),
@@ -466,12 +476,12 @@ class _AddPromoPageState extends State<AddPromoPage> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(color: const Color(0xFFE2E8F0))),
+        decoration: BoxDecoration(color: cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: borderCol)),
         child: Row(
           children: [
-            Icon(icon, size: 18, color: primaryColor),
+            Icon(icon, size: 18, color: isDark ? Colors.white : primaryColor),
             const SizedBox(width: 8),
-            Expanded(child: Text(text, style: TextStyle(color: text == "Select Time" ? mutedText : Colors.black, fontSize: 13, fontWeight: FontWeight.w600))),
+            Expanded(child: Text(text, style: TextStyle(color: text == "Select Time" ? mutedText : mainTextColor, fontSize: 13, fontWeight: FontWeight.w600))),
           ],
         ),
       ),

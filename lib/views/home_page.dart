@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import '../controllers/loyalty_controller.dart';
@@ -34,10 +35,13 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   int _selectedIndex = 0;
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF4F7F9);
+  Color get mainTextColor => const Color(0xFFD660A1);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
 
   // States
   bool isLoading = true;
@@ -357,11 +361,11 @@ class _HomePageState extends State<HomePage> {
                       width: double.infinity,
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(20),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.03),
+                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.03),
                             blurRadius: 15,
                             offset: const Offset(0, 5),
                           ),
@@ -369,10 +373,15 @@ class _HomePageState extends State<HomePage> {
                         gradient: LinearGradient(
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight,
-                          colors: [
-                            Colors.white,
-                            Colors.pink.shade50.withOpacity(0.3),
-                          ],
+                          colors: isDark
+                              ? [
+                                  cardBg,
+                                  const Color(0xFF1E293B),
+                                ]
+                              : [
+                                  Colors.white,
+                                  Colors.pink.shade50.withOpacity(0.3),
+                                ],
                         ),
                       ),
                       child: Row(
@@ -380,12 +389,12 @@ class _HomePageState extends State<HomePage> {
                           Container(
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: primaryColor.withOpacity(0.1),
+                              color: const Color(0xFFD660A1).withOpacity(0.1),
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: Icon(
+                            child: const Icon(
                               Icons.calendar_month_outlined,
-                              color: primaryColor,
+                              color: Color(0xFFD660A1),
                               size: 28,
                             ),
                           ),
@@ -406,7 +415,7 @@ class _HomePageState extends State<HomePage> {
                                 Text(
                                   timeFormat.format(now),
                                   style: TextStyle(
-                                    color: primaryColor,
+                                    color: const Color(0xFFD660A1),
                                     fontSize: 24,
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.0,
@@ -430,11 +439,11 @@ class _HomePageState extends State<HomePage> {
                     children: [
                       Text(
                         "SPECIAL OFFERS",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 12,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 1.2,
-                          color: Color(0xFF4B5563),
+                          color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
                         ),
                       ),
                       GestureDetector(
@@ -590,12 +599,12 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayBookings",
                       increase: formatIncrease(bookingsIncrease),
                       iconData: Icons.calendar_today_rounded,
-                      increaseColor: bookingsIncrease >= 0
-                          ? primaryColor
-                          : Colors.red,
-                      trendIcon: bookingsIncrease >= 0
+                      increaseColor: bookingsIncrease > 0
+                          ? const Color(0xFF10B981)
+                          : (bookingsIncrease < 0 ? const Color(0xFFEF4444) : const Color(0xFFD660A1)),
+                      trendIcon: bookingsIncrease > 0
                           ? Icons.trending_up
-                          : Icons.trending_down,
+                          : (bookingsIncrease < 0 ? Icons.trending_down : Icons.trending_flat),
                     ),
                   ),
                   if (AppSession.userRole == 'owner') ...[
@@ -607,12 +616,12 @@ class _HomePageState extends State<HomePage> {
                         value: formatCurrency(todayRevenue),
                         increase: formatIncrease(revenueIncrease),
                         iconData: Icons.payments_outlined,
-                        increaseColor: revenueIncrease >= 0
-                            ? primaryColor
-                            : Colors.red,
-                        trendIcon: revenueIncrease >= 0
+                        increaseColor: revenueIncrease > 0
+                            ? const Color(0xFF10B981)
+                            : (revenueIncrease < 0 ? const Color(0xFFEF4444) : const Color(0xFFD660A1)),
+                        trendIcon: revenueIncrease > 0
                             ? Icons.trending_up
-                            : Icons.trending_down,
+                            : (revenueIncrease < 0 ? Icons.trending_down : Icons.trending_flat),
                       ),
                     ),
                   ],
@@ -624,12 +633,12 @@ class _HomePageState extends State<HomePage> {
                       value: "$todayCustomers",
                       increase: formatIncrease(customersIncrease),
                       iconData: Icons.people_outline_rounded,
-                      increaseColor: customersIncrease >= 0
-                          ? primaryColor
-                          : Colors.red,
-                      trendIcon: customersIncrease >= 0
+                      increaseColor: customersIncrease > 0
+                          ? const Color(0xFF10B981)
+                          : (customersIncrease < 0 ? const Color(0xFFEF4444) : const Color(0xFFD660A1)),
+                      trendIcon: customersIncrease > 0
                           ? Icons.trending_up
-                          : Icons.trending_down,
+                          : (customersIncrease < 0 ? Icons.trending_down : Icons.trending_flat),
                     ),
                   ),
                   if (AppSession.userRole == 'owner') ...[
@@ -656,7 +665,7 @@ class _HomePageState extends State<HomePage> {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
@@ -759,10 +768,10 @@ class _HomePageState extends State<HomePage> {
                   const SizedBox(height: 4),
                   Text(
                     formatCurrency(promo.price),
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w900,
-                      color: Colors.black,
+                      color: isDark ? const Color(0xFFCBD5E1) : Colors.black,
                     ),
                   ),
                   if (promo.description != null &&
@@ -779,9 +788,9 @@ class _HomePageState extends State<HomePage> {
                     const SizedBox(height: 4),
                     Text(
                       promo.description!,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: Colors.black87,
+                        color: isDark ? const Color(0xFF94A3B8) : Colors.black87,
                       ),
                     ),
                   ],
@@ -920,7 +929,7 @@ class _HomePageState extends State<HomePage> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
@@ -975,14 +984,14 @@ class _HomePageState extends State<HomePage> {
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    Icon(Icons.arrow_forward, color: primaryColor, size: 16),
+                    const Icon(Icons.arrow_forward, color: Color(0xFFD660A1), size: 16),
                     const SizedBox(width: 4),
                     Text(
                       subtitle,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: primaryColor,
+                        color: Color(0xFFD660A1),
                       ),
                     ),
                   ],
@@ -1007,7 +1016,7 @@ class _HomePageState extends State<HomePage> {
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: cardBg,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(

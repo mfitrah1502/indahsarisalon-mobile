@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 import 'package:printing/printing.dart';
+import '../app_session.dart';
 
 class ReceiptPage extends StatelessWidget {
   String _translatePaymentMethod(String method) {
@@ -44,6 +45,12 @@ class ReceiptPage extends StatelessWidget {
       decimalDigits: 0,
     );
 
+    final bool isDarkMode = AppSession.isDarkMode;
+    final Color scaffoldBg = isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF5F5F5);
+    final Color cardBg = isDarkMode ? const Color(0xFF0F172A) : Colors.white;
+    final Color mainTextColor = isDarkMode ? const Color(0xFFCBD5E1) : Colors.black;
+    final Color mutedText = isDarkMode ? const Color(0xFF94A3B8) : Colors.grey;
+    final Color activeNavBg = isDarkMode ? const Color(0xFF334155) : const Color(0xFFCCE6F0);
     final Color primaryColor = const Color(0xFFD660A1);
 
     double subtotal = 0;
@@ -290,16 +297,16 @@ class ReceiptPage extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F5F5),
+      backgroundColor: scaffoldBg,
       appBar: AppBar(
         title: const Text(
           'Receipt',
           style: TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        backgroundColor: Colors.white,
+        backgroundColor: cardBg,
         elevation: 0,
-        foregroundColor: Colors.black,
+        foregroundColor: mainTextColor,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -307,7 +314,7 @@ class ReceiptPage extends StatelessWidget {
           child: Container(
             constraints: const BoxConstraints(maxWidth: 400),
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: cardBg,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
@@ -323,19 +330,20 @@ class ReceiptPage extends StatelessWidget {
                   padding: const EdgeInsets.all(24),
                   child: Column(
                     children: [
-                      const Text(
+                      Text(
                         'Indah Sari 2 Salon dan SPA',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
+                          color: mainTextColor,
                         ),
                       ),
                       const SizedBox(height: 8),
-                      const Text(
+                      Text(
                         'Jl. Jawa No.30A, Tegal Boto Lor, Sumbersari, Kec. Sumbersari, Kabupaten Jember, Jawa Timur 68121',
                         textAlign: TextAlign.center,
-                        style: TextStyle(fontSize: 12, color: Colors.grey),
+                        style: TextStyle(fontSize: 12, color: mutedText),
                       ),
                       const SizedBox(height: 20),
                       const DashedDivider(),
@@ -391,12 +399,12 @@ class ReceiptPage extends StatelessWidget {
                       const SizedBox(height: 20),
                       const DashedDivider(),
                       const SizedBox(height: 24),
-                      const Text(
+                      Text(
                         'Thank you for choosing\nIndah Sari Salon',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.black87,
+                          color: mutedText,
                           height: 1.5,
                         ),
                       ),
@@ -436,6 +444,9 @@ class ReceiptPage extends StatelessWidget {
   }
 
   Widget _buildInfoRow(String label, String value) {
+    final isDark = AppSession.isDarkMode;
+    final labelColor = isDark ? const Color(0xFF94A3B8) : Colors.black87;
+    final valueColor = isDark ? const Color(0xFFCBD5E1) : Colors.black;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -443,14 +454,14 @@ class ReceiptPage extends StatelessWidget {
         children: [
           Text(
             label,
-            style: const TextStyle(fontSize: 14, color: Colors.black87),
+            style: TextStyle(fontSize: 14, color: labelColor),
           ),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.black,
+              color: valueColor,
             ),
           ),
         ],
@@ -459,6 +470,8 @@ class ReceiptPage extends StatelessWidget {
   }
 
   Widget _buildServiceRow(String name, num price, NumberFormat format) {
+    final isDark = AppSession.isDarkMode;
+    final textColor = isDark ? const Color(0xFFCBD5E1) : Colors.black;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -467,19 +480,19 @@ class ReceiptPage extends StatelessWidget {
           Expanded(
             child: Text(
               name,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
-                color: Colors.black,
+                color: textColor,
               ),
             ),
           ),
           Text(
             format.format(price),
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: Colors.black,
+              color: textColor,
             ),
           ),
         ],
@@ -494,6 +507,9 @@ class ReceiptPage extends StatelessWidget {
     bool isBold = false,
     Color? color,
   }) {
+    final isDark = AppSession.isDarkMode;
+    final defaultLabelColor = isBold ? (isDark ? const Color(0xFFCBD5E1) : Colors.black) : (isDark ? const Color(0xFF94A3B8) : Colors.black87);
+    final defaultValueColor = isBold ? (isDark ? const Color(0xFFCBD5E1) : Colors.black) : (isDark ? const Color(0xFFCBD5E1) : Colors.black87);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -504,7 +520,7 @@ class ReceiptPage extends StatelessWidget {
             style: TextStyle(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: color ?? (isBold ? Colors.black : Colors.black87),
+              color: color ?? defaultLabelColor,
             ),
           ),
           Text(
@@ -512,7 +528,7 @@ class ReceiptPage extends StatelessWidget {
             style: TextStyle(
               fontSize: isBold ? 16 : 14,
               fontWeight: isBold ? FontWeight.bold : FontWeight.normal,
-              color: color ?? (isBold ? Colors.black : Colors.black87),
+              color: color ?? defaultValueColor,
             ),
           ),
         ],
@@ -523,20 +539,21 @@ class ReceiptPage extends StatelessWidget {
 
 class DashedDivider extends StatelessWidget {
   final double height;
-  final Color color;
+  final Color? color;
   final double dashWidth;
   final double dashSpace;
 
   const DashedDivider({
     super.key,
     this.height = 1,
-    this.color = const Color(0xFFE0E0E0),
+    this.color,
     this.dashWidth = 5,
     this.dashSpace = 3,
   });
 
   @override
   Widget build(BuildContext context) {
+    final resolvedColor = color ?? (AppSession.isDarkMode ? const Color(0xFF334155) : const Color(0xFFE0E0E0));
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final boxWidth = constraints.constrainWidth();
@@ -547,7 +564,7 @@ class DashedDivider extends StatelessWidget {
             return SizedBox(
               width: dashWidth,
               height: height,
-              child: DecoratedBox(decoration: BoxDecoration(color: color)),
+              child: DecoratedBox(decoration: BoxDecoration(color: resolvedColor)),
             );
           }),
         );

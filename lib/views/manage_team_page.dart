@@ -7,6 +7,7 @@ import 'list_stylist_page.dart';
 import 'presence_page.dart';
 import 'report_page.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class ManageTeamPage extends StatefulWidget {
   const ManageTeamPage({super.key});
@@ -16,10 +17,13 @@ class ManageTeamPage extends StatefulWidget {
 }
 
 class _ManageTeamPageState extends State<ManageTeamPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get iconBoxBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9);
 
   int _selectedIndex =
       4; // Represents the SETTINGS tab since Manage Team is in Settings
@@ -128,11 +132,11 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                       child: Container(
                         padding: const EdgeInsets.all(20),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: cardBg,
                           borderRadius: BorderRadius.circular(16),
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.02),
+                              color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
                               blurRadius: 10,
                               offset: const Offset(0, 4),
                             ),
@@ -145,9 +149,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                               width: 56,
                               height: 56,
                               decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFF1F5F9,
-                                ), // Light blue-grey background
+                                color: iconBoxBg,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               child: Icon(
@@ -188,7 +190,7 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
                             // Chevron Arrow
                             Icon(
                               Icons.chevron_right,
-                              color: Colors.grey.shade400,
+                              color: isDark ? const Color(0xFF475569) : Colors.grey.shade400,
                               size: 24,
                             ),
                           ],
@@ -210,11 +212,11 @@ class _ManageTeamPageState extends State<ManageTeamPage> {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

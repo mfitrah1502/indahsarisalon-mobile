@@ -12,10 +12,12 @@ class PromoListPage extends StatefulWidget {
 }
 
 class _PromoListPageState extends State<PromoListPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1F2937);
 
   bool _loading = true;
   List<PromoModel> _promos = [];
@@ -55,6 +57,7 @@ class _PromoListPageState extends State<PromoListPage> {
     showDialog(
       context: context,
       builder: (context) => Dialog(
+        backgroundColor: isDark ? const Color(0xFF0F172A) : Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -70,7 +73,7 @@ class _PromoListPageState extends State<PromoListPage> {
                 color: primaryColor,
               ),
               child: promo.imageUrl == null || promo.imageUrl!.isEmpty
-                ? const Icon(Icons.local_offer, color: Colors.white, size: 80)
+                ? Icon(Icons.local_offer, color: Colors.white, size: 80)
                 : null,
             ),
             Padding(
@@ -97,12 +100,12 @@ class _PromoListPageState extends State<PromoListPage> {
                   const SizedBox(height: 16),
                   Text("Get this service only for:", style: TextStyle(color: mutedText, fontSize: 14)),
                   const SizedBox(height: 4),
-                  Text(formatCurrency(promo.price), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: Colors.black)),
+                  Text(formatCurrency(promo.price), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: mainTextColor)),
                   if (promo.description != null && promo.description!.isNotEmpty) ...[
                     const SizedBox(height: 16),
                     Text("Included Treatments:", style: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.bold)),
                     const SizedBox(height: 4),
-                    Text(promo.description!, style: const TextStyle(fontSize: 14, color: Colors.black87)),
+                    Text(promo.description!, style: TextStyle(fontSize: 14, color: mainTextColor.withOpacity(0.87))),
                   ],
                   const SizedBox(height: 20),
                   const Divider(),
@@ -181,7 +184,7 @@ class _PromoListPageState extends State<PromoListPage> {
                                 child: Stack(
                                   children: [
                                     if (p.imageUrl == null || p.imageUrl!.isEmpty)
-                                      const Center(child: Icon(Icons.local_offer, color: Colors.white, size: 48)),
+                                      Center(child: Icon(Icons.local_offer, color: mainTextColor, size: 48)),
                                     Positioned(
                                       bottom: 0,
                                       left: 0,
@@ -201,13 +204,13 @@ class _PromoListPageState extends State<PromoListPage> {
                                           children: [
                                             Text(
                                               p.title,
-                                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
+                                              style: TextStyle(color: mainTextColor, fontWeight: FontWeight.bold, fontSize: 16),
                                               maxLines: 1,
                                               overflow: TextOverflow.ellipsis,
                                             ),
                                             Text(
                                               formatCurrency(p.price),
-                                              style: TextStyle(color: Colors.white.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
+                                              style: TextStyle(color: mainTextColor.withOpacity(0.9), fontSize: 14, fontWeight: FontWeight.w600),
                                             ),
                                           ],
                                         ),

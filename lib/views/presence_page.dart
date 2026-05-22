@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:intl/intl.dart';
+import '../app_session.dart';
 
 class PresencePage extends StatefulWidget {
   const PresencePage({super.key});
@@ -10,11 +11,15 @@ class PresencePage extends StatefulWidget {
 }
 
 class _PresencePageState extends State<PresencePage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFFAFAFC);
-  final Color mutedText = const Color(0xFFBE7A9F); // Elegant muted pink/rose font
-  final Color darkText = const Color(0xFFB53D7C);  // Deep premium pink font
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFFAFAFC);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFFBE7A9F); // Elegant muted pink/rose font
+  Color get darkText => isDark ? const Color(0xFFCBD5E1) : const Color(0xFFB53D7C);  // Deep premium pink font
 
   List<Map<String, dynamic>> _staffs = [];
   Map<int, String> _absensiMap = {}; // Maps user_id to status ('hadir' or 'off') for the selected date
@@ -129,25 +134,25 @@ class _PresencePageState extends State<PresencePage> {
   Color _getRoleBgColor(String? role) {
     final r = (role ?? '').toLowerCase();
     if (r.contains('stylist') || r.contains('hair')) {
-      return const Color(0xFFE0F2FE); // light blue
+      return isDark ? const Color(0xFF075985) : const Color(0xFFE0F2FE); // blue
     } else if (r.contains('beautician')) {
-      return const Color(0xFFFCE7F3); // light pink
+      return isDark ? const Color(0xFF831843) : const Color(0xFFFCE7F3); // pink/rose
     } else if (r.contains('therapist')) {
-      return const Color(0xFFD1FAE5); // light green
+      return isDark ? const Color(0xFF064E3B) : const Color(0xFFD1FAE5); // green
     }
-    return const Color(0xFFF1F5F9);
+    return isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
   }
 
   Color _getRoleTextColor(String? role) {
     final r = (role ?? '').toLowerCase();
     if (r.contains('stylist') || r.contains('hair')) {
-      return const Color(0xFF0369A1); // blue
+      return isDark ? const Color(0xFF38BDF8) : const Color(0xFF0369A1); // blue
     } else if (r.contains('beautician')) {
-      return const Color(0xFFBE185D); // pink
+      return isDark ? const Color(0xFFF472B6) : const Color(0xFFBE185D); // pink
     } else if (r.contains('therapist')) {
-      return const Color(0xFF047857); // green
+      return isDark ? const Color(0xFF34D399) : const Color(0xFF047857); // green
     }
-    return const Color(0xFF475569);
+    return isDark ? const Color(0xFFCBD5E1) : const Color(0xFF475569);
   }
 
   @override
@@ -213,12 +218,12 @@ class _PresencePageState extends State<PresencePage> {
               padding: const EdgeInsets.symmetric(horizontal: 24.0).copyWith(bottom: 16),
               child: Container(
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0)),
+                  border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.02),
+                      color: isDark ? Colors.transparent : Colors.black.withOpacity(0.02),
                       blurRadius: 10,
                       offset: const Offset(0, 4),
                     ),
@@ -279,12 +284,12 @@ class _PresencePageState extends State<PresencePage> {
                                 end: Alignment.bottomRight,
                               )
                             : null,
-                        color: isSelected ? null : Colors.white,
+                        color: isSelected ? null : cardBg,
                         borderRadius: BorderRadius.circular(16),
                         border: isSelected
                             ? null
                             : Border.all(
-                                color: isToday ? primaryColor.withOpacity(0.3) : const Color(0xFFE2E8F0),
+                                color: isToday ? primaryColor.withOpacity(0.3) : (isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                                 width: isToday ? 1.5 : 1.0,
                               ),
                         boxShadow: isSelected
@@ -297,7 +302,7 @@ class _PresencePageState extends State<PresencePage> {
                               ]
                             : [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.01),
+                                  color: isDark ? Colors.transparent : Colors.black.withOpacity(0.01),
                                   blurRadius: 4,
                                   offset: const Offset(0, 2),
                                 ),
@@ -363,12 +368,12 @@ class _PresencePageState extends State<PresencePage> {
                             return Container(
                               padding: const EdgeInsets.all(14),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cardBg,
                                 borderRadius: BorderRadius.circular(16),
-                                border: Border.all(color: const Color(0xFFF1F5F9)),
+                                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.015),
+                                    color: isDark ? Colors.transparent : Colors.black.withOpacity(0.015),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -385,8 +390,8 @@ class _PresencePageState extends State<PresencePage> {
                                         height: 52,
                                         decoration: BoxDecoration(
                                           borderRadius: BorderRadius.circular(14),
-                                          color: const Color(0xFFF8FAFC),
-                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                          color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC),
+                                          border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                                           image: staff['avatar'] != null && staff['avatar'].toString().isNotEmpty
                                               ? DecorationImage(
                                                   image: NetworkImage(staff['avatar']),
@@ -411,7 +416,7 @@ class _PresencePageState extends State<PresencePage> {
                                           decoration: BoxDecoration(
                                             color: isAktif ? const Color(0xFF10B981) : const Color(0xFFEF4444),
                                             shape: BoxShape.circle,
-                                            border: Border.all(color: Colors.white, width: 2),
+                                            border: Border.all(color: cardBg, width: 2),
                                           ),
                                         ),
                                       ),
@@ -459,7 +464,9 @@ class _PresencePageState extends State<PresencePage> {
                                             Container(
                                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                                               decoration: BoxDecoration(
-                                                color: isAktif ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2),
+                                                color: isAktif 
+                                                    ? (isDark ? const Color(0xFF064E3B) : const Color(0xFFECFDF5)) 
+                                                    : (isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEF2F2)),
                                                 borderRadius: BorderRadius.circular(6),
                                               ),
                                               child: Row(
@@ -467,7 +474,9 @@ class _PresencePageState extends State<PresencePage> {
                                                 children: [
                                                   Icon(
                                                     isAktif ? Icons.check_circle_rounded : Icons.cancel_rounded,
-                                                    color: isAktif ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                                                    color: isAktif 
+                                                        ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669)) 
+                                                        : (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626)),
                                                     size: 10,
                                                   ),
                                                   const SizedBox(width: 3),
@@ -476,7 +485,9 @@ class _PresencePageState extends State<PresencePage> {
                                                     style: TextStyle(
                                                       fontSize: 8.5,
                                                       fontWeight: FontWeight.w800,
-                                                      color: isAktif ? const Color(0xFF059669) : const Color(0xFFDC2626),
+                                                      color: isAktif 
+                                                          ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669)) 
+                                                          : (isDark ? const Color(0xFFF87171) : const Color(0xFFDC2626)),
                                                     ),
                                                   ),
                                                 ],
@@ -487,13 +498,13 @@ class _PresencePageState extends State<PresencePage> {
                                       ],
                                     ),
                                   ),
-
+ 
                                   // Sleek IN/OUT Switcher Button
                                   Container(
                                     height: 36,
                                     width: 108,
                                     decoration: BoxDecoration(
-                                      color: const Color(0xFFF1F5F9),
+                                      color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                                       borderRadius: BorderRadius.circular(18),
                                     ),
                                     child: Stack(
@@ -538,7 +549,7 @@ class _PresencePageState extends State<PresencePage> {
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight: FontWeight.w900,
-                                                      color: isAktif ? Colors.white : const Color(0xFF94A3B8),
+                                                      color: isAktif ? Colors.white : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                                                     ),
                                                   ),
                                                 ),
@@ -554,7 +565,7 @@ class _PresencePageState extends State<PresencePage> {
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight: FontWeight.w900,
-                                                      color: !isAktif ? Colors.white : const Color(0xFF94A3B8),
+                                                      color: !isAktif ? Colors.white : (isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8)),
                                                     ),
                                                   ),
                                                 ),

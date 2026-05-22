@@ -3,6 +3,7 @@ import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import 'auth_page.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class ResetPasswordPage extends StatefulWidget {
   final String email;
@@ -14,11 +15,15 @@ class ResetPasswordPage extends StatefulWidget {
 }
 
 class _ResetPasswordPageState extends State<ResetPasswordPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF5F7FB);
-  final Color inputBg = const Color(0xFFE2E4Eb);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F7FB);
+  Color get inputBg => isDark ? const Color(0xFF0F172A) : const Color(0xFFE2E4Eb);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+
 
   final passwordController = TextEditingController();
   final confirmController = TextEditingController();
@@ -92,7 +97,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF1F5F9),
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Icon(
@@ -108,7 +113,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                 Text(
                   "Reset Password",
                   style: TextStyle(
-                    color: const Color(0xFF0F172A),
+                    color: mainTextColor,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                   ),
@@ -210,7 +215,7 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                   width: double.infinity,
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF8FAFC),
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(16),
                   ),
                   child: Column(
@@ -220,12 +225,12 @@ class _ResetPasswordPageState extends State<ResetPasswordPage> {
                         children: [
                           Icon(Icons.info_outline, color: Colors.orange.shade300, size: 20),
                           const SizedBox(width: 12),
-                          const Text(
+                          Text(
                             "Security Standards",
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.bold,
-                              color: Color(0xFF0F172A),
+                              color: mainTextColor,
                             ),
                           ),
                         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 import '../models/booking_list_model.dart';
 import '../controllers/booking_list_controller.dart';
 import 'package:intl/intl.dart';
@@ -18,10 +19,18 @@ class BookingListPage extends StatefulWidget {
 }
 
 class _BookingListPageState extends State<BookingListPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF8FAFC);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get cardBgAlt => isDark ? const Color(0xFF1E293B) : const Color(0xFFF8FAFC);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get mainTextColorDark => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get inputBg => isDark ? const Color(0xFF334155) : Colors.white;
+  Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
+
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   int _selectedIndex = 1;
@@ -224,7 +233,7 @@ class _BookingListPageState extends State<BookingListPage> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white,
+                            color: cardBg,
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 10, offset: const Offset(0, 2))
@@ -241,7 +250,9 @@ class _BookingListPageState extends State<BookingListPage> {
                         child: Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: _bookings.isEmpty ? const Color(0xFFF1F5F9) : const Color(0xFFFFF1F2),
+                            color: _bookings.isEmpty 
+                                ? (isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)) 
+                                : (isDark ? const Color(0xFF7F1D1D).withOpacity(0.3) : const Color(0xFFFFF1F2)),
                             borderRadius: BorderRadius.circular(12),
                             boxShadow: [
                               if (_bookings.isNotEmpty)
@@ -263,21 +274,21 @@ class _BookingListPageState extends State<BookingListPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
                 decoration: BoxDecoration(
-                  color: Colors.white,
+                  color: cardBg,
                   borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: const Color(0xFFE2E8F0), width: 1.5),
+                  border: Border.all(color: inputBorderColor, width: 1.5),
                   boxShadow: [
-                    BoxShadow(color: Colors.black.withValues(alpha: 0.02), blurRadius: 10, offset: const Offset(0, 4))
+                    BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.02), blurRadius: 10, offset: const Offset(0, 4))
                   ],
                 ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: _filterBookings,
-                  style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: Color(0xFF1E293B)),
+                  style: TextStyle(fontSize: 15, fontWeight: FontWeight.w500, color: mainTextColor),
                   decoration: InputDecoration(
                     icon: Icon(Icons.search_rounded, color: primaryColor.withValues(alpha: 0.6), size: 22),
                     hintText: 'Search by Name or Stylist...',
-                    hintStyle: const TextStyle(color: Color(0xFF94A3B8), fontSize: 14, fontWeight: FontWeight.w400),
+                    hintStyle: TextStyle(color: mutedText, fontSize: 14, fontWeight: FontWeight.w400),
                     border: InputBorder.none,
                   ),
                 ),
@@ -311,7 +322,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                   const SizedBox(height: 6),
                                   Text(
                                     "Your Appointments",
-                                    style: const TextStyle(color: Color(0xFF1E293B), fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
+                                    style: TextStyle(color: primaryColor, fontSize: 26, fontWeight: FontWeight.w900, letterSpacing: -0.5),
                                   ),
                                 ],
                               ),
@@ -339,14 +350,14 @@ class _BookingListPageState extends State<BookingListPage> {
                                     Container(
                                       padding: const EdgeInsets.all(24),
                                       decoration: BoxDecoration(
-                                        color: Colors.white,
+                                        color: cardBg,
                                         shape: BoxShape.circle,
                                         boxShadow: [BoxShadow(color: primaryColor.withValues(alpha: 0.05), blurRadius: 20)],
                                       ),
                                       child: Icon(Icons.event_busy_rounded, size: 56, color: primaryColor.withValues(alpha: 0.4)),
                                     ),
                                     const SizedBox(height: 20),
-                                    Text("No bookings yet.", style: const TextStyle(color: Color(0xFF1E293B), fontSize: 18, fontWeight: FontWeight.w700)),
+                                    Text("No bookings yet.", style: TextStyle(color: mainTextColorDark, fontSize: 18, fontWeight: FontWeight.w700)),
                                     const SizedBox(height: 8),
                                     Text("Press the + button to create a new booking.", style: TextStyle(color: mutedText, fontSize: 14)),
                                   ],
@@ -373,10 +384,10 @@ class _BookingListPageState extends State<BookingListPage> {
                                         const SizedBox(width: 10),
                                         Text(
                                           entry.key,
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 15,
                                             fontWeight: FontWeight.w800,
-                                            color: Color(0xFF334155),
+                                            color: mainTextColor,
                                             letterSpacing: 0.2,
                                           ),
                                         ),
@@ -402,12 +413,18 @@ class _BookingListPageState extends State<BookingListPage> {
                                         child: Container(
                                           padding: const EdgeInsets.all(18),
                                           decoration: BoxDecoration(
-                                            color: Colors.white,
+                                            color: cardBg,
                                             borderRadius: BorderRadius.circular(20),
-                                            border: Border.all(color: const Color(0xFFF1F5F9), width: 1),
-                                            boxShadow: [
-                                              BoxShadow(color: primaryColor.withValues(alpha: 0.04), blurRadius: 15, offset: const Offset(0, 6)),
-                                            ],
+                                            border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9), width: 1),
+                                            boxShadow: isDark
+                                                ? null
+                                                : [
+                                                    BoxShadow(
+                                                      color: primaryColor.withValues(alpha: 0.04),
+                                                      blurRadius: 15,
+                                                      offset: const Offset(0, 6),
+                                                    ),
+                                                  ],
                                           ),
                                           child: Column(
                                             children: [
@@ -453,14 +470,14 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       children: [
                                                         Text(
                                                           booking.customerName != '-' ? booking.customerName : "Customer",
-                                                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: Color(0xFF0F172A)),
+                                                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16, color: mainTextColor),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
                                                         ),
                                                         const SizedBox(height: 4),
                                                         Text(
                                                           serviceLabel,
-                                                          style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: Color(0xFF475569)),
+                                                          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 13, color: mutedText),
                                                           maxLines: 1,
                                                           overflow: TextOverflow.ellipsis,
                                                         ),
@@ -481,7 +498,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                 ],
                                               ),
                                               const SizedBox(height: 16),
-                                              const Divider(color: Color(0xFFF1F5F9), height: 1, thickness: 1.5),
+                                              Divider(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9), height: 1, thickness: 1.5),
                                               const SizedBox(height: 16),
                                               Row(
                                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -491,9 +508,9 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       Container(
                                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                         decoration: BoxDecoration(
-                                                          color: const Color(0xFFF8FAFC),
+                                                          color: cardBgAlt,
                                                           borderRadius: BorderRadius.circular(6),
-                                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                                          border: Border.all(color: inputBorderColor),
                                                         ),
                                                         child: Row(
                                                           children: [
@@ -501,7 +518,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                             const SizedBox(width: 6),
                                                             Text(
                                                               _formatDateOnly(booking.datetime),
-                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: mainTextColor),
                                                             ),
                                                           ],
                                                         ),
@@ -510,9 +527,9 @@ class _BookingListPageState extends State<BookingListPage> {
                                                       Container(
                                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                                                         decoration: BoxDecoration(
-                                                          color: const Color(0xFFF8FAFC),
+                                                          color: cardBgAlt,
                                                           borderRadius: BorderRadius.circular(6),
-                                                          border: Border.all(color: const Color(0xFFE2E8F0)),
+                                                          border: Border.all(color: inputBorderColor),
                                                         ),
                                                         child: Row(
                                                           children: [
@@ -520,7 +537,7 @@ class _BookingListPageState extends State<BookingListPage> {
                                                             const SizedBox(width: 6),
                                                             Text(
                                                               _formatTimeOnly(booking.datetime),
-                                                              style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF334155)),
+                                                              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: mainTextColor),
                                                             ),
                                                           ],
                                                         ),
@@ -574,13 +591,13 @@ class _BookingListPageState extends State<BookingListPage> {
                         width: 60, height: 60,
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
-                            colors: [primaryColor, buttonColor],
+                            colors: [const Color(0xFFD660A1), buttonColor],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
-                            BoxShadow(color: primaryColor.withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8)),
+                            BoxShadow(color: const Color(0xFFD660A1).withValues(alpha: 0.4), blurRadius: 15, offset: const Offset(0, 8)),
                           ],
                         ),
                         child: const Icon(Icons.add_rounded, color: Colors.white, size: 32),
@@ -595,9 +612,9 @@ class _BookingListPageState extends State<BookingListPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
-          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: 0.04), blurRadius: 24, offset: const Offset(0, -8))],
+          boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: isDark ? 0.3 : 0.04), blurRadius: 24, offset: const Offset(0, -8))],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: SafeArea(
@@ -630,14 +647,14 @@ class _BookingListPageState extends State<BookingListPage> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, color: isSelected ? primaryColor : const Color(0xFF94A3B8), size: 28),
+          Icon(icon, color: isSelected ? primaryColor : mutedText, size: 28),
           const SizedBox(height: 6),
           Text(
             label, 
             style: TextStyle(
               fontSize: 10, 
               fontWeight: FontWeight.w800, 
-              color: isSelected ? primaryColor : const Color(0xFF94A3B8), 
+              color: isSelected ? primaryColor : mutedText, 
               letterSpacing: 0.5
             )
           ),

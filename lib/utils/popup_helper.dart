@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../app_session.dart';
 
 class PopupHelper {
   static void showSuccess(BuildContext context, String message, {VoidCallback? onConfirm}) {
@@ -80,7 +81,7 @@ class PopupHelper {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppSession.isDarkMode ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
         ),
         child: Column(
@@ -107,9 +108,9 @@ class PopupHelper {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF4B5563),
+                color: AppSession.isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
                 height: 1.5,
               ),
             ),
@@ -177,7 +178,7 @@ class PopupHelper {
       child: Container(
         padding: const EdgeInsets.all(24),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: AppSession.isDarkMode ? const Color(0xFF0F172A) : Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: [
             BoxShadow(
@@ -211,9 +212,9 @@ class PopupHelper {
             Text(
               message,
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
-                color: Color(0xFF4B5563),
+                color: AppSession.isDarkMode ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
                 height: 1.5,
               ),
             ),

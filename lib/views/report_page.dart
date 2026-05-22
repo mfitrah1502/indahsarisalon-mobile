@@ -24,11 +24,18 @@ class ReportPage extends StatefulWidget {
 }
 
 class _ReportPageState extends State<ReportPage> {
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : const Color(0xFFF1F5F9);
+  Color get cardBgAlt => isDark ? const Color(0xFF1E293B) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5);
+  Color get inputBorderColor => isDark ? const Color(0xFF475569) : const Color(0xFFE2E8F0);
+
   final int _selectedIndex = 3;
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
 
   DateTimeRange? _dateRange;
 
@@ -128,7 +135,7 @@ class _ReportPageState extends State<ReportPage> {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: const Color(0xFFF1F5F9),
+        color: cardBg,
         borderRadius: BorderRadius.circular(12),
       ),
       child: Row(
@@ -140,12 +147,12 @@ class _ReportPageState extends State<ReportPage> {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? Colors.white : Colors.transparent,
+                  color: isSelected ? cardBgAlt : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: isSelected
                       ? [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -183,45 +190,57 @@ class _ReportPageState extends State<ReportPage> {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
+              backgroundColor: cardBg,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(16),
               ),
-              title: const Text(
+              title: Text(
                 "Add Expense",
-                style: TextStyle(fontWeight: FontWeight.bold),
+                style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor),
               ),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   TextField(
                     controller: nameCtrl,
+                    style: TextStyle(color: mainTextColor),
                     decoration: InputDecoration(
                       labelText: "Expense Name",
+                      labelStyle: TextStyle(color: mutedText),
                       hintText: "Example: Electricity, Budi's Salary",
+                      hintStyle: TextStyle(color: mutedText.withOpacity(0.6)),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: inputBorderColor),
                       ),
                     ),
                   ),
                   const SizedBox(height: 16),
                   DropdownButtonFormField<String>(
+                    dropdownColor: cardBg,
                     value: category,
+                    style: TextStyle(color: mainTextColor),
                     decoration: InputDecoration(
                       labelText: "Category",
+                      labelStyle: TextStyle(color: mutedText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: inputBorderColor),
                       ),
                     ),
-                    items: const [
+                    items: [
                       DropdownMenuItem(
                         value: "employee_salary",
-                        child: Text("Employee Salary"),
+                        child: Text("Employee Salary", style: TextStyle(color: mainTextColor)),
                       ),
                       DropdownMenuItem(
                         value: "maintenance",
-                        child: Text("Maintenance"),
+                        child: Text("Maintenance", style: TextStyle(color: mainTextColor)),
                       ),
-                      DropdownMenuItem(value: "others", child: Text("Others")),
+                      DropdownMenuItem(
+                        value: "others",
+                        child: Text("Others", style: TextStyle(color: mainTextColor)),
+                      ),
                     ],
                     onChanged: (val) {
                       if (val != null) setDialogState(() => category = val);
@@ -231,10 +250,13 @@ class _ReportPageState extends State<ReportPage> {
                   TextField(
                     controller: amountCtrl,
                     keyboardType: TextInputType.number,
+                    style: TextStyle(color: mainTextColor),
                     decoration: InputDecoration(
                       labelText: "Amount (Rp)",
+                      labelStyle: TextStyle(color: mutedText),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(12),
+                        borderSide: BorderSide(color: inputBorderColor),
                       ),
                     ),
                   ),
@@ -247,7 +269,7 @@ class _ReportPageState extends State<ReportPage> {
                 ),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: primaryColor,
+                    backgroundColor: const Color(0xFFD660A1),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -360,7 +382,7 @@ class _ReportPageState extends State<ReportPage> {
                             : DateFormat('dd MMM').format(date),
                         style: TextStyle(
                           fontSize: 11,
-                          color: Colors.grey.shade600,
+                          color: mutedText,
                         ),
                       ),
                     );
@@ -391,7 +413,7 @@ class _ReportPageState extends State<ReportPage> {
                       text,
                       style: TextStyle(
                         fontSize: 10,
-                        color: Colors.grey.shade600,
+                        color: mutedText,
                       ),
                       textAlign: TextAlign.right,
                     ),
@@ -411,13 +433,13 @@ class _ReportPageState extends State<ReportPage> {
             drawVerticalLine: false,
             horizontalInterval: maxY / 3 > 0 ? maxY / 3 : 1,
             getDrawingHorizontalLine: (value) {
-              return FlLine(color: Colors.grey.shade200, strokeWidth: 1);
+              return FlLine(color: isDark ? const Color(0xFF334155) : Colors.grey.shade200, strokeWidth: 1);
             },
           ),
           borderData: FlBorderData(
             show: true,
             border: Border(
-              bottom: BorderSide(color: Colors.grey.shade300, width: 1),
+              bottom: BorderSide(color: isDark ? const Color(0xFF334155) : Colors.grey.shade300, width: 1),
               left: BorderSide.none,
               top: BorderSide.none,
               right: BorderSide.none,
@@ -517,7 +539,7 @@ class _ReportPageState extends State<ReportPage> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: primaryColor,
+                        backgroundColor: const Color(0xFFD660A1),
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
@@ -539,7 +561,7 @@ class _ReportPageState extends State<ReportPage> {
                           child: Container(
                             height: 85,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: cardBg,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
@@ -578,10 +600,10 @@ class _ReportPageState extends State<ReportPage> {
                                           alignment: Alignment.centerLeft,
                                           child: Text(
                                             formatCurrency(totalIncome),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w900,
-                                              color: Colors.black,
+                                              color: mainTextColor,
                                             ),
                                           ),
                                         ),
@@ -598,7 +620,7 @@ class _ReportPageState extends State<ReportPage> {
                           child: Container(
                             height: 85,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: cardBg,
                               borderRadius: BorderRadius.circular(4),
                             ),
                             child: Row(
@@ -637,10 +659,10 @@ class _ReportPageState extends State<ReportPage> {
                                           alignment: Alignment.centerLeft,
                                           child: Text(
                                             formatCurrency(totalExpense),
-                                            style: const TextStyle(
+                                            style: TextStyle(
                                               fontSize: 18,
                                               fontWeight: FontWeight.w900,
-                                              color: Colors.black,
+                                              color: mainTextColor,
                                             ),
                                           ),
                                         ),
@@ -662,10 +684,10 @@ class _ReportPageState extends State<ReportPage> {
                     children: [
                       Text(
                         "Sales Report",
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.w900,
-                          color: Colors.black,
+                          color: mainTextColor,
                         ),
                       ),
                         const SizedBox.shrink(),
@@ -674,7 +696,7 @@ class _ReportPageState extends State<ReportPage> {
                   const SizedBox(height: 4),
                   Text(
                     formatDateRange(_dateRange),
-                    style: TextStyle(color: Colors.grey.shade500, fontSize: 14),
+                    style: TextStyle(color: mutedText, fontSize: 14),
                   ),
                   const SizedBox(height: 32),
 
@@ -697,7 +719,7 @@ class _ReportPageState extends State<ReportPage> {
                         "Income",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade700,
+                          color: mainTextColor,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -715,7 +737,7 @@ class _ReportPageState extends State<ReportPage> {
                         "Expenses",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade700,
+                          color: mainTextColor,
                         ),
                       ),
                       const SizedBox(width: 16),
@@ -733,7 +755,7 @@ class _ReportPageState extends State<ReportPage> {
                         "Profit",
                         style: TextStyle(
                           fontSize: 12,
-                          color: Colors.grey.shade700,
+                          color: mainTextColor,
                         ),
                       ),
                     ],
@@ -779,11 +801,11 @@ class _ReportPageState extends State<ReportPage> {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),

@@ -10,6 +10,7 @@ import 'manage_services_page.dart';
 import 'settings_page.dart';
 import 'report_page.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class ListStylistPage extends StatefulWidget {
   final String role;
@@ -21,10 +22,15 @@ class ListStylistPage extends StatefulWidget {
 }
 
 class _ListStylistPageState extends State<ListStylistPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
   // Active index 4 (SETTINGS) mirrors what we have in manage_team_page.dart
   int _selectedIndex = 4;
@@ -128,10 +134,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                 horizontal: 16,
                               ),
                               decoration: BoxDecoration(
-                                color: const Color(
-                                  0xFFE2E8F0,
-                                ), // Light grey input background
+                                color: inputBg, // Dynamic input background
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.transparent),
                               ),
                               child: TextField(
                                 onChanged: (value) {
@@ -139,6 +144,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     _searchQuery = value;
                                   });
                                 },
+                                style: TextStyle(color: mainTextColor),
                                 decoration: InputDecoration(
                                   icon: Icon(
                                     Icons.search,
@@ -162,12 +168,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             },
                             child: Row(
                               children: [
-                                Icon(Icons.add, color: primaryColor, size: 22),
+                                Icon(Icons.add, color: const Color(0xFFD660A1), size: 22),
                                 const SizedBox(width: 4),
                                 Text(
                                   "Add New",
                                   style: TextStyle(
-                                    color: primaryColor,
+                                    color: const Color(0xFFD660A1),
                                     fontWeight: FontWeight.bold,
                                     fontSize: 14,
                                   ),
@@ -209,11 +215,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
                             return Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: Colors.white,
+                                color: cardBg,
                                 borderRadius: BorderRadius.circular(16),
+                                border: Border.all(color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9)),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.02),
+                                    color: isDark ? Colors.transparent : Colors.black.withOpacity(0.02),
                                     blurRadius: 10,
                                     offset: const Offset(0, 4),
                                   ),
@@ -227,7 +234,8 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     height: 56,
                                     decoration: BoxDecoration(
                                       borderRadius: BorderRadius.circular(12),
-                                      color: const Color(0xFFF1F5F9),
+                                      color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
+                                      border: Border.all(color: isDark ? const Color(0xFF334155) : Colors.transparent),
                                       image:
                                           stylist.avatar != null &&
                                               stylist.avatar!.isNotEmpty
@@ -242,15 +250,15 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     child:
                                         stylist.avatar == null ||
                                             stylist.avatar!.isEmpty
-                                        ? const Icon(
+                                        ? Icon(
                                             Icons.person,
-                                            color: Color(0xFF94A3B8),
+                                            color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                                             size: 32,
                                           )
                                         : null,
                                   ),
                                   const SizedBox(width: 16),
-
+ 
                                   // Text details
                                   Expanded(
                                     child: Column(
@@ -275,9 +283,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w600,
-                                              color: buttonColor.withOpacity(
-                                                0.8,
-                                              ),
+                                              color: isDark ? const Color(0xFFF472B6) : buttonColor.withOpacity(0.8),
                                             ),
                                           ),
                                         const SizedBox(height: 4),
@@ -301,7 +307,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFF1F5F9),
+                                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(
@@ -348,7 +354,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                     child: Container(
                                       padding: const EdgeInsets.all(8),
                                       decoration: BoxDecoration(
-                                        color: const Color(0xFFFEF2F2),
+                                        color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFEF2F2),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: const Icon(
@@ -377,11 +383,12 @@ class _ListStylistPageState extends State<ListStylistPage> {
       extendBody: true,
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+          border: Border.all(color: isDark ? const Color(0xFF1E293B) : Colors.transparent),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: isDark ? Colors.transparent : Colors.black.withOpacity(0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
@@ -514,11 +521,18 @@ class _ListStylistPageState extends State<ListStylistPage> {
                 builder: (context, child) {
                   return Theme(
                     data: Theme.of(context).copyWith(
-                      colorScheme: ColorScheme.light(
-                        primary: primaryColor,
-                        onPrimary: Colors.white,
-                        onSurface: primaryColor,
-                      ),
+                      colorScheme: isDark
+                          ? ColorScheme.dark(
+                              primary: const Color(0xFFD660A1),
+                              onPrimary: Colors.white,
+                              surface: cardBg,
+                              onSurface: mainTextColor,
+                            )
+                          : ColorScheme.light(
+                              primary: primaryColor,
+                              onPrimary: Colors.white,
+                              onSurface: primaryColor,
+                            ),
                     ),
                     child: child!,
                   );
@@ -551,9 +565,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                       horizontal: 24,
                       vertical: 20,
                     ),
-                    decoration: const BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.vertical(
+                    decoration: BoxDecoration(
+                      color: cardBg,
+                      borderRadius: const BorderRadius.vertical(
                         top: Radius.circular(24),
                       ),
                     ),
@@ -679,7 +693,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                   width: 100,
                                   height: 100,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE2E8F0),
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0),
                                     borderRadius: BorderRadius.circular(16),
                                     image: selectedImage != null
                                         ? DecorationImage(
@@ -698,9 +712,9 @@ class _ListStylistPageState extends State<ListStylistPage> {
                                       (selectedImage == null &&
                                           (avatarUrl == null ||
                                               avatarUrl!.isEmpty))
-                                      ? const Icon(
+                                      ? Icon(
                                           Icons.person,
-                                          color: Color(0xFF94A3B8),
+                                          color: isDark ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
                                           size: 48,
                                         )
                                       : null,
@@ -743,7 +757,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 1.0,
-                              color: const Color(0xFF4B5563),
+                              color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
                             ),
                           ),
                           const SizedBox(height: 32),
@@ -1000,7 +1014,7 @@ class _ListStylistPageState extends State<ListStylistPage> {
             fontSize: 11,
             fontWeight: FontWeight.bold,
             letterSpacing: 1.0,
-            color: const Color(0xFF4B5563),
+            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563),
           ),
         ),
       ),
@@ -1015,16 +1029,18 @@ class _ListStylistPageState extends State<ListStylistPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0).withOpacity(0.6),
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
       ),
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
+        style: TextStyle(color: mainTextColor),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
-            color: const Color(0xFF64748B).withOpacity(0.6),
+            color: isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6),
             fontSize: 15,
           ),
           border: InputBorder.none,
@@ -1041,15 +1057,16 @@ class _ListStylistPageState extends State<ListStylistPage> {
         width: double.infinity,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         decoration: BoxDecoration(
-          color: const Color(0xFFE2E8F0).withOpacity(0.6),
+          color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
         ),
         child: Text(
           text,
           style: TextStyle(
             color: text == "Select Date"
-                ? const Color(0xFF64748B).withOpacity(0.6)
-                : Colors.black87,
+                ? (isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6))
+                : mainTextColor,
             fontSize: 15,
           ),
         ),
@@ -1066,15 +1083,15 @@ class _ListStylistPageState extends State<ListStylistPage> {
       label: Text(label),
       selected: isSelected,
       onSelected: onSelected,
-      selectedColor: primaryColor.withOpacity(0.2),
+      selectedColor: isDark ? primaryColor.withOpacity(0.4) : primaryColor.withOpacity(0.2),
       labelStyle: TextStyle(
-        color: isSelected ? primaryColor : mutedText,
+        color: isSelected ? (isDark ? Colors.white : primaryColor) : mutedText,
         fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
       ),
-      backgroundColor: const Color(0xFFE2E8F0).withOpacity(0.6),
+      backgroundColor: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide.none,
+        side: isDark ? const BorderSide(color: Color(0xFF475569)) : BorderSide.none,
       ),
     );
   }
@@ -1087,11 +1104,14 @@ class _ListStylistPageState extends State<ListStylistPage> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: const Color(0xFFE2E8F0).withOpacity(0.6),
+        color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.6),
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: isDark ? const Color(0xFF475569) : Colors.transparent),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
+          dropdownColor: cardBg,
+          iconEnabledColor: primaryColor,
           value: items.any((item) => item.toLowerCase() == value.toLowerCase())
               ? items.firstWhere(
                   (item) => item.toLowerCase() == value.toLowerCase(),
@@ -1100,13 +1120,19 @@ class _ListStylistPageState extends State<ListStylistPage> {
           hint: Text(
             value,
             style: TextStyle(
-              color: const Color(0xFF64748B).withOpacity(0.6),
+              color: isDark ? const Color(0xFF94A3B8).withOpacity(0.6) : const Color(0xFF64748B).withOpacity(0.6),
               fontSize: 15,
             ),
           ),
           isExpanded: true,
           items: items.map((String item) {
-            return DropdownMenuItem<String>(value: item, child: Text(item));
+            return DropdownMenuItem<String>(
+              value: item, 
+              child: Text(
+                item,
+                style: TextStyle(color: mainTextColor, fontSize: 15),
+              ),
+            );
           }).toList(),
           onChanged: onChanged,
         ),

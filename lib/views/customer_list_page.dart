@@ -3,6 +3,7 @@ import '../controllers/user_controller.dart';
 import 'package:intl/intl.dart';
 import 'customer_booking_history_page.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class CustomerListPage extends StatefulWidget {
   final bool isSelectionMode;
@@ -14,10 +15,15 @@ class CustomerListPage extends StatefulWidget {
 }
 
 class _CustomerListPageState extends State<CustomerListPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get inputBg => isDark ? const Color(0xFF334155) : Colors.white;
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
   final _currency = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   bool _loading = true;
@@ -106,14 +112,14 @@ class _CustomerListPageState extends State<CustomerListPage> {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: BorderRadius.circular(16),
           border: _isSelectionActive && isSelected 
               ? Border.all(color: primaryColor, width: 2) 
-              : Border.all(color: Colors.transparent, width: 2),
+              : Border.all(color: borderCol, width: 1),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.02),
+              color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
               blurRadius: 10,
               offset: const Offset(0, 4),
             )
@@ -145,14 +151,14 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   height: 52,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(16),
-                    color: const Color(0xFFF1F5F9),
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9),
                     image: (customer['avatar'] != null && customer['avatar'].toString().isNotEmpty)
                         ? DecorationImage(
                             image: NetworkImage(customer['avatar']),
                             fit: BoxFit.cover,
                           )
                         : DecorationImage(
-                            image: NetworkImage("https://ui-avatars.com/api/?name=${Uri.encodeComponent(customer['name'])}&background=E4F0FA&color=D660A1&bold=true"),
+                            image: NetworkImage("https://ui-avatars.com/api/?name=${Uri.encodeComponent(customer['name'])}&background=${isDark ? "1E293B" : "E4F0FA"}&color=${isDark ? "FFFFFF" : "D660A1"}&bold=true"),
                             fit: BoxFit.cover,
                           ),
                   ),
@@ -166,7 +172,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     decoration: BoxDecoration(
                       color: const Color(0xFF10B981), // Emerald green
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white, width: 2),
+                      border: Border.all(color: cardBg, width: 2),
                     ),
                   ),
                 ),
@@ -184,10 +190,10 @@ class _CustomerListPageState extends State<CustomerListPage> {
                       Flexible(
                         child: Text(
                           customer['name'],
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.bold,
-                            color: Color(0xFF0F172A),
+                            color: mainTextColor,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -199,9 +205,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
                           final spend = customer['spend'] as int;
                           String tier = 'Reguler';
                           Color tc = mutedText;
-                          if (spend >= 3000000) { tier = 'Platinum'; tc = const Color(0xFF334155); } // dark slate
+                          if (spend >= 3000000) { tier = 'Platinum'; tc = isDark ? const Color(0xFFCBD5E1) : const Color(0xFF334155); } // dark slate
                           else if (spend >= 2000000) { tier = 'Gold'; tc = const Color(0xFFEAB308); } // gold
-                          else if (spend >= 1000000) { tier = 'Silver'; tc = const Color(0xFF94A3B8); } // silver
+                          else if (spend >= 1000000) { tier = 'Silver'; tc = isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8); } // silver
                           
                           bool isCc = customer['is_colour_circle'] == true || spend >= 1500000;
                           if (isCc) {
@@ -264,9 +270,9 @@ class _CustomerListPageState extends State<CustomerListPage> {
                   const SizedBox(height: 2),
                   Text(
                     customer['phone'].toString().isEmpty ? '-' : customer['phone'],
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: Color(0xFF64748B),
+                      color: mutedText,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -279,13 +285,13 @@ class _CustomerListPageState extends State<CustomerListPage> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                const Text(
+                Text(
                   "LIFETIME SPEND",
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 0.5,
-                    color: Color(0xFF64748B),
+                    color: mutedText,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -300,7 +306,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
               ],
             ),
             const SizedBox(width: 12),
-            if (!_isSelectionActive) const Icon(Icons.chevron_right, color: Color(0xFFCBD5E1), size: 24),
+            if (!_isSelectionActive) Icon(Icons.chevron_right, color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), size: 24),
           ],
         ),
       ),
@@ -385,7 +391,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     _isSelectionActive 
                       ? IconButton(
                           onPressed: _selectedKeys.isEmpty ? null : _deleteSelectedCustomers,
-                          icon: Icon(Icons.delete_outline, color: _selectedKeys.isEmpty ? Colors.grey : Colors.red, size: 28),
+                          icon: Icon(Icons.delete_outline, color: _selectedKeys.isEmpty ? (isDark ? Colors.grey[600] : Colors.grey) : Colors.red, size: 28),
                         )
                       : TextButton(
                           onPressed: () => setState(() => _isSelectionActive = true),
@@ -404,16 +410,19 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(12),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                        border: Border.all(color: borderCol, width: 1),
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                       ),
                       child: TextField(
                         controller: _searchController,
                         onChanged: (v) => _filter(),
+                        style: TextStyle(color: mainTextColor),
                         decoration: InputDecoration(
-                          icon: Icon(Icons.search, color: Color(0xFF64748B)),
+                          icon: Icon(Icons.search, color: mutedText),
                           hintText: 'Search name or phone number...',
+                          hintStyle: TextStyle(color: mutedText),
                           border: InputBorder.none,
                         ),
                       ),
@@ -425,15 +434,17 @@ class _CustomerListPageState extends State<CustomerListPage> {
                     height: 50,
                     width: 50,
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: cardBg,
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                      border: Border.all(color: borderCol, width: 1),
+                      boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                     ),
                     child: PopupMenuButton<String>(
+                      color: cardBg,
                       icon: Stack(
                         alignment: Alignment.center,
                         children: [
-                           const Icon(Icons.tune, color: Color(0xFF64748B), size: 24),
+                           Icon(Icons.tune, color: mutedText, size: 24),
                            if (_selectedTier != 'All')
                              Positioned(
                                right: -2,
@@ -462,7 +473,7 @@ class _CustomerListPageState extends State<CustomerListPage> {
                               children: [
                                 Text(choice, style: TextStyle(
                                   fontWeight: _selectedTier == choice ? FontWeight.bold : FontWeight.normal,
-                                  color: _selectedTier == choice ? primaryColor : Colors.black87,
+                                  color: _selectedTier == choice ? primaryColor : mainTextColor,
                                 )),
                                 if (_selectedTier == choice)
                                   Icon(Icons.check, color: primaryColor, size: 18),

@@ -13,10 +13,15 @@ class AuthPage extends StatefulWidget {
 }
 
 class _AuthPageState extends State<AuthPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF5F7FB);
-  final Color inputBg = const Color(0xFFE2E4Eb);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF5F7FB);
+  Color get inputBg => isDark ? const Color(0xFF334155) : const Color(0xFFE2E4Eb);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF4B5563);
+  Color get borderCol => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
 
   final username = TextEditingController();
   final password = TextEditingController();
@@ -93,7 +98,7 @@ class _AuthPageState extends State<AuthPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFE6E6E6),
+                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE6E6E6),
                     borderRadius: BorderRadius.circular(4),
                   ),
                   child: Row(
@@ -102,25 +107,25 @@ class _AuthPageState extends State<AuthPage> {
                       Container(
                         width: 6,
                         height: 6,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFF4A2C10),
+                        decoration: BoxDecoration(
+                          color: isDark ? Colors.white70 : const Color(0xFF4A2C10),
                           shape: BoxShape.circle,
                         ),
                       ),
                       const SizedBox(width: 6),
-                      const Text(
+                      Text(
                         "SECURE ACCESS",
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.5,
-                          color: Color(0xFF4A4A4A),
+                          color: isDark ? const Color(0xFFCBD5E1) : const Color(0xFF4A4A4A),
                         ),
                       ),
                     ],
                   ),
                 ),
-
+                
                 const SizedBox(height: 24),
 
                 // LARGE TITLE
@@ -138,10 +143,10 @@ class _AuthPageState extends State<AuthPage> {
                 const SizedBox(height: 16),
 
                 // SUBTITLE
-                const Text(
+                Text(
                   "Access your personalized beauty\ndashboard and manage your upcoming\ntreatments.",
                   style: TextStyle(
-                    color: Color(0xFF4B5563),
+                    color: mutedText,
                     fontSize: 15,
                     height: 1.5,
                   ),
@@ -153,29 +158,31 @@ class _AuthPageState extends State<AuthPage> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: borderCol, width: 1),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // USERNAME
-                      const Text(
+                      Text(
                         "USERNAME",
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF4B5563),
+                          color: mutedText,
                           letterSpacing: 0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
                       TextField(
                         controller: username,
+                        style: TextStyle(color: mainTextColor, fontSize: 15, fontWeight: FontWeight.w600),
                         decoration: InputDecoration(
                           hintText: "e.g. indah_sari",
-                          hintStyle: const TextStyle(
-                            color: Color(0xFF9CA3AF),
+                          hintStyle: TextStyle(
+                            color: mutedText,
                             fontSize: 15,
                           ),
                           filled: true,
@@ -194,12 +201,12 @@ class _AuthPageState extends State<AuthPage> {
                       const SizedBox(height: 24),
 
                       // PASSWORD
-                      const Text(
+                      Text(
                         "PASSWORD",
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF4B5563),
+                          color: mutedText,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -207,16 +214,17 @@ class _AuthPageState extends State<AuthPage> {
                       TextField(
                         controller: password,
                         obscureText: _obscurePassword,
+                        style: TextStyle(color: mainTextColor, fontSize: 15, fontWeight: FontWeight.w600),
                         decoration: InputDecoration(
                           hintText: "••••••••",
-                          hintStyle: const TextStyle(
-                            color: Color(0xFF9CA3AF),
+                          hintStyle: TextStyle(
+                            color: mutedText,
                             letterSpacing: 6,
                           ),
                           suffixIcon: IconButton(
                             icon: Icon(
                               _obscurePassword ? Icons.visibility_off : Icons.visibility,
-                              color: const Color(0xFF9CA3AF),
+                              color: mutedText,
                               size: 20,
                             ),
                             onPressed: () {
@@ -253,20 +261,20 @@ class _AuthPageState extends State<AuthPage> {
                                 if (states.contains(MaterialState.selected)) {
                                   return primaryColor;
                                 }
-                                return inputBg; // Note: For unselected state, fillColor controls the inside. Checkbox border color usually relies on side property.
+                                return inputBg;
                               }),
-                              checkColor: Colors.white,
+                              checkColor: isDark ? const Color(0xFF0F172A) : Colors.white,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(4),
                               ),
-                              side: BorderSide(color: inputBg, width: 2), // Remove default border
+                              side: BorderSide(color: isDark ? const Color(0xFF475569) : inputBg, width: 2),
                             ),
                           ),
                           const SizedBox(width: 12),
-                          const Text(
+                          Text(
                             "Remember Me",
                             style: TextStyle(
-                              color: Color(0xFF4B5563),
+                              color: mutedText,
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),

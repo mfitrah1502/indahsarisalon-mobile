@@ -42,10 +42,16 @@ class PaymentDetailsPage extends StatefulWidget {
 }
 
 class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+  Color get inputBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF4F7F9);
+  Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get dividerColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
   final _currencyFormat = NumberFormat.currency(locale: 'id_ID', symbol: 'Rp ', decimalDigits: 0);
 
   int _selectedPaymentIndex = 2; // Default: Cash at Salon
@@ -203,9 +209,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.02), blurRadius: 10, offset: const Offset(0, 4))],
+                        boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.2 : 0.02), blurRadius: 10, offset: const Offset(0, 4))],
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -215,8 +221,11 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             children: [
                               Container(
                                 width: 44, height: 44,
-                                decoration: BoxDecoration(borderRadius: BorderRadius.circular(12), color: const Color(0xFFE4F0FA)),
-                                child: Icon(Icons.person, color: primaryColor, size: 24),
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4F0FA),
+                                ),
+                                child: Icon(Icons.person, color: isDark ? Colors.white : primaryColor, size: 24),
                               ),
                               const SizedBox(width: 16),
                               Column(
@@ -224,7 +233,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 children: [
                                   Text("STYLIST", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                                   const SizedBox(height: 2),
-                                  Text(widget.stylistName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: primaryColor)),
+                                  Text(widget.stylistName, style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: isDark ? Colors.white : primaryColor)),
                                 ],
                               ),
                             ],
@@ -238,13 +247,13 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                               const SizedBox(width: 8),
                               Text(
                                 widget.reservationDatetime.substring(0, 16).replaceFirst(' ', ' • '),
-                                style: const TextStyle(fontSize: 12, color: Color(0xFF334155), fontWeight: FontWeight.w500),
+                                style: TextStyle(fontSize: 12, color: mainTextColor, fontWeight: FontWeight.w500),
                               ),
                             ],
                           ),
                           const SizedBox(height: 20),
 
-                          const Divider(color: Color(0xFFE2E8F0)),
+                          Divider(color: dividerColor),
                           const SizedBox(height: 12),
 
                           // Services list
@@ -264,7 +273,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(title, style: const TextStyle(fontSize: 14, color: Color(0xFF334155))),
+                                        Text(title, style: TextStyle(fontSize: 14, color: mainTextColor)),
                                         const SizedBox(height: 2),
                                         Row(
                                           children: [
@@ -278,7 +287,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                               const SizedBox(width: 8),
                                               Container(
                                                 padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                                                decoration: BoxDecoration(color: const Color(0xFFD660A1).withOpacity(0.1), borderRadius: BorderRadius.circular(4)),
+                                                decoration: BoxDecoration(color: const Color(0xFFD660A1).withOpacity(isDark ? 0.2 : 0.1), borderRadius: BorderRadius.circular(4)),
                                                 child: const Text("Colour Circle -35%", style: TextStyle(color: Color(0xFFD660A1), fontSize: 9, fontWeight: FontWeight.bold)),
                                               ),
                                             ],
@@ -287,20 +296,20 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                       ],
                                     ),
                                   ),
-                                  Text(_currencyFormat.format(price), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Color(0xFF0F172A))),
+                                  Text(_currencyFormat.format(price), style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: mainTextColor)),
                                 ],
                               ),
                             );
                           }),
 
-                          const Divider(color: Color(0xFFE2E8F0)),
+                          Divider(color: dividerColor),
                           const SizedBox(height: 8),
 
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text("Total", style: TextStyle(fontWeight: FontWeight.bold, color: primaryColor)),
-                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: primaryColor)),
+                              Text("Total", style: TextStyle(fontWeight: FontWeight.bold, color: isDark ? Colors.white : primaryColor)),
+                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontWeight: FontWeight.w900, fontSize: 16, color: isDark ? Colors.white : primaryColor)),
                             ],
                           ),
                         ],
@@ -323,10 +332,10 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             margin: const EdgeInsets.only(bottom: 12),
                             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
                             decoration: BoxDecoration(
-                              color: isSelected ? Colors.white : const Color(0xFFF4F7F9),
+                              color: isSelected ? cardBg : inputBg,
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isSelected ? primaryColor : const Color(0xFFE2E8F0),
+                                color: isSelected ? primaryColor : inputBorderColor,
                                 width: isSelected ? 1.5 : 1,
                               ),
                             ),
@@ -335,24 +344,24 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                                 Container(
                                   padding: const EdgeInsets.all(8),
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFE2E8F0).withOpacity(0.5),
+                                    color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0).withOpacity(0.5),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
-                                  child: Icon(method["icon"], size: 20, color: primaryColor),
+                                  child: Icon(method["icon"], size: 20, color: isDark ? Colors.white : primaryColor),
                                 ),
                                 const SizedBox(width: 16),
                                 Expanded(
                                   child: Column(
                                     crossAxisAlignment: CrossAxisAlignment.start,
                                     children: [
-                                      Text(method["title"], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: primaryColor)),
+                                      Text(method["title"], style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: isDark ? Colors.white : primaryColor)),
                                       Text(method["subtitle"], style: TextStyle(fontSize: 12, color: mutedText)),
                                     ],
                                   ),
                                 ),
                                 isSelected
-                                    ? Icon(Icons.circle, color: primaryColor, size: 22)
-                                    : const Icon(Icons.radio_button_unchecked, color: Color(0xFFCBD5E1), size: 22),
+                                    ? Icon(Icons.circle, color: isDark ? Colors.white : primaryColor, size: 22)
+                                    : Icon(Icons.radio_button_unchecked, color: isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1), size: 22),
                               ],
                             ),
                           ),
@@ -366,7 +375,7 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFE2E8F0).withOpacity(0.6),
+                        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE2E8F0).withOpacity(0.6),
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -377,17 +386,20 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
                             children: [
                               Text("TOTAL PAYMENT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.0, color: mutedText)),
                               const SizedBox(height: 4),
-                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: primaryColor, height: 1.0)),
+                              Text(_currencyFormat.format(widget.totalPrice), style: TextStyle(fontSize: 24, fontWeight: FontWeight.w900, color: isDark ? Colors.white : primaryColor, height: 1.0)),
                             ],
                           ),
                           Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                            decoration: BoxDecoration(color: const Color(0xFFFFEDD5), borderRadius: BorderRadius.circular(20)),
-                            child: const Row(
+                            decoration: BoxDecoration(
+                              color: isDark ? const Color(0xFF7C2D12) : const Color(0xFFFFEDD5),
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                            child: Row(
                               children: [
-                                Icon(Icons.verified_user, size: 12, color: Color(0xFFEA580C)),
-                                SizedBox(width: 4),
-                                Text("SECURE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5, color: Color(0xFFEA580C))),
+                                Icon(Icons.verified_user, size: 12, color: isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C)),
+                                const SizedBox(width: 4),
+                                Text("SECURE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w800, letterSpacing: 0.5, color: isDark ? const Color(0xFFFB923C) : const Color(0xFFEA580C))),
                               ],
                             ),
                           ),
@@ -422,9 +434,9 @@ class _PaymentDetailsPageState extends State<PaymentDetailsPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 20, offset: const Offset(0, -5))],
+          boxShadow: [BoxShadow(color: Colors.black.withOpacity(isDark ? 0.3 : 0.05), blurRadius: 20, offset: const Offset(0, -5))],
         ),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         child: SafeArea(

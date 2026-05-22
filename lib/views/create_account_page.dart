@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:bcrypt/bcrypt.dart';
 import '../utils/popup_helper.dart';
+import '../app_session.dart';
 
 class CreateAccountPage extends StatefulWidget {
   const CreateAccountPage({super.key});
@@ -11,11 +12,15 @@ class CreateAccountPage extends StatefulWidget {
 }
 
 class _CreateAccountPageState extends State<CreateAccountPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
-  final Color fieldBg = const Color(0xFFE2E8F0);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get inputBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9).withOpacity(0.5);
+  Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
 
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _nameCtrl = TextEditingController();
@@ -80,9 +85,9 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
     return Stack(
       children: [
         Scaffold(
-          backgroundColor: Colors.white,
+          backgroundColor: scaffoldBg,
           appBar: AppBar(
-            backgroundColor: Colors.white,
+            backgroundColor: scaffoldBg,
             elevation: 0,
             leading: IconButton(
               icon: Icon(Icons.arrow_back, color: primaryColor),
@@ -112,7 +117,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                   "Join our community and book your next appointment easily.",
                   style: TextStyle(
                     fontSize: 16,
-                    color: primaryColor.withOpacity(0.8),
+                    color: isDark ? mutedText : primaryColor.withOpacity(0.8),
                     height: 1.5,
                   ),
                 ),
@@ -122,12 +127,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: cardBg,
                     borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: const Color(0xFFF1F5F9)),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.02),
+                        color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
@@ -167,7 +172,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
                         }),
                         const SizedBox(height: 32),
                         
-                        const Divider(),
+                        Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
                         const SizedBox(height: 24),
                         
                         _buildFieldLabel("USERNAME"),
@@ -234,7 +239,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         style: TextStyle(
           fontSize: 11,
           fontWeight: FontWeight.bold,
-          color: primaryColor.withOpacity(0.7),
+          color: isDark ? mutedText : primaryColor.withOpacity(0.7),
           letterSpacing: 1.0,
         ),
       ),
@@ -256,12 +261,12 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
       obscureText: obscureText,
       keyboardType: keyboardType,
       validator: validator,
-      style: TextStyle(color: primaryColor, fontWeight: FontWeight.w500),
+      style: TextStyle(color: mainTextColor, fontWeight: FontWeight.w500),
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: TextStyle(color: primaryColor.withOpacity(0.3)),
+        hintStyle: TextStyle(color: isDark ? mutedText.withOpacity(0.4) : primaryColor.withOpacity(0.3)),
         filled: true,
-        fillColor: const Color(0xFFF1F5F9).withOpacity(0.5),
+        fillColor: inputBg,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
@@ -273,7 +278,7 @@ class _CreateAccountPageState extends State<CreateAccountPage> {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),
-          borderSide: BorderSide(color: primaryColor.withOpacity(0.1), width: 1),
+          borderSide: BorderSide(color: isDark ? const Color(0xFF475569) : primaryColor.withOpacity(0.1), width: 1),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(10),

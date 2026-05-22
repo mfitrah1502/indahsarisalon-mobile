@@ -26,10 +26,17 @@ class BookingDetailsPage extends StatefulWidget {
 }
 
 class _BookingDetailsPageState extends State<BookingDetailsPage> {
-  final Color primaryColor = const Color(0xFFD660A1);
-  final Color buttonColor = const Color(0xFFB53D7C);
-  final Color scaffoldBg = const Color(0xFFF6F8FA);
-  final Color mutedText = const Color(0xFF64748B);
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF1E293B);
+  Color get inputBg => isDark ? const Color(0xFF334155) : Colors.white;
+  Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get dividerColor => isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9);
+  
   final _currency = NumberFormat.currency(
     locale: 'id_ID',
     symbol: 'Rp ',
@@ -42,28 +49,54 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
   String get _status => widget.booking['status'] as String? ?? 'pending';
 
   Color _statusColor(String status) {
-    switch (status.toLowerCase()) {
-      case 'berhasil':
-      case 'success':
-        return const Color(0xFF16A34A);
-      case 'dibatalkan':
-      case 'cancelled':
-        return const Color(0xFFDC2626);
-      default:
-        return const Color(0xFFEA580C);
+    if (isDark) {
+      switch (status.toLowerCase()) {
+        case 'berhasil':
+        case 'success':
+          return const Color(0xFF4ADE80);
+        case 'dibatalkan':
+        case 'cancelled':
+          return const Color(0xFFF87171);
+        default:
+          return const Color(0xFFFB923C);
+      }
+    } else {
+      switch (status.toLowerCase()) {
+        case 'berhasil':
+        case 'success':
+          return const Color(0xFF16A34A);
+        case 'dibatalkan':
+        case 'cancelled':
+          return const Color(0xFFDC2626);
+        default:
+          return const Color(0xFFEA580C);
+      }
     }
   }
 
   Color _statusBg(String status) {
-    switch (status.toLowerCase()) {
-      case 'berhasil':
-      case 'success':
-        return const Color(0xFFDCFCE7);
-      case 'dibatalkan':
-      case 'cancelled':
-        return const Color(0xFFFEE2E2);
-      default:
-        return const Color(0xFFFFEDD5);
+    if (isDark) {
+      switch (status.toLowerCase()) {
+        case 'berhasil':
+        case 'success':
+          return const Color(0xFF064E3B);
+        case 'dibatalkan':
+        case 'cancelled':
+          return const Color(0xFF7F1D1D);
+        default:
+          return const Color(0xFF7C2D12);
+      }
+    } else {
+      switch (status.toLowerCase()) {
+        case 'berhasil':
+        case 'success':
+          return const Color(0xFFDCFCE7);
+        case 'dibatalkan':
+        case 'cancelled':
+          return const Color(0xFFFEE2E2);
+        default:
+          return const Color(0xFFFFEDD5);
+      }
     }
   }
 
@@ -174,14 +207,15 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       context: context,
       barrierDismissible: false,
       builder: (context) => AlertDialog(
+        backgroundColor: cardBg,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         title: Row(
           children: [
-            Icon(Icons.stars, color: primaryColor),
+            Icon(Icons.stars, color: isDark ? Colors.white : primaryColor),
             const SizedBox(width: 10),
             Text(
               '$tier Member! 🎉',
-              style: const TextStyle(fontWeight: FontWeight.bold),
+              style: TextStyle(fontWeight: FontWeight.bold, color: mainTextColor),
             ),
           ],
         ),
@@ -192,12 +226,12 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
             Text(
               'Hai $customerName, kamu telah memasuki $tier Member! '
               'Please join our available $tier group.',
-              style: const TextStyle(fontSize: 15, height: 1.5),
+              style: TextStyle(fontSize: 15, height: 1.5, color: mainTextColor),
             ),
             const SizedBox(height: 16),
             Text(
               'Link Grup $tier:',
-              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: mainTextColor),
             ),
             const SizedBox(height: 4),
             Text(
@@ -416,22 +450,23 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       result = await showDialog<Map<String, dynamic>>(
         context: context,
         builder: (context) => AlertDialog(
+          backgroundColor: cardBg,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          title: const Text(
+          title: Text(
             'Cash Payment',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18, color: mainTextColor),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Enter amount received:',
                 style: TextStyle(
                   fontSize: 14,
-                  color: Color(0xFF64748B),
+                  color: mutedText,
                   fontWeight: FontWeight.w500,
                 ),
               ),
@@ -440,30 +475,31 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                 controller: amountController,
                 keyboardType: TextInputType.number,
                 autofocus: true,
-                style: const TextStyle(
+                style: TextStyle(
                   fontWeight: FontWeight.normal,
                   fontSize: 16,
+                  color: mainTextColor,
                 ),
                 decoration: InputDecoration(
                   prefixText: 'Rp ',
                   prefixStyle: TextStyle(
                     fontWeight: FontWeight.normal,
-                    color: primaryColor,
+                    color: isDark ? Colors.white : primaryColor,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: inputBorderColor),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                    borderSide: BorderSide(color: inputBorderColor),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide(color: primaryColor, width: 2),
+                    borderSide: BorderSide(color: isDark ? Colors.white : primaryColor, width: 2),
                   ),
                   labelText: 'Amount Paid',
-                  labelStyle: const TextStyle(fontSize: 13),
+                  labelStyle: TextStyle(fontSize: 13, color: mutedText),
                 ),
               ),
             ],
@@ -476,8 +512,8 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                   child: OutlinedButton(
                     style: OutlinedButton.styleFrom(
                       foregroundColor: mutedText,
-                      side: const BorderSide(
-                        color: Color(0xFFCBD5E1),
+                      side: BorderSide(
+                        color: inputBorderColor,
                         width: 1.5,
                       ),
                       shape: RoundedRectangleBorder(
@@ -728,15 +764,14 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     ),
                     const SizedBox(height: 16),
 
-                    // Main Detail Card
                     Container(
                       clipBehavior: Clip.hardEdge,
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withOpacity(isDark ? 0.2 : 0.04),
                             blurRadius: 10,
                             offset: const Offset(0, 4),
                           ),
@@ -801,7 +836,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                                             style: TextStyle(
                                               fontSize: 15,
                                               fontWeight: FontWeight.w600,
-                                              color: const Color(0xFF1E293B),
+                                              color: mainTextColor,
                                             ),
                                           ),
                                         ),
@@ -825,7 +860,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
@@ -872,7 +907,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                           child: Container(
                             padding: const EdgeInsets.all(20),
                             decoration: BoxDecoration(
-                              color: const Color(0xFFF1F5F9),
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9),
                               borderRadius: BorderRadius.circular(16),
                             ),
                             child: Column(
@@ -919,7 +954,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Row(
@@ -929,7 +964,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             height: 50,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(12),
-                              color: const Color(0xFFE4F0FA),
+                              color: isDark ? const Color(0xFF1E293B) : const Color(0xFFE4F0FA),
                               image: (booking['stylist_avatar'] != null && booking['stylist_avatar'].toString().isNotEmpty)
                                   ? DecorationImage(
                                       image: NetworkImage(booking['stylist_avatar']),
@@ -972,10 +1007,10 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                             children: List.generate(
                               5,
                               (_) => const Icon(
-                                Icons.star,
-                                color: Color(0xFFFBBF24),
-                                size: 16,
-                              ),
+                                  Icons.star,
+                                  color: Color(0xFFFBBF24),
+                                  size: 16,
+                                ),
                             ),
                           ),
                         ],
@@ -988,7 +1023,7 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
                     Container(
                       padding: const EdgeInsets.all(20),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: cardBg,
                         borderRadius: BorderRadius.circular(16),
                       ),
                       child: Column(
@@ -1260,11 +1295,11 @@ class _BookingDetailsPageState extends State<BookingDetailsPage> {
       ),
       bottomNavigationBar: Container(
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: cardBg,
           borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(isDark ? 0.3 : 0.05),
               blurRadius: 20,
               offset: const Offset(0, -5),
             ),
