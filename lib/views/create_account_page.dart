@@ -1,0 +1,297 @@
+import 'package:flutter/material.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:bcrypt/bcrypt.dart';
+import '../utils/popup_helper.dart';
+import '../app_session.dart';
+
+class CreateAccountPage extends StatefulWidget {
+  const CreateAccountPage({super.key});
+
+  @override
+  State<CreateAccountPage> createState() => _CreateAccountPageState();
+}
+
+class _CreateAccountPageState extends State<CreateAccountPage> {
+  bool get isDark => AppSession.isDarkMode;
+  Color get primaryColor => const Color(0xFFD660A1);
+  Color get buttonColor => const Color(0xFFB53D7C);
+  Color get scaffoldBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF6F8FA);
+  Color get mutedText => isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B);
+  Color get cardBg => isDark ? const Color(0xFF0F172A) : Colors.white;
+  Color get inputBg => isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9).withValues(alpha: 0.5);
+  Color get inputBorderColor => isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0);
+  Color get mainTextColor => isDark ? const Color(0xFFCBD5E1) : const Color(0xFF0F172A);
+
+  final _formKey = GlobalKey<FormState>();
+  final TextEditingController _nameCtrl = TextEditingController();
+  final TextEditingController _phoneCtrl = TextEditingController();
+  final TextEditingController _emailCtrl = TextEditingController();
+  final TextEditingController _addressCtrl = TextEditingController();
+  final TextEditingController _usernameCtrl = TextEditingController();
+  final TextEditingController _passwordCtrl = TextEditingController();
+
+  bool _obscurePassword = true;
+  bool _isLoading = false;
+
+  Future<void> _handleCreateAccount() async {
+    if (!_formKey.currentState!.validate()) return;
+
+    setState(() => _isLoading = true);
+
+    try {
+      final supabase = Supabase.instance.client;
+
+      // 1. Check if username or email exists
+      final checkUser = await supabase
+          .from('users')
+          .select('id')
+          .or('username.eq.${_usernameCtrl.text.trim()},email.eq.${_emailCtrl.text.trim()}')
+          .maybeSingle();
+
+      if (checkUser != null) {
+        throw Exception("Username or Email already registered");
+      }
+
+      // 2. Insert new user
+      final hashedPassword = BCrypt.hashpw(_passwordCtrl.text.trim(), BCrypt.gensalt());
+      
+      await supabase.from('users').insert({
+        'name': _nameCtrl.text.trim(),
+        'phone': _phoneCtrl.text.trim(),
+        'email': _emailCtrl.text.trim(),
+        'address': _addressCtrl.text.trim(),
+        'username': _usernameCtrl.text.trim(),
+        'password': hashedPassword,
+        'role': 'admin',
+        'status': 'aktif',
+      });
+
+      if (mounted) {
+        PopupHelper.showSuccess(context, "Admin account created successfully!", onConfirm: () {
+          Navigator.pop(context);
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        PopupHelper.showError(context, e.toString());
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Scaffold(
+          backgroundColor: scaffoldBg,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 20.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Header Row with Back Button and Title
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      GestureDetector(
+                        onTap: () => Navigator.pop(context),
+                        child: Icon(
+                          Icons.arrow_back,
+                          color: primaryColor,
+                          size: 28,
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      Expanded(
+                        child: Text(
+                          "Create Account",
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                            color: primaryColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    "Create a new admin account to help manage salon bookings and operations.",
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: mutedText,
+                      height: 1.4,
+                    ),
+                  ),
+                  const SizedBox(height: 32),
+                
+                // White Form Container
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: cardBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: isDark ? const Color(0xFF334155) : const Color(0xFFF1F5F9)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
+                  ),
+                  child: Form(
+                    key: _formKey,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildFieldLabel("FULL NAME"),
+                        _buildTextField(_nameCtrl, "Ajeng Elsa", validator: (v) {
+                          if (v == null || v.isEmpty) return "Full Name is required";
+                          return null;
+                        }),
+                        const SizedBox(height: 20),
+                        
+                        _buildFieldLabel("PHONE NUMBER"),
+                        _buildTextField(_phoneCtrl, "08123456789", keyboardType: TextInputType.phone, validator: (v) {
+                          if (v == null || v.isEmpty) return "Phone Number is required";
+                          return null;
+                        }),
+                        const SizedBox(height: 20),
+                        
+                        _buildFieldLabel("EMAIL"),
+                        _buildTextField(_emailCtrl, "elsa@example.com", keyboardType: TextInputType.emailAddress, validator: (v) {
+                          if (v == null || v.isEmpty) return "Email is required";
+                          if (!RegExp(r'^[\w-\.]+@([\w-]+\.)+[\w-]{2,4}$').hasMatch(v)) return "Enter a valid email";
+                          return null;
+                        }),
+                        const SizedBox(height: 20),
+                        
+                        _buildFieldLabel("ADDRESS"),
+                        _buildTextField(_addressCtrl, "Jalan Ledjen Supriyadi", validator: (v) {
+                          if (v == null || v.isEmpty) return "Address is required";
+                          return null;
+                        }),
+                        const SizedBox(height: 32),
+                        
+                        Divider(color: isDark ? const Color(0xFF334155) : const Color(0xFFE2E8F0)),
+                        const SizedBox(height: 24),
+                        
+                        _buildFieldLabel("USERNAME"),
+                        _buildTextField(_usernameCtrl, "elsa66", validator: (v) {
+                          if (v == null || v.isEmpty) return "Username is required";
+                          return null;
+                        }),
+                        const SizedBox(height: 20),
+                        
+                        _buildFieldLabel("PASSWORD"),
+                        _buildTextField(
+                          _passwordCtrl, 
+                          "••••••••", 
+                          obscureText: _obscurePassword,
+                          suffixIcon: IconButton(
+                            icon: Icon(_obscurePassword ? Icons.visibility_off : Icons.visibility, color: mutedText, size: 20),
+                            onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                          ),
+                          validator: (v) {
+                            if (v == null || v.isEmpty) return "Password is required";
+                            if (v.length < 6) return "Password must be at least 6 characters";
+                            return null;
+                          }
+                        ),
+                        const SizedBox(height: 48),
+                        
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: buttonColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                              elevation: 0,
+                            ),
+                            onPressed: _isLoading ? null : _handleCreateAccount,
+                            child: const Text("Save", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 40),
+              ],
+            ),
+          ),
+        ),
+      ),
+        if (_isLoading)
+          Container(
+            color: Colors.black26,
+            child: const Center(child: CircularProgressIndicator()),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildFieldLabel(String label) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8.0, left: 4.0),
+      child: Text(
+        label,
+        style: TextStyle(
+          fontSize: 11,
+          fontWeight: FontWeight.bold,
+          color: isDark ? mutedText : primaryColor.withValues(alpha: 0.7),
+          letterSpacing: 1.0,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTextField(
+    TextEditingController controller, 
+    String hint, 
+    {
+      bool obscureText = false, 
+      TextInputType? keyboardType,
+      Widget? suffixIcon,
+      String? Function(String?)? validator,
+    }
+  ) {
+    return TextFormField(
+      controller: controller,
+      obscureText: obscureText,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: TextStyle(color: mainTextColor, fontWeight: FontWeight.w500),
+      decoration: InputDecoration(
+        hintText: hint,
+        hintStyle: TextStyle(color: isDark ? mutedText.withValues(alpha: 0.4) : primaryColor.withValues(alpha: 0.3)),
+        filled: true,
+        fillColor: inputBg,
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: BorderSide(color: isDark ? const Color(0xFF475569) : primaryColor.withValues(alpha: 0.1), width: 1),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: Colors.redAccent, width: 1),
+        ),
+        suffixIcon: suffixIcon,
+      ),
+    );
+  }
+}

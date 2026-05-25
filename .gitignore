@@ -20,3 +20,6 @@ ios/.symlinks/
 .vscode/
 .idea/
 *.iml
+
+# Flutter generated
+.flutter-plugins-dependencies

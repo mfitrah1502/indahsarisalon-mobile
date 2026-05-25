@@ -1,10 +1,15 @@
 import 'package:flutter/material.dart';
+import 'app_session.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'pages/auth_page.dart';
+
+import 'views/auth_page.dart';
+
+import 'package:intl/date_symbol_data_local.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await initializeDateFormatting('id', null);
 
   await dotenv.load(fileName: ".env");
 
@@ -21,14 +26,25 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Indah Sari Salon',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD660A1)),
-        useMaterial3: true,
-      ),
-      home: const AuthPage(),
+    return ValueListenableBuilder<bool>(
+      valueListenable: AppSession.themeNotifier,
+      builder: (context, isDark, _) {
+        return MaterialApp(
+          title: 'Indah Sari Salon',
+          debugShowCheckedModeBanner: false,
+          theme: ThemeData(
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD660A1)),
+            useMaterial3: true,
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFFD660A1), brightness: Brightness.dark),
+            useMaterial3: true,
+          ),
+          themeMode: isDark ? ThemeMode.dark : ThemeMode.light,
+          home: const AuthPage(),
+        );
+      },
     );
   }
 }
