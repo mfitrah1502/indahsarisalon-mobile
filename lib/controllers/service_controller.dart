@@ -16,7 +16,7 @@ class ServiceController {
     try {
       svcData = await _supabase
           .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, is_active, image, delete_at, categories(id, name))')
+          .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, is_active, image, deleted_at, categories(id, name))')
           .order('id');
     } catch (e) {
       debugPrint("Error fetching services: $e");
