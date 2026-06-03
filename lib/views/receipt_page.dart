@@ -105,201 +105,282 @@ class ReceiptPage extends StatelessWidget {
 
       doc.addPage(
         pw.Page(
-          pageFormat: PdfPageFormat.roll80,
-          margin: const pw.EdgeInsets.all(10),
+          pageFormat: PdfPageFormat.roll80, // Default fallback
           build: (pw.Context context) {
-            return pw.Column(
-              crossAxisAlignment: pw.CrossAxisAlignment.start,
-              children: [
-                pw.Center(
-                  child: pw.Column(
-                    children: [
-                      pw.Text(
-                        'Indah Sari 2 Salon dan SPA',
-                        style: pw.TextStyle(font: titleFont, fontSize: 16),
-                      ),
-                      pw.Text(
-                        'Jl. Jawa No.30A, Tegal Boto Lor, Sumbersari',
-                        style: pw.TextStyle(font: regularFont, fontSize: 10),
-                      ),
-                      pw.Text(
-                        'Kec. Sumbersari, Kabupaten Jember',
-                        style: pw.TextStyle(font: regularFont, fontSize: 10),
-                      ),
-                    ],
-                  ),
-                ),
-                pw.SizedBox(height: 10),
-                pw.Divider(borderStyle: pw.BorderStyle.dashed),
-                pw.SizedBox(height: 5),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'No. Struk',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      transactionId,
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Tanggal',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      DateFormat('dd MMM yyyy', 'id').format(transactionDate),
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Jam',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 5),
-                pw.Divider(borderStyle: pw.BorderStyle.dashed),
-                pw.SizedBox(height: 5),
-                ...services.map((s) {
-                  final sName = s['name'] ?? '';
-                  final sPrice = (s['price'] as num?)?.toDouble() ?? 0;
-                  return pw.Padding(
-                    padding: const pw.EdgeInsets.symmetric(vertical: 2),
-                    child: pw.Row(
-                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                      children: [
-                        pw.Expanded(
-                          child: pw.Text(
-                            sName,
-                            style: pw.TextStyle(
-                              font: regularFont,
-                              fontSize: 10,
-                            ),
-                          ),
-                        ),
-                        if (hasIndividualPrices)
-                          pw.Text(
-                            currencyFormat.format(sPrice),
-                            style: pw.TextStyle(
-                              font: regularFont,
-                              fontSize: 10,
-                            ),
-                          ),
-                      ],
-                    ),
-                  );
-                }),
-                pw.SizedBox(height: 5),
-                pw.Divider(thickness: 0.5), // Solid line
-                pw.SizedBox(height: 5),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Subtotal',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      currencyFormat.format(subtotal),
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                if (effectiveDiscountAmount > 0)
-                  pw.Row(
-                    mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                    children: [
-                      pw.Text(
-                        discountPercentage > 0
-                            ? 'Diskon (${discountPercentage.toInt()}%)'
-                            : 'Diskon',
-                        style: pw.TextStyle(font: regularFont, fontSize: 10),
-                      ),
-                      pw.Text(
-                        '-${currencyFormat.format(effectiveDiscountAmount)}',
-                        style: pw.TextStyle(font: regularFont, fontSize: 10),
-                      ),
-                    ],
-                  ),
-                pw.SizedBox(height: 4),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Total',
-                      style: pw.TextStyle(font: titleFont, fontSize: 13),
-                    ),
-                    pw.Text(
-                      currencyFormat.format(total),
-                      style: pw.TextStyle(font: titleFont, fontSize: 13),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 5),
-                pw.Divider(borderStyle: pw.BorderStyle.dashed),
-                pw.SizedBox(height: 5),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Bayar (${_translatePaymentMethod(paymentMethod)})',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      currencyFormat.format(amountPaid),
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                pw.Row(
-                  mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
-                  children: [
-                    pw.Text(
-                      'Kembalian',
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                    pw.Text(
-                      currencyFormat.format(change),
-                      style: pw.TextStyle(font: regularFont, fontSize: 10),
-                    ),
-                  ],
-                ),
-                pw.SizedBox(height: 10),
-                pw.Divider(borderStyle: pw.BorderStyle.dashed),
-                pw.SizedBox(height: 15),
-                pw.Center(
-                  child: pw.Text(
-                    'Terima Kasih Telah Menggunakan\nLayanan Indah Sari Salon',
-                    textAlign: pw.TextAlign.center,
-                    style: pw.TextStyle(
-                      font: regularFont,
-                      fontSize: 9,
-                      fontStyle: pw.FontStyle.italic,
-                    ),
-                  ),
-                ),
-              ],
-            );
+            return pw.SizedBox(); // Dummy placeholder, overridden by dynamic Page below
           },
         ),
       );
 
+      // Re-initialize doc and add the actual page dynamically inside layoutPdf
       await Printing.layoutPdf(
-        onLayout: (PdfPageFormat format) async => doc.save(),
+        onLayout: (PdfPageFormat format) async {
+          final dynamicDoc = pw.Document();
+          
+          // Determine the target width and margins based on format.width
+          double targetWidth = format.width;
+          double horizontalMargin = 10;
+          double verticalMargin = 10;
+
+          // Font sizes
+          double titleFontSize = 14;
+          double bodyFontSize = 9.5;
+          double totalFontSize = 12;
+          double footerFontSize = 8;
+
+          if (targetWidth <= 180) {
+            // 58mm paper roll
+            horizontalMargin = 12;
+            verticalMargin = 8;
+            titleFontSize = 9.5;
+            bodyFontSize = 6.5;
+            totalFontSize = 8.5;
+            footerFontSize = 6.0;
+          } else if (targetWidth <= 250) {
+            // 80mm paper roll
+            horizontalMargin = 24;
+            verticalMargin = 12;
+            titleFontSize = 11.5;
+            bodyFontSize = 8.0;
+            totalFontSize = 10.0;
+            footerFontSize = 7.0;
+          } else {
+            // A4 or other large formats: constrain content to 80mm roll size and center it
+            targetWidth = PdfPageFormat.roll80.width;
+            horizontalMargin = 24;
+            verticalMargin = 12;
+            titleFontSize = 11.5;
+            bodyFontSize = 8.0;
+            totalFontSize = 10.0;
+            footerFontSize = 7.0;
+          }
+
+          final pageFormat = PdfPageFormat(
+            format.width,
+            format.height,
+            marginAll: 0,
+          );
+
+          dynamicDoc.addPage(
+            pw.Page(
+              pageFormat: pageFormat,
+              build: (pw.Context context) {
+                final receiptContent = pw.Column(
+                  crossAxisAlignment: pw.CrossAxisAlignment.start,
+                  children: [
+                    pw.Center(
+                      child: pw.Column(
+                        children: [
+                          pw.Text(
+                            'Indah Sari 2 Salon dan SPA',
+                            style: pw.TextStyle(font: titleFont, fontSize: titleFontSize),
+                          ),
+                          pw.Text(
+                            'Jl. Jawa No.30A, Tegal Boto Lor, Sumbersari',
+                            style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                          ),
+                          pw.Text(
+                            'Kec. Sumbersari, Kabupaten Jember',
+                            style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                          ),
+                        ],
+                      ),
+                    ),
+                    pw.SizedBox(height: 10),
+                    pw.Divider(borderStyle: pw.BorderStyle.dashed),
+                    pw.SizedBox(height: 5),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'No. Struk',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          transactionId,
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Tanggal',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          DateFormat('dd MMM yyyy', 'id').format(transactionDate),
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Jam',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Divider(borderStyle: pw.BorderStyle.dashed),
+                    pw.SizedBox(height: 5),
+                    ...services.map((s) {
+                      final sName = s['name'] ?? '';
+                      final sPrice = (s['price'] as num?)?.toDouble() ?? 0;
+                      return pw.Padding(
+                        padding: const pw.EdgeInsets.symmetric(vertical: 2),
+                        child: pw.Row(
+                          mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                          children: [
+                            pw.Expanded(
+                              child: pw.Text(
+                                sName,
+                                style: pw.TextStyle(
+                                  font: regularFont,
+                                  fontSize: bodyFontSize,
+                                ),
+                              ),
+                            ),
+                            if (hasIndividualPrices)
+                              pw.Text(
+                                currencyFormat.format(sPrice),
+                                style: pw.TextStyle(
+                                  font: regularFont,
+                                  fontSize: bodyFontSize,
+                                ),
+                              ),
+                          ],
+                        ),
+                      );
+                    }),
+                    pw.SizedBox(height: 5),
+                    pw.Divider(thickness: 0.5), // Solid line
+                    pw.SizedBox(height: 5),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Subtotal',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          currencyFormat.format(subtotal),
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    if (effectiveDiscountAmount > 0)
+                      pw.Row(
+                        mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                        children: [
+                          pw.Text(
+                            discountPercentage > 0
+                                ? 'Diskon (${discountPercentage.toInt()}%)'
+                                : 'Diskon',
+                            style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                          ),
+                          pw.Text(
+                            '-${currencyFormat.format(effectiveDiscountAmount)}',
+                            style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                          ),
+                        ],
+                      ),
+                    pw.SizedBox(height: 4),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Total',
+                          style: pw.TextStyle(font: titleFont, fontSize: totalFontSize),
+                        ),
+                        pw.Text(
+                          currencyFormat.format(total),
+                          style: pw.TextStyle(font: titleFont, fontSize: totalFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 5),
+                    pw.Divider(borderStyle: pw.BorderStyle.dashed),
+                    pw.SizedBox(height: 5),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Bayar (${_translatePaymentMethod(paymentMethod)})',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          currencyFormat.format(amountPaid),
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.Row(
+                      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+                      children: [
+                        pw.Text(
+                          'Kembalian',
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                        pw.Text(
+                          currencyFormat.format(change),
+                          style: pw.TextStyle(font: regularFont, fontSize: bodyFontSize),
+                        ),
+                      ],
+                    ),
+                    pw.SizedBox(height: 10),
+                    pw.Divider(borderStyle: pw.BorderStyle.dashed),
+                    pw.SizedBox(height: 15),
+                    pw.Center(
+                      child: pw.Text(
+                        'Terima Kasih Telah Menggunakan\nLayanan Indah Sari Salon',
+                        textAlign: pw.TextAlign.center,
+                        style: pw.TextStyle(
+                          font: regularFont,
+                          fontSize: footerFontSize,
+                          fontStyle: pw.FontStyle.italic,
+                        ),
+                      ),
+                    ),
+                  ],
+                );
+
+                if (format.width > targetWidth) {
+                  return pw.Center(
+                    child: pw.Padding(
+                      padding: pw.EdgeInsets.symmetric(
+                        horizontal: (format.width - targetWidth) / 2 + horizontalMargin,
+                        vertical: verticalMargin,
+                      ),
+                      child: pw.SizedBox(
+                        width: targetWidth - 2 * horizontalMargin,
+                        child: receiptContent,
+                      ),
+                    ),
+                  );
+                } else {
+                  return pw.Padding(
+                    padding: pw.EdgeInsets.symmetric(
+                      horizontal: horizontalMargin,
+                      vertical: verticalMargin,
+                    ),
+                    child: receiptContent,
+                  );
+                }
+              },
+            ),
+          );
+          
+          return dynamicDoc.save();
+        },
+        format: PdfPageFormat.roll80,
       );
     }
 
