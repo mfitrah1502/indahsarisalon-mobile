@@ -10,13 +10,16 @@ class ReceiptPage extends StatelessWidget {
   String _translatePaymentMethod(String method) {
     switch (method.toLowerCase()) {
       case 'tunai':
-        return 'Cash';
+      case 'cash':
+        return 'Tunai';
       case 'transfer':
-        return 'Bank Transfer';
+      case 'bank transfer':
+        return 'Transfer Bank';
       default:
         return method;
     }
   }
+
   final String transactionId;
   final DateTime transactionDate;
   final List<Map<String, dynamic>> services;
@@ -47,9 +50,13 @@ class ReceiptPage extends StatelessWidget {
     );
 
     final bool isDarkMode = AppSession.isDarkMode;
-    final Color scaffoldBg = isDarkMode ? const Color(0xFF1E293B) : const Color(0xFFF5F5F5);
+    final Color scaffoldBg = isDarkMode
+        ? const Color(0xFF1E293B)
+        : const Color(0xFFF5F5F5);
     final Color cardBg = isDarkMode ? const Color(0xFF0F172A) : Colors.white;
-    final Color mainTextColor = isDarkMode ? const Color(0xFFCBD5E1) : Colors.black;
+    final Color mainTextColor = isDarkMode
+        ? const Color(0xFFCBD5E1)
+        : Colors.black;
     final Color mutedText = isDarkMode ? const Color(0xFF94A3B8) : Colors.grey;
     final Color primaryColor = const Color(0xFFD660A1);
 
@@ -129,7 +136,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Receipt No.',
+                      'No. Struk',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -142,11 +149,11 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Date',
+                      'Tanggal',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
-                      DateFormat('dd MMM yyyy', 'en').format(transactionDate),
+                      DateFormat('dd MMM yyyy', 'id').format(transactionDate),
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                   ],
@@ -155,11 +162,11 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Time',
+                      'Jam',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
-                      '${DateFormat('HH:mm', 'en').format(transactionDate)} WIB',
+                      '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                   ],
@@ -218,8 +225,8 @@ class ReceiptPage extends StatelessWidget {
                     children: [
                       pw.Text(
                         discountPercentage > 0
-                            ? 'Discount (${discountPercentage.toInt()}%)'
-                            : 'Discount',
+                            ? 'Diskon (${discountPercentage.toInt()}%)'
+                            : 'Diskon',
                         style: pw.TextStyle(font: regularFont, fontSize: 10),
                       ),
                       pw.Text(
@@ -233,7 +240,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'TOTAL',
+                      'Total',
                       style: pw.TextStyle(font: titleFont, fontSize: 13),
                     ),
                     pw.Text(
@@ -249,7 +256,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Paid (${_translatePaymentMethod(paymentMethod)})',
+                      'Bayar (${_translatePaymentMethod(paymentMethod)})',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -262,7 +269,7 @@ class ReceiptPage extends StatelessWidget {
                   mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
                   children: [
                     pw.Text(
-                      'Change',
+                      'Kembalian',
                       style: pw.TextStyle(font: regularFont, fontSize: 10),
                     ),
                     pw.Text(
@@ -276,7 +283,7 @@ class ReceiptPage extends StatelessWidget {
                 pw.SizedBox(height: 15),
                 pw.Center(
                   child: pw.Text(
-                    'Thank you for choosing\nIndah Sari Salon',
+                    'Terima Kasih Telah Menggunakan\nLayanan Indah Sari Salon',
                     textAlign: pw.TextAlign.center,
                     style: pw.TextStyle(
                       font: regularFont,
@@ -348,14 +355,14 @@ class ReceiptPage extends StatelessWidget {
                       const SizedBox(height: 20),
                       const DashedDivider(),
                       const SizedBox(height: 16),
-                      _buildInfoRow('Receipt No.', transactionId),
+                      _buildInfoRow('No. Struk', transactionId),
                       _buildInfoRow(
-                        'Date',
-                        DateFormat('dd MMM yyyy', 'en').format(transactionDate),
+                        'Tanggal',
+                        DateFormat('dd MMM yyyy', 'id').format(transactionDate),
                       ),
                       _buildInfoRow(
-                        'Time',
-                        '${DateFormat('HH:mm', 'en').format(transactionDate)} WIB',
+                        'Jam',
+                        '${DateFormat('HH:mm', 'id').format(transactionDate)} WIB',
                       ),
                       const SizedBox(height: 16),
                       const DashedDivider(),
@@ -374,8 +381,8 @@ class ReceiptPage extends StatelessWidget {
                       if (effectiveDiscountAmount > 0)
                         _buildSummaryRow(
                           discountPercentage > 0
-                              ? 'Discount (${discountPercentage.toInt()}%)'
-                              : 'Discount',
+                              ? 'Diskon (${discountPercentage.toInt()}%)'
+                              : 'Diskon',
                           -effectiveDiscountAmount,
                           currencyFormat,
                           color: Colors.orange[800],
@@ -391,16 +398,16 @@ class ReceiptPage extends StatelessWidget {
                       const DashedDivider(),
                       const SizedBox(height: 16),
                       _buildSummaryRow(
-                        'Paid (${_translatePaymentMethod(paymentMethod)})',
+                        'Bayar (${_translatePaymentMethod(paymentMethod)})',
                         amountPaid,
                         currencyFormat,
                       ),
-                      _buildSummaryRow('Change', change, currencyFormat),
+                      _buildSummaryRow('Kembalian', change, currencyFormat),
                       const SizedBox(height: 20),
                       const DashedDivider(),
                       const SizedBox(height: 24),
                       Text(
-                        'Thank you for choosing\nIndah Sari Salon',
+                        'Terima Kasih Telah Menggunakan\nLayanan Indah Sari Salon',
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           fontSize: 14,
@@ -452,10 +459,7 @@ class ReceiptPage extends StatelessWidget {
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Text(
-            label,
-            style: TextStyle(fontSize: 14, color: labelColor),
-          ),
+          Text(label, style: TextStyle(fontSize: 14, color: labelColor)),
           Text(
             value,
             style: TextStyle(
@@ -508,8 +512,12 @@ class ReceiptPage extends StatelessWidget {
     Color? color,
   }) {
     final isDark = AppSession.isDarkMode;
-    final defaultLabelColor = isBold ? (isDark ? const Color(0xFFCBD5E1) : Colors.black) : (isDark ? const Color(0xFF94A3B8) : Colors.black87);
-    final defaultValueColor = isBold ? (isDark ? const Color(0xFFCBD5E1) : Colors.black) : (isDark ? const Color(0xFFCBD5E1) : Colors.black87);
+    final defaultLabelColor = isBold
+        ? (isDark ? const Color(0xFFCBD5E1) : Colors.black)
+        : (isDark ? const Color(0xFF94A3B8) : Colors.black87);
+    final defaultValueColor = isBold
+        ? (isDark ? const Color(0xFFCBD5E1) : Colors.black)
+        : (isDark ? const Color(0xFFCBD5E1) : Colors.black87);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
@@ -553,7 +561,11 @@ class DashedDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final resolvedColor = color ?? (AppSession.isDarkMode ? const Color(0xFF334155) : const Color(0xFFE0E0E0));
+    final resolvedColor =
+        color ??
+        (AppSession.isDarkMode
+            ? const Color(0xFF334155)
+            : const Color(0xFFE0E0E0));
     return LayoutBuilder(
       builder: (BuildContext context, BoxConstraints constraints) {
         final boxWidth = constraints.constrainWidth();
@@ -564,7 +576,9 @@ class DashedDivider extends StatelessWidget {
             return SizedBox(
               width: dashWidth,
               height: height,
-              child: DecoratedBox(decoration: BoxDecoration(color: resolvedColor)),
+              child: DecoratedBox(
+                decoration: BoxDecoration(color: resolvedColor),
+              ),
             );
           }),
         );
