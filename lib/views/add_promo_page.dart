@@ -189,6 +189,9 @@ class _AddPromoPageState extends State<AddPromoPage> {
           'is_promo': true,
           'promo_type': 'Fixed',
           'promo_value': double.tryParse(_priceController.text) ?? 0.0,
+          'promo_start_date': start.toIso8601String().split('T')[0],
+'promo_end_date': end.toIso8601String().split('T')[0],
+'target_audience': _targetAudience,
         };
         
         int? treatmentId;

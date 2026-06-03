@@ -16,7 +16,7 @@ class ServiceController {
     try {
       svcData = await _supabase
           .from('treatment_details')
-          .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, is_active, image, categories(id, name))')
+          .select('id, name, duration, price, treatment_id, image_url, treatments(id, name, category_id, is_promo, is_active, image, deleted_at, categories(id, name))')
           .order('id');
     } catch (e) {
       debugPrint("Error fetching services: $e");
@@ -51,7 +51,9 @@ class ServiceController {
       final promoInfo = isPromo ? promoMap[treatmentName] : null;
       
       bool activeStatus = treatment?['is_active'] ?? true;
-      if (isPromo) {
+      if (treatment?['deleted_at'] != null) {
+        activeStatus = false;
+      } else if (isPromo) {
         activeStatus = promoInfo?['is_active'] ?? true;
       }
 
@@ -116,6 +118,20 @@ class ServiceController {
     if (imageUrl != null) data['image_url'] = imageUrl;
     
     await _supabase.from('promos').update(data).eq('id', promoId);
+    // Synchronize to treatments table
+    try {
+      final promo = await _supabase.from('promos').select('title').eq('id', promoId).maybeSingle();
+      if (promo != null && promo['title'] != null) {
+        final title = promo['title'];
+        await _supabase.from('treatments').update({
+          'promo_start_date': startAt.toIso8601String().split('T')[0],
+          'promo_end_date': endAt.toIso8601String().split('T')[0],
+          'is_active': isActive,
+        }).eq('name', title);
+      }
+    } catch (e) {
+      debugPrint("Failed to sync promo status to treatments: $e");
+    }
   }
 
   Future<void> savePromo(PromoModel promo) async {
@@ -137,18 +153,45 @@ class ServiceController {
   }
 
   Future<void> deleteService(int tdId) async {
-    // ... soft delete logic ...
     try {
-      await _supabase
+      // 1. Get the treatment_id first
+      final detail = await _supabase
           .from('treatment_details')
-          .update({'is_active': false})
-          .eq('id', tdId);
+          .select('treatment_id')
+          .eq('id', tdId)
+          .maybeSingle();
+
+      // 2. Delete the treatment detail
+      try {
+        await _supabase
+            .from('treatment_details')
+            .update({'is_active': false})
+            .eq('id', tdId);
+      } catch (e) {
+        debugPrint("Soft delete failed, attempting hard delete: $e");
+        await _supabase
+            .from('treatment_details')
+            .delete()
+            .eq('id', tdId);
+      }
+
+      // 3. If no details remain for the parent treatment, soft-delete it too
+      if (detail != null && detail['treatment_id'] != null) {
+        final int treatmentId = detail['treatment_id'];
+        final List<dynamic> remaining = await _supabase
+            .from('treatment_details')
+            .select('id')
+            .eq('treatment_id', treatmentId);
+
+        if (remaining.isEmpty) {
+          await _supabase
+              .from('treatments')
+              .update({'deleted_at': DateTime.now().toIso8601String()})
+              .eq('id', treatmentId);
+        }
+      }
     } catch (e) {
-      debugPrint("Soft delete failed, attempting hard delete: $e");
-      await _supabase
-          .from('treatment_details')
-          .delete()
-          .eq('id', tdId);
+      debugPrint("Error in deleteService: $e");
     }
   }
 

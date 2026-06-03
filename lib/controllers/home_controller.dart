@@ -114,6 +114,7 @@ class HomeController {
           .eq('type', 'karyawan')
           .neq('role', 'pelanggan')
           .neq('role', 'owner')
+          .neq('role', 'admin')
           .eq('status', 'aktif');
           
       final offStaffToday = await _supabase
