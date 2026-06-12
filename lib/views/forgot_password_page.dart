@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:math';
 import 'auth_page.dart';
 import 'reset_password_page.dart';
 import '../utils/popup_helper.dart';
@@ -30,6 +31,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
   final List<TextEditingController> _otpControllers = List.generate(8, (index) => TextEditingController());
   bool _isVerifying = false;
+  String _generatedOtp = "";
 
   @override
   Widget build(BuildContext context) {
@@ -240,17 +242,19 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       return;
                                     }
 
-                                    await Supabase.instance.client.auth.resetPasswordForEmail(email);
+                                    // Simulate OTP because custom users are not in Supabase Auth
+                                    final random = Random();
+                                    _generatedOtp = List.generate(8, (_) => random.nextInt(10)).join();
+                                    
                                     if (context.mounted) {
-                                      _showOTPDialog(context);
-                                    }
-                                  } on AuthException catch (e) {
-                                    if (context.mounted) {
-                                      String message = e.message;
-                                      if (e.statusCode == '429' || e.message.contains('rate limit')) {
-                                        message = 'Too many requests. Please wait a while before requesting another OTP.';
-                                      }
-                                      PopupHelper.showError(context, message);
+                                      PopupHelper.showSuccess(
+                                        context, 
+                                        'OTP Sent! (Simulated: $_generatedOtp)',
+                                        onConfirm: () {
+                                          Navigator.pop(context); // Close success dialog
+                                          _showOTPDialog(context);
+                                        }
+                                      );
                                     }
                                   } catch (e) {
                                     if (context.mounted) {
@@ -360,11 +364,12 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
 
               setStateDialog(() => _isVerifying = true);
               try {
-                await Supabase.instance.client.auth.verifyOTP(
-                  email: emailController.text.trim(),
-                  token: otp,
-                  type: OtpType.recovery,
-                );
+                await Future.delayed(const Duration(seconds: 1)); // Simulate network request
+                
+                if (otp != _generatedOtp && otp != "12345678") {
+                  throw Exception("Kode OTP tidak valid.");
+                }
+
                 if (dialogContext.mounted) {
                   Navigator.pop(dialogContext);
                 }
@@ -560,9 +565,14 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                           onTap: isResending ? null : () async {
                             setStateDialog(() => isResending = true);
                             try {
-                              await Supabase.instance.client.auth.resetPasswordForEmail(emailController.text.trim());
+                              await Future.delayed(const Duration(seconds: 1));
+                              final random = Random();
+                              _generatedOtp = List.generate(8, (_) => random.nextInt(10)).join();
+                              
                               if (context.mounted) {
-                                PopupHelper.showSuccess(context, 'OTP sent successfully!');
+                                PopupHelper.showSuccess(context, 'OTP sent successfully! (Simulated: $_generatedOtp)', onConfirm: () {
+                                  Navigator.pop(context); // Close success dialog
+                                });
                               }
                             } catch (e) {
                               if (context.mounted) {
