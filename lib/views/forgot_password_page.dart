@@ -6,6 +6,7 @@ import 'auth_page.dart';
 import 'reset_password_page.dart';
 import '../utils/popup_helper.dart';
 import '../app_session.dart';
+import '../utils/email_helper.dart';
 
 class ForgotPasswordPage extends StatefulWidget {
   const ForgotPasswordPage({super.key});
@@ -242,16 +243,18 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                                       return;
                                     }
 
-                                    // Simulate OTP because custom users are not in Supabase Auth
+                                    // Generate OTP
                                     final random = Random();
                                     _generatedOtp = List.generate(8, (_) => random.nextInt(10)).join();
+                                    
+                                    // Send actual email
+                                    await EmailHelper.sendOTPEmail(email, _generatedOtp);
                                     
                                     if (context.mounted) {
                                       PopupHelper.showSuccess(
                                         context, 
-                                        'OTP Sent! (Simulated: $_generatedOtp)',
+                                        'Kode OTP telah berhasil dikirim ke email Anda!',
                                         onConfirm: () {
-                                          Navigator.pop(context); // Close success dialog
                                           _showOTPDialog(context);
                                         }
                                       );
@@ -366,7 +369,7 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
               try {
                 await Future.delayed(const Duration(seconds: 1)); // Simulate network request
                 
-                if (otp != _generatedOtp && otp != "12345678") {
+                if (otp != _generatedOtp) {
                   throw Exception("Kode OTP tidak valid.");
                 }
 
@@ -374,12 +377,13 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                   Navigator.pop(dialogContext);
                 }
                 if (context.mounted) {
-                  Navigator.push(
+                  Navigator.pushAndRemoveUntil(
                     context,
                     MaterialPageRoute(builder: (context) => ResetPasswordPage(
                       email: emailController.text.trim(),
                       username: usernameController.text.trim(),
                     )),
+                    (route) => route.isFirst,
                   );
                 }
               } catch (e) {
@@ -569,10 +573,17 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
                               final random = Random();
                               _generatedOtp = List.generate(8, (_) => random.nextInt(10)).join();
                               
+                              // Send actual email
+                              await EmailHelper.sendOTPEmail(emailController.text.trim(), _generatedOtp);
+                              
                               if (context.mounted) {
-                                PopupHelper.showSuccess(context, 'OTP sent successfully! (Simulated: $_generatedOtp)', onConfirm: () {
-                                  Navigator.pop(context); // Close success dialog
-                                });
+                                PopupHelper.showSuccess(
+                                  context, 
+                                  'Kode OTP baru telah berhasil dikirim!', 
+                                  onConfirm: () {
+                                    // PopupHelper handles the pop
+                                  }
+                                );
                               }
                             } catch (e) {
                               if (context.mounted) {
